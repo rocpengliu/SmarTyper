@@ -1,0 +1,196 @@
+import os
+import pandas as pd
+from ..utils.utils_func import split_codingpos, check_overlapping_gene, get_splicer_exon_list_map
+from ..utils.utils_common import print_time
+from .ref_microhap_class import RefMicrotype
+import pdb
+
+class MetaDataClass:
+    def __init__(self):
+        self._sample_df =pd.DataFrame()
+        self._loc_df = pd.DataFrame()
+        self._samples_list=[]
+        self._ref_markers_list=[]
+        self._cur_mh_markers_list=[]
+        self._cur_mh_samples_list=[]
+        self._pre_mh_markers_list=[]
+        self._pre_mh_samples_list=[]
+        self._sex_df = pd.DataFrame()
+        self._cur_microhap_df = pd.DataFrame()#read the all_sample_final_microhap_file
+        self._pre_microhap_df = pd.DataFrame() # read the pre microhap file
+
+    def get_sample_df(self):
+        return self._sample_df
+    
+    def set_sample_df(self, sample_df):
+        self._sample_df = sample_df
+    
+    def get_loc_df(self):
+        return self._loc_df
+    
+    def set_loc_df(self, loc_df):
+        self._loc_df = loc_df
+    
+    def get_samples_list(self):
+        return self._samples_list
+    
+    def set_samples_list(self, samples_list):
+        self._samples_list = samples_list
+
+    def get_ref_markers_list(self):
+        return self._ref_markers_list
+    
+    def set_ref_markers_list(self, ref_markers_list):
+        self._ref_markers_list = ref_markers_list
+        
+    def get_cur_mh_markers_list(self):
+        return self._cur_mh_markers_list
+    
+    def set_cur_mh_markers_list(self, cur_mh_markers_list):
+        self._cur_mh_markers_list = cur_mh_markers_list
+    
+    def get_cur_mh_samples_list(self):
+        return self._cur_mh_samples_list
+    
+    def set_cur_mh_samples_list(self, cur_mh_samples_list):
+        self._cur_mh_samples_list = cur_mh_samples_list
+    
+    def get_pre_mh_markers_list(self):
+        return self._pre_mh_markers_list
+    
+    def set_pre_mh_markers_list(self, pre_mh_markers_list):
+        self._pre_mh_markers_list = pre_mh_markers_list
+        
+    def get_pre_mh_samples_list(self):
+        return self._pre_mh_samples_list
+    
+    def set_pre_mh_samples_list(self, pre_mh_samples_list):
+        self._pre_mh_samples_list = pre_mh_samples_list
+        
+    def get_sex_df(self):
+        return self._sex_df
+    
+    def set_sex_df(self, sex_df):
+        self._sex_df = sex_df
+    
+    def read_sexfile(self, parameter_class):
+        fpath =parameter_class.get_sexfile()
+        if os.path.isfile(fpath):
+            self._sex_df = pd.read_csv(fpath, delimiter="\t")
+    
+    def get_cur_microhap_df(self):
+        return self._cur_microhap_df
+    
+    def set_cur_microhap_df(self, cur_microhap_df):
+        self._cur_microhap_df = cur_microhap_df
+
+    def get_pre_microhap_df(self):
+        return self._pre_microhap_df
+    
+    def set_pre_microhap_df(self, pre_microhap_df):
+        self._pre_microhap_df = pre_microhap_df
+    def read_samplefile(self, parameter_class):
+        fpath = parameter_class.get_samplefile()
+        print(f"reading sample file: {fpath}")
+        if os.path.isfile(fpath):
+            sampletable = pd.read_csv(fpath, delimiter="\t", header=None)
+            if sampletable.shape[0] == 0:
+                raise ValueError("sample table must not be empty!")
+            if sampletable.shape[1] == 3 and parameter_class.get_seqtype() == "se":
+                sampletable.columns = ['sample', 'read1', 'grp']
+            elif sampletable.shape[1] == 4 and parameter_class.get_seqtype() == "pe":
+                sampletable.columns = ['sample', 'read1', 'read2', 'grp']
+            else:
+                raise ValueError("sample table must has 3 or 4 columns")
+            sampletable['sample'] = sampletable['sample'].astype(str)
+            self._sample_df=sampletable.astype({'sample':str})
+            self._samples_list=sorted(sampletable['sample'].unique())
+    def read_locifile(self, parameter_class, post_microhap_class, mh=False):
+        fpath=parameter_class.get_locifile()
+        print(f"reading loci file: {fpath}")
+        #pdb.set_trace()
+        if os.path.isfile(fpath):
+            locitable =  pd.read_csv(fpath, delimiter="\t", header =None)
+            if locitable.shape[0] == 0:
+                raise ValueError("loci table must not be empty!")
+            ncol = locitable.shape[1]
+            if  ncol == 8 and parameter_class.get_analtype() == "snp":
+                locitable.columns=['locus', 'fprimer', 'rprimer', 'triml', 'trimr', 'snppos', 'codingpos', 'ref']
+            elif ncol == 8 and parameter_class.get_analtype() == "sat":
+                locitable.columns=['locus', 'fprimer', 'rprimer', 'fflank', 'rflank', 'repeat', 'numrep', 'mra']
+            else:
+                raise ValueError("loci table must have 8 columns")
+            locitable['locus'] = locitable['locus'].astype(str)
+            locitable = locitable.sort_values(by='locus')
+
+            if parameter_class.get_analtype() == "snp":
+                #pdb.set_trace()
+                for idx, row in locitable.iterrows():
+                    print_time(f'read_locifile for {row['locus']}')
+                    mar_ref = RefMicrotype()
+                    mar_ref.set_locus(row['locus'].strip())
+                    mar_ref.set_fprimer(row['fprimer'].strip())
+                    mar_ref.set_rprimer(row['rprimer'].strip())
+                    mar_ref.set_triml(int(row['triml']))
+                    mar_ref.set_trimr(int(row['trimr']))
+                    mar_ref.set_dna_ref(row['ref'].strip())
+                    if row['snppos'].replace(' ', '') != "0":
+                        snpos = [int(pos.strip()) for pos in row['snppos'].replace(" ", "").split('|')]
+                        if len(snpos) != 0:
+                            mar_ref.set_snppos(sorted(snpos))
+                    if mh:
+                        if row['codingpos'].replace(' ', '') != '0':
+                            codingpos = split_codingpos(row['codingpos'])
+                            if codingpos is not None and len(codingpos) != 0:
+                                mar_ref.set_has_splicer(True)
+                                mar_ref.set_overlapped_gene(not check_overlapping_gene(codingpos))
+                                mar_ref.set_codingpos(codingpos)
+                                if not mar_ref.is_overlapped_gene():
+                                    mar_ref.set_splicer_exon_list_dict(get_splicer_exon_list_map(codingpos))
+                    mar_ref.populate_ref_compre_mt()#must be put here because when mh is false, it still needs to populate
+                    post_microhap_class.get_loc_ref_dict()[row['locus']]=mar_ref
+                post_microhap_class.set_loc_ref_dict(dict(sorted(post_microhap_class.get_loc_ref_dict().items())))
+            self._loc_df = locitable
+            self.set_ref_markers_list(sorted(locitable['locus'].unique()))
+            if len(self.get_ref_markers_list()) == 0:
+                raise ValueError(f"please upload loci file first")
+    def read_microhap_file(self, parameter_class, cur = True):
+        #pdb.set_trace()
+        fpath = parameter_class.get_cur_microhap_input_file() if cur else parameter_class.get_pre_microhap_input_file()
+        if not os.path.isfile(fpath):
+            raise ValueError(f"{fpath} is not a file")
+        if not cur:
+            if len(self.get_cur_microhap_df())==0:
+                raise ValueError(f"please read microhap file first before reading pre microhap file")
+        tmp_df = pd.read_csv(fpath, delimiter = '\t')
+        print_time(f'microhap file size is {tmp_df.shape}')
+        if tmp_df.shape[0] == 0:
+            if not cur:
+                parameter_class.set_has_pre_mh(False)
+            raise ValueError(f"microhap table is empty")
+        else:
+            if cur:
+                self.set_cur_microhap_df(tmp_df)
+            else:
+                self.set_pre_microhap_df(tmp_df)
+            samples_list = sorted(tmp_df['Sample'].unique())
+            mar_list = sorted(tmp_df['Locus'].unique())
+
+            if cur:
+                self.set_cur_mh_samples_list(sorted(set((self.get_cur_mh_samples_list() or []) + samples_list)))
+                self.set_cur_mh_markers_list(sorted(set((self.get_cur_mh_markers_list() or []) + mar_list)))
+            else:
+                self.set_pre_mh_samples_list(sorted(set((self.get_pre_mh_samples_list() or []) + samples_list)))
+                self.set_pre_mh_markers_list(sorted(set((self.get_pre_mh_markers_list() or []) + mar_list)))
+            
+            # if not cur:
+            #     print(f'microhap file has {samples_list} samples and mar_list is {mar_list}')
+            #     print(self.get_pre_microhap_df())
+
+            if len(self.get_cur_mh_markers_list()) == 0:
+                raise ValueError(f"micorhpa file: {fpath} is not valid")
+            if self.get_cur_mh_markers_list() > self.get_ref_markers_list():
+                    raise ValueError(f"microhap file: {fpath} contains new markers which are not in the ref loci table")
+            if not cur:
+                if self.get_pre_mh_markers_list() < self.get_ref_markers_list():
+                    raise ValueError(f"pre microhap file: {fpath} contains new markers which are not in the ref loci table")
