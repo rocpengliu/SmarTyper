@@ -4,7 +4,7 @@
 
 **SmarTyper** is a novel, multifunctional, ultra-fast, all-in-one and reads-to-report platform smart genetic variations(microsatellites, SNP, microhaplotype) identification from target sequencing.
 
-## Key features of Seq2Sat
+## Key features of Seq2Type
 
 * **Multifunctional**: SmarTyper can conduct genotyping for both microsatellite/SSR and SNPs from both target sequencing.
 
