@@ -193,12 +193,11 @@ def target(parent):
     subargs['average_qual'] = genoclass.get_parameter().get_average_qual()
     subargs['length_required'] = genoclass.get_parameter().get_length_required()
     if genoclass.get_parameter().get_analtype() == "snp":
-        pass
-        # subargs['htJetter'] = genoclass.get_parameter().get_htJetter()
-        # subargs['hmPerH'] = genoclass.get_parameter().get_hmPerH()
-        # subargs['hmPerL'] = genoclass.get_parameter().get_hmPerL()
-        # subargs['minSeqsPerSnp'] = genoclass.get_parameter().get_minSeqsPerSnp()
-        # subargs['minReads4Filter'] = genoclass.get_parameter().get_minReads4Filter()
+        subargs['htJetter'] = genoclass.get_parameter().get_htJetter()
+        subargs['hmPerH'] = genoclass.get_parameter().get_hmPerH()
+        subargs['hmPerL'] = genoclass.get_parameter().get_hmPerL()
+        subargs['minSeqsPerSnp'] = genoclass.get_parameter().get_minSeqsPerSnp()
+        subargs['minReads4Filter'] = genoclass.get_parameter().get_minReads4Filter()
     else:
         pass
 
