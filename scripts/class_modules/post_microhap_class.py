@@ -221,7 +221,7 @@ class PostMicrohapClass:
                                                     'label':[f'mh_{i+len(pre_mar_mh_seqs_set)}' for i in range(len(new_mar_mh_seqs_list))],
                                                     'seq':list(new_mar_mh_seqs_list)
                                                     })
-                            tmp_mar_ref.set_mar_microhap_df(pd.concat([tmp_pre_mar_mh_df, tmp_df]), ignore_index=True)
+                            tmp_mar_ref.set_mar_microhap_df(pd.concat([tmp_pre_mar_mh_df, tmp_df], ignore_index=True))
                             tmp_mar_ref.set_cur_mar_microhap_df(tmp_df)
                             if tmp_pre_mar_mh_df is not None:
                                 tmp_mar_ref.set_pre_mar_microhap_df(tmp_pre_mar_mh_df)
