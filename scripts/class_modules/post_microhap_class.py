@@ -150,7 +150,8 @@ class PostMicrohapClass:
                 elif zygo == "heter":
                     mar_sam_microhap.add(mar_sam_microhap_df['Sequence'].iloc[0])
                     mar_sam_microhap.add(mar_sam_microhap_df['Sequence'].iloc[1])
-            mar_sam_microhap = sorted(mar_sam_microhap)
+            if mar_sam_microhap:
+                mar_sam_microhap = sorted(mar_sam_microhap)
             tmp_df = pd.DataFrame(columns=['locus', 'label', 'seq'])
             if len(mar_sam_microhap)!=0:
                 tmp_df=pd.DataFrame({
@@ -159,6 +160,10 @@ class PostMicrohapClass:
                                 'seq':mar_sam_microhap})
         else:
             tmp_df=parent_mh_df.loc[(parent_mh_df['Locus'] == mar) & (parent_mh_df['Allele'] != "-9"), ['Locus', 'Allele', 'Sequence']]
+            if tmp_df is None :
+                tmp_df = pd.DataFrame()
+                tmp_df.columns = ['locus','label','seq']
+                return tmp_df
             tmp_df = tmp_df.reset_index(drop=True)
             tmp_df = tmp_df.drop_duplicates(subset='Sequence')
             tmp_df.columns = ['locus','label','seq']
@@ -276,7 +281,6 @@ class PostMicrohapClass:
         # File paths for temporary files
         fa_file = os.path.join(tmp_dir, f'{id}_mh.fasta')
         align_file = os.path.join(tmp_dir, f'{id}_align.fasta')
-        
         try:
             # Write input sequences to the temporary FASTA file
             with open(fa_file, "w") as output_file:
@@ -567,8 +571,11 @@ class PostMicrohapClass:
         print_time("finished to populate_final_mar_mh_df_dict")
         return True
     def output_final_microhap_table(self, parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict, final_pre_mh_dict, final_pre_sim_mh_dict):
-        self._final_microhap_df = pd.concat(final_cur_mh_dict.values(), ignore_index = True)
-        self._final_microhap_df = self._final_microhap_df.sort_values(by=['Sample', 'Locus']).reset_index(drop=True)
+        if final_cur_mh_dict.values():
+            self._final_microhap_df = pd.concat(final_cur_mh_dict.values(), ignore_index = True)
+            self._final_microhap_df = self._final_microhap_df.sort_values(by=['Sample', 'Locus']).reset_index(drop=True)
+        else:
+            self._final_microhap_df = pd.DataFrame()
         if self._final_microhap_df.shape[0] > 0:
             self._final_microhap_df.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_cur_mh_table.txt"), sep = '\t', index = False)
         
@@ -578,12 +585,18 @@ class PostMicrohapClass:
                 final_cur_sim_mh_df_list.append(df)
             else:
                 final_cur_sim_mh_df_list.append(df.drop(columns='Sample'))
-        self._final_microhap_df_simple = pd.concat(final_cur_sim_mh_df_list, axis = 1)
+        if final_cur_sim_mh_df_list:
+            self._final_microhap_df_simple = pd.concat(final_cur_sim_mh_df_list, axis = 1)
+        else:
+            self._final_microhap_df_simple = pd.DataFrame()
         if self._final_microhap_df_simple.shape[0] > 0:
             self._final_microhap_df_simple.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_cur_mh_sim_table.txt"), sep = '\t', index = False)
         
         if parameter_class.get_has_pre_mh():
-            final_pre_mh_df = pd.concat(final_pre_mh_dict.values(), ignore_index = True)
+            if final_pre_mh_dict.values():
+                final_pre_mh_df = pd.concat(final_pre_mh_dict.values(), ignore_index = True)
+            else:
+                final_pre_mh_df = pd.DataFrame()
             if final_pre_mh_df.shape[0] > 0:
                 self._final_microhap_df = pd.concat([final_pre_mh_df, self._final_microhap_df], ignore_index=True) if self._final_microhap_df.shape[0] > 0 else final_pre_mh_df
                 self._final_microhap_df.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_mh_table.txt"), sep = '\t', index = False)
@@ -594,7 +607,10 @@ class PostMicrohapClass:
                     final_pre_sim_mh_df_list.append(df)
                 else:
                     final_pre_sim_mh_df_list.append(df.drop(columns='Sample'))
-            final_pre_sim_mh_df = pd.concat(final_pre_sim_mh_df_list, axis = 1)
+            if final_pre_sim_mh_df_list:
+                final_pre_sim_mh_df = pd.concat(final_pre_sim_mh_df_list, axis = 1)
+            else:
+                final_pre_sim_mh_df = pd.DataFrame()
             if final_pre_sim_mh_df.shape[0] > 0:
                 self._final_all_microhap_df_simple = pd.concat([final_pre_sim_mh_df, self._final_microhap_df_simple], ignore_index=True) if self._final_microhap_df_simple.shape[0] > 0 else final_pre_sim_mh_df
                 self._final_all_microhap_df_simple.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_mh_sim_table.txt"), sep = '\t', index = False)
