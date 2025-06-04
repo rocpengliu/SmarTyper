@@ -23,18 +23,18 @@
 ## Getting started
 ### Step 1. Pre-install the software
 SmarTyper  is written in Python/Cython, C/C++11 and can be installed on Linux or Mac OS X (with Xcode and Xcode Command Line Tools installed). 
-We have tested SmarTyper on Ubuntu (16.04 LTS and above) 
+We have tested SmarTyper on Ubuntu (Ubuntu 22.04.3 LTS) 
 
 ```
 sudo apt install python3 python3-pip
 sudo apt install cython3
 sudo apt install python3-tk
 pip3 install customtkinter
-pip install biopython
-pip install pillow
-pip install matplotlib
-pip install typing
-pip install dill
+pip3 install biopython
+pip3 install pillow
+pip3 install matplotlib
+pip3 install typing
+pip3 install dill
 ```
 
 ### Step 2. Install smartyper 
