@@ -34,6 +34,7 @@ pip install biopython
 pip install pillow
 pip install matplotlib
 pip install typing
+pip install dill
 ```
 
 ### Step 2. Install smartyper 
