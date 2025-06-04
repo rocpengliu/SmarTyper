@@ -8,8 +8,8 @@ def create_project_module(parent):
     page.grid_columnconfigure(0, weight=1)  # Allow column to expand
     
     # Project title label
-    label = ctk.CTkLabel(page, text="Project Module", font=("Helvetica", 20, "bold"), 
-                         fg_color="#3b3b3b", text_color="blue")
+    label = ctk.CTkLabel(page, text="Project Module", font=("Helvetica", 40, "bold"), 
+                         fg_color="#3b3b3b", text_color="green")
     label.grid(row=0, column=0, pady=(30, 10), padx=(40, 50), sticky="n")
     
     return page

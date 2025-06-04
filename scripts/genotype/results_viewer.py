@@ -155,6 +155,7 @@ def on_previous_button_click(parent):
 def on_next_button_click(parent):
     genoclass = parent.master.genotype_class
     genoclass.generate_all()
+    genoclass.dump_session("genotype")
     parent.master.show_page("summary")
 def create_bottom_panel(parent, body_frame):
     bottom_panel = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")

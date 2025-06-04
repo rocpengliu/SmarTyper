@@ -1,5 +1,6 @@
 from tkinter import messagebox  # Importing messagebox for error handling
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import dill
 from ..utils.utils_func import output_all_fig_tab, produce_fig_mar_sam_pdf, output_all_geno_table
 from ..utils.utils_common import print_time
 from .snp_class import SnpClass
@@ -12,7 +13,6 @@ from .result_parameter_class import ResultParameter
 from .read_class import ReadsClass
 from .metadata_class import MetaDataClass
 
-     
 class GenotypeClass:
     def __init__(self):
         self._snp = SnpClass()
@@ -169,3 +169,46 @@ class GenotypeClass:
                     except Exception as e:
                             print_time(f'Error processing marker: {mar}: {e}')
             print_time(f'finished to process all the markers')
+
+    def dump_session(self, project):
+        try:
+            if project == "genotype":
+                output_path = self.get_parameter().get_outputgenotypeproject()
+            elif project == "microtype":
+                output_path = self.get_parameter().get_outputmicrotypeproject()
+            else:
+                messagebox.showerror("Invalid Project Output", f"Unknown project type: {project}")
+                return
+            with open(output_path, 'wb') as f:
+                dill.dump(self, f)
+            print(f"Session successfully saved to: {output_path}")
+        except Exception as e:
+            messagebox.showerror("Error Saving Session", str(e))
+
+    def load_session(self, project):
+        try:
+            # Determine input path based on project type
+            if project == "genotype":
+                input_path = self.get_parameter().get_outputgenotypeproject()
+            elif project == "microtype":
+                input_path = self.get_parameter().get_outputmicrotypeproject()
+            else:
+                messagebox.showerror("Invalid Project Input", f"Unknown project type: {project}")
+                return False
+            # Load the saved object
+            with open(input_path, 'rb') as f:
+                loaded_obj = dill.load(f)
+            # Optional: verify type (optional but safe)
+            if not isinstance(loaded_obj, self.__class__):
+                messagebox.showerror("Type Mismatch", f"Loaded object is not a {self.__class__.__name__} instance.")
+                return False
+            # Update current instance with loaded data
+            self.__dict__.update(loaded_obj.__dict__)
+            print(f"[INFO] Session successfully loaded from: {input_path}")
+            return True
+        except FileNotFoundError:
+            messagebox.showerror("File Not Found", f"No file found at: {input_path}")
+            return False
+        except Exception as e:
+            messagebox.showerror("Error Loading Session", f"Failed to load session from {input_path}\n\n{str(e)}")
+            return False

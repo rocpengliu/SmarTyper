@@ -155,9 +155,8 @@ def create_body(parent, frame):
     scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=tree_frame.file_tree.yview)
     tree_frame.file_tree.configure(yscroll=scrollbar.set)
     scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    
     return body_frame
-    
+
 def update_suffix_state(suffix2_entry, pe=True):
     if pe:
         suffix2_entry.configure(state="normal")
