@@ -43,5 +43,10 @@ pip install dill
 git clone https://github.com/rocpengliu/SmarTyper.git
 cd SmarTyper
 python setup.py clean --all && python setup.py build_ext --inplace #compile seq2type
+```
+
+### Step 3. Launch smartyper 
+
+```
 python smartyper
 ```
