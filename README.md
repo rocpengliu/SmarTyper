@@ -21,7 +21,7 @@
 * **Reads-to-report files**: it generates genotype table, a htlm report containging figures and tables for genotype, sex identification, SNPs.
 
 ## Getting started
-### Step 1. Pre-install the software
+### Step 1. Pre-installations
 SmarTyper  is written in Python/Cython, C/C++11 and can be installed on Linux or Mac OS X (with Xcode and Xcode Command Line Tools installed).
 We have tested SmarTyper on Ubuntu (Ubuntu 22.04.3 LTS)
 
@@ -49,4 +49,10 @@ python setup.py clean --all && python setup.py build_ext --inplace #compile seq2
 
 ```
 python smartyper
+```
+
+## To do list
+
+```
+1. add microtype looking up table
 ```
