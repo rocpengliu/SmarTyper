@@ -204,6 +204,13 @@ class GenotypeClass:
                 return False
             # Update current instance with loaded data
             self.__dict__.update(loaded_obj.__dict__)
+            if project == "genotype":
+                self.get_parameter().set_project_genotype_model(True)
+            elif project == "microtype":
+                self.get_parameter().set_project_microtype_model(True)
+            else:
+                messagebox.showerror("Invalid Project Input", f"Unknown project type: {project}")
+                return False
             print(f"[INFO] Session successfully loaded from: {input_path}")
             return True
         except FileNotFoundError:

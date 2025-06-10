@@ -117,7 +117,6 @@ def update_combox_from_others(parent):
     try:
         genoclass = parent.master.genotype_class
         res_frame = parent.master.pages.get('results', None)
-        
         if res_frame is None:
             print("Error: 'results' page is not available.")
             return
@@ -150,7 +149,10 @@ def create_footer(parent, frame):
     return footer_frame
 
 def on_previous_button_click(parent):
-    parent.master.show_page("run")
+    if parent.master.genotype_class.get_parameter().is_project_genotype_model():
+        parent.master.show_page("openner")
+    else:
+        parent.master.show_page("run")
 
 def on_next_button_click(parent):
     genoclass = parent.master.genotype_class

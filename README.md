@@ -2,17 +2,19 @@
 
 ## Description
 
-**SmarTyper** is a novel, multifunctional, ultra-fast, all-in-one and reads-to-report platform smart genetic variations(microsatellites, SNP, microhaplotype and micropeptype) identification from target sequencing.
+**SmarTyper** is a novel, smart, multifunctional platform for genetic variation identification from target sequencing data.
 
 ## Key features of SmarTyper
 
-* **Multifunctional**: SmarTyper can conduct genotyping for both microsatellite/SSR and SNPs, as well as microhaplotype and micropeptype identification from target sequencing.
+* **Multifunctional**: conducts genotyping for microsatellite/SSR and SNPs, as well as microhaplotype and micropeptype identification.
+
+* **Smart**: supports smart genotyping powered by AI.
+
+* **Interative**: supports both auto and manual-genotyping with interactive plotting.
 
 * **Ultra-fast**: ~ 1 second/sample using single thread.
 
 * **Extremely low memory cost**: negligible ~ 0.1 MB RAM.
-
-* **AI-powered processing**: support smart genotyping using AI.
 
 * **All-in-one**: SmarTyper directly takes raw target sequencing reads as input and output genotype table without any intermediate file writing and loading, making I/O very efficient.
 

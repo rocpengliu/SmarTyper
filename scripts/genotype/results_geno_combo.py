@@ -37,7 +37,7 @@ def update_genotype_tab(parent, genotab):
             try:
                 amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{selected_sample}').get(f'{mar}')
                 hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{selected_sample}').get(f'{mar}')
-                if not amplicon_df.empty:
+                if amplicon_df is not None and not amplicon_df.empty:
                     fig = create_figure(selected_sample, mar, amplicon_df, hap_df, genotab, genoclass)
                     figures.append(fig)
                     seq_tables.append(amplicon_df.head(genotab.n_rows))
@@ -57,7 +57,7 @@ def update_genotype_tab(parent, genotab):
             try:
                 amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sam}').get(f'{selected_marker}')
                 hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sam}').get(f'{selected_marker}')
-                if not amplicon_df.empty:
+                if amplicon_df is not None and not amplicon_df.empty:
                     fig = create_figure(sam, selected_marker, amplicon_df, hap_df, genotab, genoclass)
                     figures.append(fig)
                     seq_tables.append(amplicon_df.head(genotab.n_rows))
@@ -299,7 +299,7 @@ def process_fig_table2(sample, marker, genoclass, genotab):
         hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
         sam_mar = f"{sample}_{marker}"
         #print(f"starting to process figure table for {sam_mar}")
-        if not amplicon_df.empty:
+        if amplicon_df is not None and not amplicon_df.empty:
             with genotab.figures_lock:
                 genotab.figures[sam_mar]= create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
             with genotab.tables_lock:

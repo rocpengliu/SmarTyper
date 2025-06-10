@@ -11,6 +11,8 @@ class ParameterClass:
         self._samplefile = ""
         self._num_samples = 0
         
+        self._project_genotype_model = False
+        self._project_microtype_model = False
         self._outputgenotypeproject = "project_genotype_session.dill"
         self._outputmicrotypeproject = "project_microtype_session.dill"
         
@@ -213,6 +215,16 @@ class ParameterClass:
         if not os.path.isdir(self._outputdir):
             raise ValueError(f"Output directory '{self._outputdir}' does not exist")
 
+    def is_project_genotype_model(self):
+        return self._project_genotype_model
+    def set_project_genotype_model(self, gmodel):
+        self._project_genotype_model = gmodel
+    
+    def is_project_microtype_model(self):
+        return self._project_microtype_model
+    def set_project_microtype_model(self, mmodel):
+        self._project_microtype_model = mmodel
+        
     def get_outputgenotypeproject(self):
         return os.path.join(self._outputdir, self._outputgenotypeproject)
     
