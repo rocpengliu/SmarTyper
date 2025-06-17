@@ -209,7 +209,7 @@ def display_page(genotab, genoclass):
     start_index = genotab.current_page * genotab.fig_per_page
     end_index = min(start_index + genotab.fig_per_page, len(genotab.figures))
     
-    create_fig_tab_combo(canvas, genotab, start_index, end_index, figures_frame, loci_table)
+    create_fig_tab_combo(canvas, genotab, start_index, end_index, figures_frame, loci_table, genoclass)
     # Update the scroll region of the canvas to fit the figures_frame
     canvas.configure(scrollregion=canvas.bbox("all"))
 
@@ -312,7 +312,7 @@ def process_fig_table2(sample, marker, genoclass, genotab):
     finally:
         print(f"Thread {threading.current_thread().name} finished processing {sample}_{marker}")
 
-def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loci_table):
+def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loci_table, genoclass):
     if len(genotab.figures) == 0:
         return
     row_index=0
@@ -393,10 +393,14 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         #seq_widget.tag_add('blue_text', '1.0', f'1.{min(poset)}' if poset else '2.0')
         for line_num, (index, row) in enumerate(tbl.iterrows(), start=2):
             padded_index = f"{index:02}"
-            seq_widget.insert(f"{line_num}.0", padded_index + ": " + row['Sequence'] + "\n")
+            padded_seq = ("*" * genoclass.get_post_microhap().get_loc_ref_dict().get(marker).get_triml() \
+                            + row['Sequence'] \
+                            + "*" * genoclass.get_post_microhap().get_loc_ref_dict().get(marker).get_trimr())
+            
+            seq_widget.insert(f"{line_num}.0", padded_index + ": " + padded_seq + "\n")
             pos=poslst[index]
             if pos:
-                if pos[-1] < len(row['Sequence']):
+                if pos[-1] < len(padded_seq):
                     for i in reversed(pos):
                         start_pos=f'{line_num}.{i}'
                         end_pos=f'{line_num}.{i+1}'

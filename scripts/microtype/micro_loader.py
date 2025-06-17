@@ -49,13 +49,6 @@ def create_body(parent, frame):
     body_frame.top_panel.grid_columnconfigure(0, weight=1) #right panel
     body_frame.top_panel.grid_rowconfigure('all', weight=1)
     
-    # #top_panel.grid_propagate(False)
-    
-    # bottom_panel = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")
-    # bottom_panel.grid(row=1, column=0, sticky="nsew", padx=body_frame.padx,pady=(0,0))
-    # bottom_panel.grid_columnconfigure(0, weight=1)
-    # bottom_panel.grid_rowconfigure(0, weight=1)
-    
     row = 0
     
     n_thread_var = tk.IntVar(value=genotype_class.get_parameter().get_thread())
@@ -86,7 +79,7 @@ def create_body(parent, frame):
     ctk.CTkButton(body_frame.top_panel, text="Browse", font=body_frame.brfont, height=20, width=50, 
                   command=lambda: infile_browser(body_frame.top_panel.in_entry, "index")).grid(row=row, column=1, pady=(1,1), sticky="w")
     body_frame.top_panel.inputdir_var.trace_add("write", lambda *args: (genotype_class.get_parameter().set_cur_microhap_input_file(body_frame.top_panel.inputdir_var.get()),
-                                                                        genotype_class.get_metadata().read_microhap_file(genotype_class.get_parameter())))
+                                                                        genotype_class.get_metadata().read_cur_microhap_file(genotype_class.get_parameter())))
     row+=1
     
     micro_var = ctk.StringVar(value=genotype_class.get_parameter().get_pre_microhap_input_file())
@@ -97,7 +90,7 @@ def create_body(parent, frame):
                   command=lambda: infile_browser(body_frame.top_panel.microhap_entry, "index")).grid(row=row, column=1, pady=(1,1), sticky="w")
     micro_var.trace_add("write", lambda *args: (genotype_class.get_parameter().set_pre_microhap_input_file(micro_var.get()),
                                                 genotype_class.get_parameter().set_has_pre_mh(True),
-                                                genotype_class.get_metadata().read_microhap_file(genotype_class.get_parameter(), False)))
+                                                genotype_class.get_metadata().read_pre_microhap_file(genotype_class.get_parameter())))
     row+=1
     
     output_var = ctk.StringVar(value=genotype_class.get_parameter().get_post_microhap_output_dir())

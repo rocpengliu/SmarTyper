@@ -20,7 +20,12 @@ class CompreVariationClass:
         self._snp_pos_list = [] #snp position if in the true splicer, it should [(ori_pos0, cur_pos0), (ori_pos1, cur_pos1)]
         self._indel_pos_list = []
         self._snp_str = ""
-        
+        self._index = "" #
+    def get_index(self):
+        return self._index
+    
+    def set_index(self, index):
+        self._index = index
     def get_snp_str(self):
         return self._snp_str
     

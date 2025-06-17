@@ -152,22 +152,23 @@ class PostMicrohapClass:
                     mar_sam_microhap.add(mar_sam_microhap_df['Sequence'].iloc[1])
             if mar_sam_microhap:
                 mar_sam_microhap = sorted(mar_sam_microhap)
-            tmp_df = pd.DataFrame(columns=['locus', 'label', 'seq'])
+            tmp_df = pd.DataFrame(columns=['locus', 'label', 'seq', 'id'])
             if len(mar_sam_microhap)!=0:
                 tmp_df=pd.DataFrame({
-                                'locus':[mar]*len(mar_sam_microhap),
-                                'label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
-                                'seq':mar_sam_microhap})
+                                'Locus':[mar]*len(mar_sam_microhap),
+                                'Label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
+                                'Seq':mar_sam_microhap, 
+                                'ID': [i for i in range(len(mar_sam_microhap))]})
         else:
-            tmp_df=parent_mh_df.loc[(parent_mh_df['Locus'] == mar) & (parent_mh_df['Allele'] != "-9"), ['Locus', 'Allele', 'Sequence']]
+            tmp_df=parent_mh_df.loc[parent_mh_df['Locus'] == mar, ['Locus', 'Allele', 'Sequence', 'ID']]
             if tmp_df is None :
                 tmp_df = pd.DataFrame()
-                tmp_df.columns = ['locus','label','seq']
+                tmp_df.columns = ['Locus','Label','Seq', 'ID']
                 return tmp_df
             tmp_df = tmp_df.reset_index(drop=True)
             tmp_df = tmp_df.drop_duplicates(subset='Sequence')
-            tmp_df.columns = ['locus','label','seq']
-        tmp_df = tmp_df.sort_values(by="label").reset_index(drop=True)
+            tmp_df.columns = ['Locus','Label','Seq', 'ID']
+        tmp_df = tmp_df.sort_values(by="ID").reset_index(drop=True)
         return tmp_df
 
     def populate_one_microhap_dict(self, parameter_class, metadata_class, cur = True)->None:
@@ -178,7 +179,7 @@ class PostMicrohapClass:
             parent_mh_df = metadata_class.get_cur_microhap_df() if cur else metadata_class.get_pre_microhap_df()
             if parent_mh_df is not None and parent_mh_df.shape[0] > 0:
                 markers = sorted(parent_mh_df['Locus'].unique())
-                samples = sorted(parent_mh_df['Sample'].unique())
+                samples = sorted(parent_mh_df['Sample'].unique()) if cur else []
                 mar_df_dict = {}
                 for mar in markers:
                     future = executor.submit(self.populate_mar_sam_microhap, mar, samples, parent_mh_df, cur)
@@ -189,8 +190,6 @@ class PostMicrohapClass:
                         microhap_df = future.result()
                         with thread_lock:
                             mar_df_dict[mar]=microhap_df
-                            # if not cur:
-                            #     print_time(f'{mar} microhap_df is {microhap_df}')
                         print_time(f"finished to populate_one_microhap_dict for marker: {mar}")
                     except Exception as exc:
                         print(f"Error in {mar}: {exc}")
@@ -199,7 +198,6 @@ class PostMicrohapClass:
                     self._cur_mar_microhap_dict = mar_df_dict
                 else:
                     self._pre_mar_microhap_dict = mar_df_dict
-
         print_time(f"finished to populate_one_microhap_dict")
 
     def populate_pre_post_microhap_dict(self, parameter_class, metadata_class)->None:
@@ -209,6 +207,7 @@ class PostMicrohapClass:
     def populate_microhap_dict(self, parameter_class, metadata_class)->None:
         print_time(f"starting to populate_microhap_dict")
         #pdb.set_trace()
+        mh_lookup_table_dir = {}
         for mar in metadata_class.get_ref_markers_list():
             tmp_mar_ref = self.get_loc_ref_dict().get(mar, None)
             if tmp_mar_ref is not None:
@@ -217,38 +216,47 @@ class PostMicrohapClass:
                     if parameter_class.get_has_pre_mh():
                         tmp_pre_mar_mh_df = copy.deepcopy(self.get_pre_mar_microhap_dict().get(mar, None))
                         pre_mar_mh_seqs_set = set()
+                        max_id = 0
+                        start_1 = False
                         if tmp_pre_mar_mh_df is not None:
-                            pre_mar_mh_seqs_set = set(tmp_pre_mar_mh_df['seq'].unique())
-                        cur_mar_mh_seqs_set = set(tmp_cur_mar_mh_df['seq'].unique())
+                            pre_mar_mh_seqs_set = set(tmp_pre_mar_mh_df['Seq'].unique())
+                            max_id = tmp_pre_mar_mh_df['ID'].max()
+                            start_1 = True
+                        cur_mar_mh_seqs_set = set(tmp_cur_mar_mh_df['Seq'].unique())
                         new_mar_mh_seqs_list = sorted(cur_mar_mh_seqs_set.difference(pre_mar_mh_seqs_set))
                         if len(new_mar_mh_seqs_list) != 0:
-                            tmp_df = pd.DataFrame({'locus':[mar]*len(new_mar_mh_seqs_list),
-                                                    'label':[f'mh_{i+len(pre_mar_mh_seqs_set)}' for i in range(len(new_mar_mh_seqs_list))],
-                                                    'seq':list(new_mar_mh_seqs_list)
+                            tmp_df = pd.DataFrame({'Locus':[mar]*len(new_mar_mh_seqs_list),
+                                                    'Label':[f'mh_{i + (max_id + 1 if start_1 else max_id)}' for i in range(len(new_mar_mh_seqs_list))],
+                                                    'Seq':list(new_mar_mh_seqs_list),
+                                                    'ID': [i + (max_id + 1 if start_1 else max_id) for i in range(len(new_mar_mh_seqs_list))]
                                                     })
-                            tmp_mar_ref.set_mar_microhap_df(pd.concat([tmp_pre_mar_mh_df, tmp_df], ignore_index=True))
-                            tmp_mar_ref.set_cur_mar_microhap_df(tmp_df)
-                            if tmp_pre_mar_mh_df is not None:
-                                tmp_mar_ref.set_pre_mar_microhap_df(tmp_pre_mar_mh_df)
-                            else:
-                                tmp_mar_ref.set_pre_mar_microhap_df(pd.DataFrame())
+                            mar_microhap_df = pd.concat([tmp_pre_mar_mh_df, tmp_df], ignore_index=True)
+                            tmp_mar_ref.set_mar_microhap_df(mar_microhap_df)
+                            tmp_mar_ref.set_cur_mar_microhap_df(mar_microhap_df[mar_microhap_df['Seq'].isin(cur_mar_mh_seqs_set)].reset_index(drop=True))
                             tmp_mar_ref.set_has_new_mh(True)
                         else:
                             tmp_mar_ref.set_mar_microhap_df(tmp_pre_mar_mh_df)
                             tmp_mar_ref.set_cur_mar_microhap_df(tmp_pre_mar_mh_df)
-                            if tmp_pre_mar_mh_df is not None:
-                                tmp_mar_ref.set_pre_mar_microhap_df(tmp_pre_mar_mh_df)
-                            else:
-                                tmp_mar_ref.set_pre_mar_microhap_df(pd.DataFrame())
                             tmp_mar_ref.set_has_new_mh(False)
+                            
+                        if tmp_pre_mar_mh_df is not None:
+                            tmp_mar_ref.set_pre_mar_microhap_df(tmp_pre_mar_mh_df)
+                        else:
+                            tmp_mar_ref.set_pre_mar_microhap_df(pd.DataFrame())
                     else:
                         tmp_mar_ref.set_mar_microhap_df(tmp_cur_mar_mh_df)
                         tmp_mar_ref.set_cur_mar_microhap_df(tmp_cur_mar_mh_df)
+                    mh_lookup_table_dir[mar] = tmp_mar_ref.get_mar_microhap_df()
             else:
                 raise ValueError(f"Error: cannot find {mar} in reference markers!\n")
-
+        self.output_mh_lookup_table(parameter_class, mh_lookup_table_dir)
         print_time(f"finished to populate_microhap_dict")
 
+    def output_mh_lookup_table(self, parameter_class, mh_lookup_table_dir):
+        mh_lookup_table = pd.concat(mh_lookup_table_dir.values(), ignore_index = True)
+        if mh_lookup_table is not None and mh_lookup_table.shape[0] > 0:
+            mh_lookup_table = mh_lookup_table.sort_values(['Locus', 'ID']).reset_index(drop=True)
+            mh_lookup_table.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_mh_lookup_table.txt"), sep = '\t', index = False)
     def do_translate(self, mar_mh_df, ref_refMicrotype):
         if len(ref_refMicrotype.get_codingpos()) != 0:
             for seq in mar_mh_df['seq']:
@@ -334,7 +342,7 @@ class PostMicrohapClass:
                 tot_snp_pos_set = set()
                 seq_records = []
                 for _, row in mh_seq_df.iterrows():
-                    _, label, seq = row
+                    _, label, seq, idx = row
                     tmp_compre_var = CompreVariationClass()
                     id = f'{mar}_{label}'
                     tmp_compre_var.set_id(id)
@@ -342,6 +350,7 @@ class PostMicrohapClass:
                     tmp_compre_var.set_splicer(splicer)
                     tmp_compre_var.set_mt(label)
                     tmp_compre_var.set_seq(seq)
+                    tmp_compre_var.set_index(idx)
                     indels_pos, mismatches_pos, snp_str = do_pairwise_alignment(ref_splicer0_mt_seq, seq)
                     tmp_compre_var.set_indel_pos_list(indels_pos)
                     tmp_compre_var.set_snp_pos_list(mismatches_pos)
@@ -367,7 +376,7 @@ class PostMicrohapClass:
                 tot_snp_pos_set = set()
                 seq_records = []
                 for _, row in mh_seq_df.iterrows():
-                    _, label, seq = row
+                    _, label, seq, idx = row
                     tmp_compre_var = CompreVariationClass()
                     id = f'{mar}_{label}'
                     tmp_compre_var.set_id(id)
@@ -375,6 +384,7 @@ class PostMicrohapClass:
                     tmp_compre_var.set_splicer(splicer)
                     tmp_compre_var.set_mt(label)
                     tmp_compre_var.set_seq(seq)
+                    tmp_compre_var.set_index(idx)
                     indels_pos, mismatches_pos, snp_str = do_pairwise_alignment(ref_splicer_mt_seq, seq)
                     tmp_compre_var.set_indel_pos_list(indels_pos)
                     tmp_compre_var.set_snp_pos_list(mismatches_pos)
@@ -412,7 +422,7 @@ class PostMicrohapClass:
                     tmp_compre_mt.set_splicer_pos_list(ref_splicer_mt.get_splicer_pos_list())
                     tmp_compre_mt.set_splicer_aa_pos_list(ref_splicer_mt.get_splicer_aa_pos_list())
                     for _, row in mh_seq_df.iterrows():#mh lookup table
-                        mar2, label, seq = row
+                        mar2, label, seq, index = row
                         dna_seq, aa_seq = trans_single_dna(seq, ref_splicer_mt.get_splicer_pos_list())
                         mh_df.loc[len(mh_df)] = [mar2,label,dna_seq]
                         mp_df.loc[len(mp_df)] = [mar2,label,aa_seq]
@@ -481,22 +491,9 @@ class PostMicrohapClass:
                         print(f'Error while performing mh alignment for marker {mar}: {exc}')
         print_time("finished sequence alignment...")
 
-    def populate_each_mar_mh_dict(self, mar, cur_mar_mh_df, pre_mar_mh_df, mh_lookup_table_dict)->tuple:
+    def populate_each_mar_mh_dict(self, mar, cur_mar_mh_df, mh_lookup_table_dict)->tuple:
         final_sam_cur_mh_dict = {}
-        final_sam_pre_mh_dict = {}
         final_sam_cur_mh_sim_dict={}#simple df sample, mar_allele1, mar_allele2
-        final_sam_pre_mh_sim_dict={}
-        if pre_mar_mh_df is not None and pre_mar_mh_df.shape[0]!=0:
-            for sam in sorted(pre_mar_mh_df['Sample'].unique()):
-                tmp_df = pre_mar_mh_df[pre_mar_mh_df['Sample'] == sam].reset_index(drop=True)
-                final_sam_pre_mh_dict[sam] = tmp_df
-                tmp_sim_df = tmp_df[['Sample', 'Allele']].reset_index(drop=True).copy()
-                tmp_sim_df = tmp_sim_df.pivot_table(index='Sample',
-                                                    columns=tmp_sim_df.groupby('Sample').cumcount(),
-                                                    values='Allele',
-                                                    aggfunc='first').reset_index()
-                tmp_sim_df.columns=['Sample', f'{mar}_allele1', f'{mar}_allele2']
-                final_sam_pre_mh_sim_dict[sam] = tmp_sim_df
         if cur_mar_mh_df is not None and cur_mar_mh_df.shape[0] != 0:
             #pdb.set_trace()
             cur_mar_mh_df['Allele']=cur_mar_mh_df['Sequence'].map(mh_lookup_table_dict).fillna('-9')
@@ -509,7 +506,6 @@ class PostMicrohapClass:
                     tmp_sim_df.at[1, 'Allele']=tmp_sim_df['Allele'].iloc[0]
                 elif zygo == 'heter':
                     tmp_sim_df=tmp_sim_df.sort_values(by='Allele')
-                    #pass
                 else:
                     tmp_sim_df.at[0, 'Allele'] = '-9'
                     tmp_sim_df.at[1, 'Allele'] = '-9'
@@ -521,22 +517,19 @@ class PostMicrohapClass:
                 tmp_sim_df.columns=['Sample', f'{mar}_allele1', f'{mar}_allele2']
                 final_sam_cur_mh_sim_dict[sam] = tmp_sim_df
         #pdb.set_trace()
-        return final_sam_cur_mh_dict,final_sam_cur_mh_sim_dict, final_sam_pre_mh_dict,final_sam_pre_mh_sim_dict
+        return final_sam_cur_mh_dict,final_sam_cur_mh_sim_dict
 
     def populate_final_mar_mh_df_dict(self, parameter_class, metadata_class)->bool:
         print_time("staring to populate_final_mar_mh_df_dict")
         n_threads = parameter_class.get_thread()
         cur_mh_df = metadata_class.get_cur_microhap_df()
-        pre_mh_df = metadata_class.get_pre_microhap_df()
         final_cur_mh_dict = {}
         final_cur_sim_mh_dict = {}
-        final_pre_mh_dict = {}
-        final_pre_sim_mh_dict = {}
         with ThreadPoolExecutor(max_workers=n_threads) as executor:
             futures ={}
             for mar, mar_value in self.get_loc_ref_dict().items():
                 try:
-                    mh_lookup_table_dict = mar_value.get_mar_microhap_df().set_index('seq')['label'].to_dict()
+                    mh_lookup_table_dict = mar_value.get_mar_microhap_df().set_index('Seq')['Label'].to_dict()
                     #print_time(f"mh_lookup_table_dict is {mh_lookup_table_dict}")
                     if mh_lookup_table_dict is None or not mh_lookup_table_dict:
                         continue
@@ -544,33 +537,25 @@ class PostMicrohapClass:
                     #print_time(f"cur_mar_mh_df is {cur_mar_mh_df}")
                     if cur_mar_mh_df is None or len(cur_mar_mh_df) == 0:
                         continue
-                    pre_mar_mh_df = pd.DataFrame()
-                    if parameter_class.get_has_pre_mh():
-                        pre_mar_mh_df = pre_mh_df[pre_mh_df['Locus'] == mar].reset_index(drop=True).copy()
-                    future = executor.submit(self.populate_each_mar_mh_dict, mar, cur_mar_mh_df, pre_mar_mh_df, mh_lookup_table_dict)
+                    future = executor.submit(self.populate_each_mar_mh_dict, mar, cur_mar_mh_df, mh_lookup_table_dict)
                     futures[future]=mar
                 except Exception as e:
                         print(f"An error occurred while processing {mar}: {e}")
             for future in as_completed(futures):
                 mar = futures[future]
                 try:
-                    final_sam_cur_mh_dict,final_sam_cur_mh_sim_dict, final_sam_pre_mh_dict,final_sam_pre_mh_sim_dict = future.result()
+                    final_sam_cur_mh_dict,final_sam_cur_mh_sim_dict = future.result()
                     with thread_lock:
                         self.get_loc_ref_dict().get(mar).set_final_mar_cur_microhap_nested_dict(final_sam_cur_mh_dict)
                         final_cur_mh_dict[mar] = pd.concat(final_sam_cur_mh_dict.values(), ignore_index = True)
                         self.get_loc_ref_dict().get(mar).set_final_mar_cur_sim_microhap_nested_dict(final_sam_cur_mh_sim_dict)
                         final_cur_sim_mh_dict[mar] = pd.concat(final_sam_cur_mh_sim_dict.values(), ignore_index = True)
-                        if parameter_class.get_has_pre_mh():
-                            self.get_loc_ref_dict().get(mar).set_final_mar_pre_microhap_nested_dict(final_sam_pre_mh_dict)
-                            final_pre_mh_dict[mar] = pd.concat(final_sam_pre_mh_dict.values(), ignore_index = True)
-                            self.get_loc_ref_dict().get(mar).set_final_mar_pre_sim_microhap_nested_dict(final_sam_pre_mh_sim_dict)
-                            final_pre_sim_mh_dict[mar] = pd.concat(final_sam_pre_mh_sim_dict.values(), ignore_index = True)
                 except Exception as exc:
                     print(f"Error while populating final mh df for marker {mar}: {exc}")
-        self.output_final_microhap_table(parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict, final_pre_mh_dict, final_pre_sim_mh_dict)
+        self.output_final_microhap_table(parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict)
         print_time("finished to populate_final_mar_mh_df_dict")
         return True
-    def output_final_microhap_table(self, parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict, final_pre_mh_dict, final_pre_sim_mh_dict):
+    def output_final_microhap_table(self, parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict):
         if final_cur_mh_dict.values():
             self._final_microhap_df = pd.concat(final_cur_mh_dict.values(), ignore_index = True)
             self._final_microhap_df = self._final_microhap_df.sort_values(by=['Sample', 'Locus']).reset_index(drop=True)
@@ -578,7 +563,7 @@ class PostMicrohapClass:
             self._final_microhap_df = pd.DataFrame()
         if self._final_microhap_df.shape[0] > 0:
             self._final_microhap_df.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_cur_mh_table.txt"), sep = '\t', index = False)
-        
+
         final_cur_sim_mh_df_list = []
         for i, (mar, df) in enumerate(final_cur_sim_mh_dict.items()):
             if i == 0:
@@ -591,29 +576,7 @@ class PostMicrohapClass:
             self._final_microhap_df_simple = pd.DataFrame()
         if self._final_microhap_df_simple.shape[0] > 0:
             self._final_microhap_df_simple.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_cur_mh_sim_table.txt"), sep = '\t', index = False)
-        
-        if parameter_class.get_has_pre_mh():
-            if final_pre_mh_dict.values():
-                final_pre_mh_df = pd.concat(final_pre_mh_dict.values(), ignore_index = True)
-            else:
-                final_pre_mh_df = pd.DataFrame()
-            if final_pre_mh_df.shape[0] > 0:
-                self._final_microhap_df = pd.concat([final_pre_mh_df, self._final_microhap_df], ignore_index=True) if self._final_microhap_df.shape[0] > 0 else final_pre_mh_df
-                self._final_microhap_df.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_mh_table.txt"), sep = '\t', index = False)
-            
-            final_pre_sim_mh_df_list = []
-            for i, (mar,df) in enumerate(final_pre_sim_mh_dict.items()):
-                if i == 0:
-                    final_pre_sim_mh_df_list.append(df)
-                else:
-                    final_pre_sim_mh_df_list.append(df.drop(columns='Sample'))
-            if final_pre_sim_mh_df_list:
-                final_pre_sim_mh_df = pd.concat(final_pre_sim_mh_df_list, axis = 1)
-            else:
-                final_pre_sim_mh_df = pd.DataFrame()
-            if final_pre_sim_mh_df.shape[0] > 0:
-                self._final_all_microhap_df_simple = pd.concat([final_pre_sim_mh_df, self._final_microhap_df_simple], ignore_index=True) if self._final_microhap_df_simple.shape[0] > 0 else final_pre_sim_mh_df
-                self._final_all_microhap_df_simple.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_mh_sim_table.txt"), sep = '\t', index = False)
+
     def print(self):
         for mar, mar_value in self.get_loc_ref_dict().items():
             print(f"Marker: {mar}")

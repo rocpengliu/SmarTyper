@@ -107,7 +107,8 @@ def update_combox_from_others(parent):
         if top_panel is None:
             print("Error: 'top_panel' is not initialized.")
             return
-        sorted_markers = sorted(genoclass.get_post_microhap().get_loc_ref_dict().keys())
+        #sorted_markers = sorted(genoclass.get_post_microhap().get_loc_ref_dict().keys())
+        sorted_markers = sorted(genoclass.get_metadata().get_cur_mh_markers_list())
         genoclass.get_post_microhap().set_working_markers_list(sorted_markers)
         top_panel.options = sorted_markers if len(sorted_markers) != 0 else []
         top_panel.combobox.configure(values=top_panel.options)

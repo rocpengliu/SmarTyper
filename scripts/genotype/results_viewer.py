@@ -150,7 +150,7 @@ def create_footer(parent, frame):
 
 def on_previous_button_click(parent):
     if parent.master.genotype_class.get_parameter().is_project_genotype_model():
-        parent.master.show_page("openner")
+        parent.master.show_page("opener")
     else:
         parent.master.show_page("run")
 

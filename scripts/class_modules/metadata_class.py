@@ -154,43 +154,42 @@ class MetaDataClass:
             self.set_ref_markers_list(sorted(locitable['locus'].unique()))
             if len(self.get_ref_markers_list()) == 0:
                 raise ValueError(f"please upload loci file first")
-    def read_microhap_file(self, parameter_class, cur = True):
+    def read_cur_microhap_file(self, parameter_class):
         #pdb.set_trace()
-        fpath = parameter_class.get_cur_microhap_input_file() if cur else parameter_class.get_pre_microhap_input_file()
+        fpath = parameter_class.get_cur_microhap_input_file()
         if not os.path.isfile(fpath):
             raise ValueError(f"{fpath} is not a file")
-        if not cur:
-            if len(self.get_cur_microhap_df())==0:
-                raise ValueError(f"please read microhap file first before reading pre microhap file")
         tmp_df = pd.read_csv(fpath, delimiter = '\t')
         print_time(f'microhap file size is {tmp_df.shape}')
         if tmp_df.shape[0] == 0:
-            if not cur:
-                parameter_class.set_has_pre_mh(False)
-            raise ValueError(f"microhap table is empty")
+            raise ValueError(f"microhap table is empty!")
         else:
-            if cur:
-                self.set_cur_microhap_df(tmp_df)
-            else:
-                self.set_pre_microhap_df(tmp_df)
+            self.set_cur_microhap_df(tmp_df)
             samples_list = sorted(tmp_df['Sample'].unique())
             mar_list = sorted(tmp_df['Locus'].unique())
-
-            if cur:
-                self.set_cur_mh_samples_list(sorted(set((self.get_cur_mh_samples_list() or []) + samples_list)))
-                self.set_cur_mh_markers_list(sorted(set((self.get_cur_mh_markers_list() or []) + mar_list)))
-            else:
-                self.set_pre_mh_samples_list(sorted(set((self.get_pre_mh_samples_list() or []) + samples_list)))
-                self.set_pre_mh_markers_list(sorted(set((self.get_pre_mh_markers_list() or []) + mar_list)))
-            
-            # if not cur:
-            #     print(f'microhap file has {samples_list} samples and mar_list is {mar_list}')
-            #     print(self.get_pre_microhap_df())
+            self.set_cur_mh_samples_list(sorted(set((self.get_cur_mh_samples_list() or []) + samples_list)))
+            self.set_cur_mh_markers_list(sorted(set((self.get_cur_mh_markers_list() or []) + mar_list)))
 
             if len(self.get_cur_mh_markers_list()) == 0:
                 raise ValueError(f"micorhpa file: {fpath} is not valid")
             if self.get_cur_mh_markers_list() > self.get_ref_markers_list():
                     raise ValueError(f"microhap file: {fpath} contains new markers which are not in the ref loci table")
-            if not cur:
-                if self.get_pre_mh_markers_list() < self.get_ref_markers_list():
-                    raise ValueError(f"pre microhap file: {fpath} contains new markers which are not in the ref loci table")
+    
+    def read_pre_microhap_file(self, parameter_class):
+        #pdb.set_trace()
+        fpath = parameter_class.get_pre_microhap_input_file()
+        if not os.path.isfile(fpath):
+            raise ValueError(f"{fpath} is not a file")
+        if len(self.get_cur_microhap_df())==0:
+            raise ValueError(f"please read microhap file first before reading pre microhap file")
+        tmp_df = pd.read_csv(fpath, delimiter = '\t', dtype={'id':'Int64'})
+        print_time(f'microhap file size is {tmp_df.shape}')
+        if tmp_df.shape[0] == 0:
+            parameter_class.set_has_pre_mh(False)
+            raise ValueError(f"pre-microhap table is empty")
+        else:
+            self.set_pre_microhap_df(tmp_df)
+            mar_list = sorted(tmp_df['Locus'].unique())
+            self.set_pre_mh_markers_list(mar_list)
+            if self.get_pre_mh_markers_list() < self.get_ref_markers_list():
+                raise ValueError(f"pre microhap file: {fpath} contains new markers which are not in the ref loci table")
