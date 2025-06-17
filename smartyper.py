@@ -1,8 +1,11 @@
-import ctypes
-try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(-4)
-except Exception:
-    pass
+import platform
+
+if platform.system() == "Windows":
+    import ctypes
+    try:
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)  # or -4
+    except Exception:
+        pass
 
 import customtkinter as ctk
 from customtkinter import CTkImage
