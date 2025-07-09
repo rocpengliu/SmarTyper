@@ -9,6 +9,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 from Bio.Seq import Seq
 from .utils_common import matplotlib_lock, print_time
+import traceback
+import numpy as np
 
 def load_pdf(file_path, canvas):
     try:
@@ -44,7 +46,7 @@ def output_geno_table(genoclass,selected_sample,anal_type)->bool:
     return True
 
 def output_all_geno_table(genoclass):
-    tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"all_sample_final_genotype.txt")
+    tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"All_sample_final_genotype.txt")
     for idx, (sam, sam_dict) in enumerate(genoclass.get_microhap().get_sam_microhaps_dir().items()):
         geno_df = pd.concat(sam_dict.values(), ignore_index=True)
         if idx == 0:
@@ -57,109 +59,209 @@ def produce_fig_sam_mar_pdf(genoclass,selected_sample,anal_type)->bool:
     markers = genoclass.get_metadata().get_ref_markers_list()
     pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_sample}_sample_genotype.pdf")
     with matplotlib_lock:
-        with PdfPages(pdf_file_path) as pdf:
-            nrows, ncols = 8, 5
-            fig, axes = None, None
-            tot_pages = 0
-            for i, loc in enumerate(markers):
-                #print(f"Thread {threading.current_thread().name}: start to process sample: {selected_sample} in index: {i} for marker: {loc}")
-                if i % (nrows * ncols) == 0:
-                    if fig is not None:
-                        fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                        pdf.savefig(fig)
-                        plt.close(fig)
-                        tot_pages += 1
-                    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
-                ax = axes[i // ncols % nrows, i % ncols]
-                colors = ['lightgray', 'lightgray']
-                subset = genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample).get(loc)
-                if len(subset) == 0:
-                    subset = pd.DataFrame({
-                        'id': [f'{loc}_0', f'{loc}_1'],
-                        'NumReads': [0, 0],
-                        'Allele': [1, 2],
-                        'Zygosity': ['nan', 'nan']
-                    })
-                zygo = subset['Zygosity'].iloc[0]
-                if zygo == "heter":
-                    colors[0:2] = ('darkgreen', 'orange')
-                elif zygo == "homo":
-                    colors[0] = 'darkgreen'
-                ax.bar(x=subset['id'],
-                    height=subset['NumReads'],
-                    color=colors)
-                ax.set_xticks(range(len(subset)))
-                ax.set_xticklabels(subset['Allele'].astype(str))
-                ax.set_title(f'{loc} ({zygo})', fontsize=8)
-                ax.tick_params(axis='x', labelsize=6)
-                ax.tick_params(axis='y', labelsize=6)
-                fig.subplots_adjust(hspace=0.8)
-                fig.suptitle(f"Genotypes of sample {selected_sample}")
-                fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
+        try:
+            with PdfPages(pdf_file_path) as pdf:
+                nrows, ncols = 8, 5
+                fig, axes = None, None
+                tot_pages = 0
+                for i, loc in enumerate(markers):
+                    #print(f"Thread {threading.current_thread().name}: start to process sample: {selected_sample} in index: {i} for marker: {loc}")
+                    if i % (nrows * ncols) == 0:
+                        if fig is not None:
+                            fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
+                            pdf.savefig(fig)
+                            plt.close(fig)
+                            tot_pages += 1
+                        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
+                        axes = np.atleast_2d(axes)
+                    if (i // ncols % nrows) >= nrows or (i % ncols) >= ncols:
+                        continue
+                    ax = axes[i // ncols % nrows, i % ncols]
+                    colors = ['lightgray', 'lightgray']
+                    subset = genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample).get(loc)
+                    if len(subset) == 0:
+                        subset = pd.DataFrame({
+                            'id': [f'{loc}_0', f'{loc}_1'],
+                            'NumReads': [0, 0],
+                            'Allele': [1, 2],
+                            'Zygosity': ['nan', 'nan']
+                        })
+                    zygo = subset['Zygosity'].iloc[0]
+                    if zygo == "heter":
+                        colors[0:2] = ('darkgreen', 'orange')
+                    elif zygo == "homo":
+                        colors[0] = 'darkgreen'
+                    ax.bar(x=subset['id'],
+                        height=subset['NumReads'],
+                        color=colors)
+                    ax.set_xticks(range(len(subset)))
+                    ax.set_xticklabels(subset['Allele'].astype(str))
+                    ax.set_title(f'{loc} ({zygo})', fontsize=8)
+                    ax.tick_params(axis='x', labelsize=6)
+                    ax.tick_params(axis='y', labelsize=6)
+                    fig.subplots_adjust(hspace=0.8)
+                    fig.suptitle(f"Genotypes of sample {selected_sample}")
+                    fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
+                    print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
 
-            if fig is not None:
-                fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                pdf.savefig(fig)
-                plt.close(fig)
-            print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample}")
-            return True
+                if fig is not None:
+                    fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
+                    fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
+                    pdf.savefig(fig)
+                    plt.close(fig)
+                print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample}")
+                return True
+        except Exception as e:
+            print(f"Thread {threading.current_thread().name}: Error for sample {selected_sample}: {e}")
+            traceback.print_exc()
+            return False
     return True
 
-def produce_fig_mar_sam_pdf(genoclass,selected_marker, anal_type)->bool:
+def produce_fig_mar_sam_pdf(genoclass, selected_marker, anal_type) -> bool:
     print(f"Thread {threading.current_thread().name}: Starting to process marker: {selected_marker}")
     samples = genoclass.get_metadata().get_samples_list()
     pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_marker_genotype.pdf")
+    nrows, ncols = 8, 5
+    max_plots_per_page = nrows * ncols
+    print_time(f"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
     with matplotlib_lock:
-        with PdfPages(pdf_file_path) as pdf:
-            nrows, ncols = 8, 5
-            fig, axes = None, None
-            tot_pages = 0
-            for i, sam in enumerate(samples):
-                #print(f"Thread {threading.current_thread().name}: start to process marker: {selected_marker} in index: {i} for sample: {sam}")
-                if i % (nrows * ncols) == 0:
-                    if fig is not None:
-                        fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                        pdf.savefig(fig)
-                        plt.close(fig)
-                        tot_pages += 1
+        try:
+            print_time(f"bbbbbbbbbbbbbbbbbbbbbbbbbb")
+            with PdfPages(pdf_file_path) as pdf:
+                print_time(f"cccccccccccccccccccccccccc")
+                tot_pages = 0
+                num_samples = len(samples)
+                print_time(f"dddddddddddddddddddddddddddddd")
+                for page_start in range(0, num_samples, max_plots_per_page):
+                    print_time(f"eeeeeeeeeeeeeeeeeeee")
                     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
-                ax = axes[i // ncols % nrows, i % ncols]
-                colors = ['lightgray', 'lightgray']
-                subset = genoclass.get_microhap().get_sam_microhaps_dir().get(sam).get(selected_marker)
-                if len(subset) == 0:
-                    subset = pd.DataFrame({
-                        'id': [f'{selected_marker}_0', f'{selected_marker}_1'],
-                        'NumReads': [0, 0],
-                        'Allele': [1, 2],
-                        'Zygosity': ['nan', 'nan']
-                    })
-                zygo = subset['Zygosity'].iloc[0]
-                if zygo == "heter":
-                    colors[0:2] = ('darkgreen', 'orange')
-                elif zygo == "homo":
-                    colors[0] = 'darkgreen'
-                ax.bar(x=subset['id'],
-                    height=subset['NumReads'],
-                    color=colors)
-                ax.set_xticks(range(len(subset)))
-                ax.set_xticklabels(subset['Allele'].astype(str))
-                ax.set_title(f'{sam} ({zygo})', fontsize=8)
-                ax.tick_params(axis='x', labelsize=6)
-                ax.tick_params(axis='y', labelsize=6)
-                fig.subplots_adjust(hspace=0.8)
-                fig.suptitle(f"Genotypes of marker {selected_marker}")
-                fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                #print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker} in index: {i} for sample: {sam}")
+                    # Normalize axes to always be 2D
+                    axes = np.atleast_2d(axes)
+                    # For a single subplot, axes is a scalar
+                    if axes.shape == ():
+                        axes = np.array([[axes]])
+                    print_time(f"fffffffffffffffffffffffffffffff")
+                    page_samples = samples[page_start:page_start + max_plots_per_page]
+                    for j, sam in enumerate(page_samples):
+                        # Compute grid position
+                        row = j // ncols
+                        col = j % ncols
+                        ax = axes[row, col]
+                        print_time(f"gggggggggggggggggggggggggggggggggg")
+                        colors = ['lightgray', 'lightgray']
+                        subset = genoclass.get_microhap().get_sam_microhaps_dir().get(sam, {}).get(selected_marker)
+                        if subset is None or len(subset) == 0:
+                            subset = pd.DataFrame({
+                                'id': [f'{selected_marker}_0', f'{selected_marker}_1'],
+                                'NumReads': [0, 0],
+                                'Allele': [1, 2],
+                                'Zygosity': ['nan', 'nan']
+                            })
+                        print_time(f"hhhhhhhhhhhhhhhhhhhhhh")
+                        zygo = subset['Zygosity'].iloc[0]
+                        if zygo == "heter":
+                            colors[0:2] = ('darkgreen', 'orange')
+                        elif zygo == "homo":
+                            colors[0] = 'darkgreen'
+                        print_time(f"iiiiiiiiiiiiiiiiiiiiiiiiiiiii")
+                        try:
+                            ax.bar(x=subset['id'], height=subset['NumReads'], color=colors)
+                            ax.set_xticks(range(len(subset)))
+                            ax.set_xticklabels(subset['Allele'].astype(str))
+                            ax.set_title(f'{sam} ({zygo})', fontsize=8)
+                            ax.tick_params(axis='x', labelsize=6)
+                            ax.tick_params(axis='y', labelsize=6)
+                            print_time(f"jjjjjjjjjjjjjjjjjjjjjjjjjj")
+                        except Exception as plot_err:
+                            print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
+                            traceback.print_exc()
+                        print_time(f"kkkkkkkkkkkkkkkkkkkkkkkk")
+                        fig.subplots_adjust(hspace=0.8)
+                        fig.suptitle(f"Genotypes of marker {selected_marker}")
+                        fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
+                        print_time(f"llllllllllllllllllllllllll")
+                    # Blank remaining axes (if any)
+                    print_time(f"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm")
+                    total_plots = len(page_samples)
+                    for blank_j in range(total_plots, max_plots_per_page):
+                        row = blank_j // ncols
+                        col = blank_j % ncols
+                        axes[row, col].axis('off')
+                    print_time(f"nnnnnnnnnnnnnnnnnnnnnnnnnn")
+                    fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
+                    pdf.savefig(fig)
+                    plt.close(fig)
+                    tot_pages += 1
+                    print_time(f"oooooooooooooooooooooooooooooooo")
+                print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
+                return True
+        except Exception as e:
+            print(f"Thread {threading.current_thread().name}: Error for marker {selected_marker}: {e}")
+            traceback.print_exc()
+            return False
+    return True
 
-            if fig is not None:
-                fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                pdf.savefig(fig)
-                plt.close(fig)
-            print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
-            return True
+def produce_fig_mar_sam_pdf1(genoclass,selected_marker, anal_type)->bool:
+    print(f"Thread {threading.current_thread().name}: Starting to process marker: {selected_marker}")
+    samples = genoclass.get_metadata().get_samples_list()
+    pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_marker_genotype.pdf")
+    nrows, ncols = 8, 5
+    max_plots_per_page = nrows * ncols
+    with matplotlib_lock:
+        try:
+            with PdfPages(pdf_file_path) as pdf:
+                fig, axes = None, None
+                tot_pages = 0
+                for i, sam in enumerate(samples):
+                    #print(f"Thread {threading.current_thread().name}: start to process marker: {selected_marker} in index: {i} for sample: {sam}")
+                    if i % (nrows * ncols) == 0:
+                        if fig is not None:
+                            fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
+                            pdf.savefig(fig)
+                            plt.close(fig)
+                            tot_pages += 1
+                        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
+                        axes = np.atleast_2d(axes)
+                    if (i // ncols % nrows) >= nrows or (i % ncols) >= ncols:
+                        continue
+                    ax = axes[i // ncols % nrows, i % ncols]
+                    colors = ['lightgray', 'lightgray']
+                    subset = genoclass.get_microhap().get_sam_microhaps_dir().get(sam).get(selected_marker)
+                    if len(subset) == 0:
+                        subset = pd.DataFrame({
+                            'id': [f'{selected_marker}_0', f'{selected_marker}_1'],
+                            'NumReads': [0, 0],
+                            'Allele': [1, 2],
+                            'Zygosity': ['nan', 'nan']
+                        })
+                    zygo = subset['Zygosity'].iloc[0]
+                    if zygo == "heter":
+                        colors[0:2] = ('darkgreen', 'orange')
+                    elif zygo == "homo":
+                        colors[0] = 'darkgreen'
+                    ax.bar(x=subset['id'],
+                        height=subset['NumReads'],
+                        color=colors)
+                    ax.set_xticks(range(len(subset)))
+                    ax.set_xticklabels(subset['Allele'].astype(str))
+                    ax.set_title(f'{sam} ({zygo})', fontsize=8)
+                    ax.tick_params(axis='x', labelsize=6)
+                    ax.tick_params(axis='y', labelsize=6)
+                    fig.subplots_adjust(hspace=0.8)
+                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
+                    #print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker} in index: {i} for sample: {sam}")
+                if fig is not None:
+                    fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
+                    fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
+                    pdf.savefig(fig)
+                    plt.close(fig)
+                print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
+                return True
+        except Exception as e:
+            print(f"Thread {threading.current_thread().name}: Error for sample {selected_marker}: {e}")
+            traceback.print_exc()
+            return False
     return True
 
 def trans_dna(dna:str, exon_pos_list:list)->list:
@@ -198,6 +300,106 @@ def split_codingpos(pos_str:str)->list:
         messagebox.showerror("Invalid Input", str(e))
         return None
 
+def get_triml_pos(out_lst, trimlpos):
+    new_pos = []
+    new_start = None
+    if trimlpos < out_lst[0][0]:
+        new_pos = [(posl - trimlpos -1 , posr - trimlpos - 1) for (posl, posr) in out_lst]
+        return new_pos
+    else:
+        for in_lst in out_lst:
+            pos_lst = []
+            for pos in list(range(in_lst[0], in_lst[1])):
+                pos_lst.append(pos)
+                if pos == trimlpos:
+                    if len(pos_lst) == 1:
+                        new_start = 2
+                    elif len(pos_lst) == 2:
+                        new_start = 1
+                    else:
+                        new_start = 0
+                    break
+                if len(pos_lst) == 3:
+                    pos_lst = []
+    if new_start is None:
+        return new_pos
+    else:
+        tmp_pos = [(posl - trimlpos -1, posr - trimlpos -1) for (posl, posr) in out_lst]
+        for in_lst in tmp_pos:
+            if in_lst[1] <= 0:
+                pass
+            elif in_lst[0] < 0 and in_lst[1] > 0:
+                new_pos.append((new_start, in_lst[1]))
+            else:
+                new_pos.append(in_lst)
+    return new_pos
+def get_trimr_pos(out_lst, trimrpos):
+    new_pos = []
+    new_end = None
+    for in_lst in out_lst[::-1]:
+        pos_lst = []
+        for pos in list(range(in_lst[0], in_lst[1])):
+            pos_lst.append(pos)
+            if pos == trimrpos:
+                if len(pos_lst) == 1:
+                    new_end = pos
+                elif len(pos_lst) == 2:
+                    new_end = pos -1
+                else:
+                    new_end = pos - 2
+                break
+            if len(pos_lst) == 3:
+                pos_lst = []
+    if new_end is None:
+        return new_pos
+    for in_lst in out_lst:
+        if trimrpos >= in_lst[1]:
+            new_pos.append(in_lst)
+        elif trimrpos <= in_lst[0]:
+            pass
+        else:
+            new_pos.append((in_lst[0], new_end))
+    return new_pos
+def get_new_codingpos(codingpos, triml, trimr, dnalen):
+    new_codingpos = []
+    if triml == 0 and trimr == 0:
+        return new_codingpos
+    elif triml != 0 and trimr == 0:
+        trimlpos = triml - 1
+        for out_lst in codingpos:
+            if trimlpos < out_lst[-1][-1] - 3:
+                tmps = get_triml_pos(out_lst, trimlpos)
+                if len(tmps) != 0:
+                    new_codingpos.append(tmps)
+    elif triml == 0 and trimr != 0:
+        trimrpos = dnalen - trimr -1
+        for out_lst in codingpos:
+            if (trimrpos + 1) >= out_lst[-1][1]:
+                new_codingpos.append(out_lst)
+            else:
+                tmps = get_trimr_pos(out_lst, trimrpos)
+                if len(tmps) != 0:
+                    new_codingpos.append(tmps)
+    else:
+        trimrpos = dnalen - trimr -1
+        for out_lst in codingpos:
+            if (trimrpos + 1) >= out_lst[-1][1]:
+                new_codingpos.append(out_lst)
+            else:
+                tmps = get_trimr_pos(out_lst, trimrpos)
+                if len(tmps) != 0:
+                    new_codingpos.append(tmps)
+        if len(new_codingpos) != 0:
+            trimlpos = triml - 1
+            new_new_codingpos = []
+            for out_lst in new_codingpos:
+                if trimlpos < out_lst[-1][-1] - 3:
+                    tmps = get_triml_pos(out_lst, trimlpos)
+                    if len(tmps) != 0:
+                        new_new_codingpos.append(tmps)
+            new_codingpos = new_new_codingpos
+    return new_codingpos
+
 def check_overlapping_gene(nested_list):
     len_list = [len(pos_list) for pos_list in nested_list]
     max_idx = len_list.index(max(len_list))
@@ -220,7 +422,6 @@ def get_splicer_exon_list_map(nested_list):
     splicer_exon_list_dic = {}
     for idx, tup in enumerate(super_ref_list):
         splicer_exon_list_dic[tup] = idx
-    
     splicer_exon_map = {'splicer_0' : list(range(len(super_ref_list)))}
     for idx, tuple_list in enumerate(nested_list):
         if idx != 0:
@@ -228,5 +429,4 @@ def get_splicer_exon_list_map(nested_list):
             for tup in tuple_list:
                 exon_list.append(splicer_exon_list_dic[tup])
             splicer_exon_map[f'splicer_{idx}'] = exon_list
-    
     return splicer_exon_map

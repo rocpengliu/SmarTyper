@@ -138,24 +138,24 @@ def on_previous_button_click(parent):
     parent.master.show_page("micro_data")
 
 def on_next_button_click(parent):
+    pass
     # Placeholder for the next button action
-    genoclass = parent.master.genotype_class
-    genoclass.generate_all()
-    panel = parent.master.pages.get('micro_data', None)
-    if panel is not None:
-        if genoclass.get_parameter().get_outputdir() and os.path.isdir(genoclass.get_parameter().get_outputdir()):
-            genoclass.get_parameter().set_analtype('snp')
-            genoclass.get_metadata().read_locifile(genoclass.get_parameter(), genoclass.get_post_microhap(), True)
-            panel.body_frame.top_panel.loci_entry.delete(0, 'end')
-            panel.body_frame.top_panel.loci_entry.insert(0, genoclass.get_parameter().get_locifile())
-            
-            outfile = os.path.join(genoclass.get_parameter().get_outputdir(), 'all_sample_final_genotype.txt')
-            if os.path.exists(outfile):
-                genoclass.get_parameter().set_cur_microhap_input_file(outfile)
-                genoclass.get_metadata().read_microhap_file(genoclass.get_parameter())
-                panel.body_frame.top_panel.inputdir_var.delete(0, 'end')
-                panel.body_frame.top_panel.inputdir_var.insert(0, outfile)
-    parent.master.show_page("micro_data")
+    # genoclass = parent.master.genotype_class
+    # genoclass.generate_all()
+    # panel = parent.master.pages.get('micro_data', None)
+    # if panel is not None:
+    #     if genoclass.get_parameter().get_outputdir() and os.path.isdir(genoclass.get_parameter().get_outputdir()):
+    #         genoclass.get_parameter().set_analtype('snp')
+    #         genoclass.get_metadata().read_locifile(genoclass.get_parameter(), genoclass.get_post_microhap(), True)
+    #         panel.body_frame.top_panel.loci_entry.delete(0, 'end')
+    #         panel.body_frame.top_panel.loci_entry.insert(0, genoclass.get_parameter().get_locifile())
+    #         outfile = os.path.join(genoclass.get_parameter().get_outputdir(), 'All_sample_final_genotype.txt')
+    #         if os.path.exists(outfile):
+    #             genoclass.get_parameter().set_cur_microhap_input_file(outfile)
+    #             genoclass.get_metadata().read_microhap_file(genoclass.get_parameter())
+    #             panel.body_frame.top_panel.inputdir_var.delete(0, 'end')
+    #             panel.body_frame.top_panel.inputdir_var.insert(0, outfile)
+    # parent.master.show_page("micro_data")
 
 def create_bottom_panel(parent, body_frame):
     bottom_panel = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")

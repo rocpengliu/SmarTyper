@@ -130,7 +130,7 @@ class ReadsClass:
         plt.suptitle("Quality score of all samples", fontsize=14)
         
         # Save the plot as a PDF
-        output_file = os.path.join(dir_path, "all_sample_read_quality.pdf")
+        output_file = os.path.join(dir_path, "All_sample_read_quality.pdf")
         plt.savefig(output_file)
         
         # Close the plot to release memory

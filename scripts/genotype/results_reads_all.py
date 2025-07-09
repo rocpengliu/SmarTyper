@@ -35,9 +35,9 @@ def update_all_reads_qual_distri(parent,show_panel,type):
 def load_pdf_from_here(genoclass,canvas,fig_type):
     suffix=""
     if fig_type =="qual":
-        suffix="all_sample_read_quality.pdf"
+        suffix="All_sample_read_quality.pdf"
     elif fig_type=="distri":
-        suffix="all_sample_read_distribution.pdf"
+        suffix="All_sample_read_distribution.pdf"
     else:
         return
     pdf_file_path=os.path.join(genoclass.get_parameter().get_outputdir(),suffix)

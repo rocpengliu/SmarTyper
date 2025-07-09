@@ -14,7 +14,7 @@ def update_geno_tab_all(parent, bottom_panel):
     for cid in range(bottom_panel.grid_size()[0]):
         bottom_panel.grid_columnconfigure(cid,weight=0)
     
-    bottom_panel.grid(row=1, column=0, sticky="nsew", padx=(0,0), pady=(0,0))   
+    bottom_panel.grid(row=1, column=0, sticky="nsew", padx=(0,0), pady=(0,0))
     bottom_panel.grid_rowconfigure(0, weight=1)
     bottom_panel.grid_columnconfigure(0, weight=1)
     

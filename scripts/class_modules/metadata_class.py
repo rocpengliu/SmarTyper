@@ -1,6 +1,7 @@
 import os
 import pandas as pd
-from ..utils.utils_func import split_codingpos, check_overlapping_gene, get_splicer_exon_list_map
+from tkinter import messagebox
+from ..utils.utils_func import split_codingpos, check_overlapping_gene, get_splicer_exon_list_map, get_new_codingpos
 from ..utils.utils_common import print_time
 from .ref_microhap_class import RefMicrotype
 import pdb
@@ -133,14 +134,43 @@ class MetaDataClass:
                     mar_ref.set_rprimer(row['rprimer'].strip())
                     mar_ref.set_triml(int(row['triml']))
                     mar_ref.set_trimr(int(row['trimr']))
+                    mar_ref.set_ori_dna_ref(row['ref'].strip())
                     mar_ref.set_dna_ref(row['ref'].strip())
+                    if mar_ref.get_trimr() >= len(mar_ref.get_dna_ref()):
+                        messagebox.showerror("Invalid Input", "tail trim length is too long")
+                    if mar_ref.get_trimr() != 0:
+                        mar_ref.set_dna_ref(mar_ref.get_dna_ref()[:-mar_ref.get_trimr()])
+                    if mar_ref.get_triml() >= len(mar_ref.get_dna_ref()):
+                        messagebox.showerror("Invalid Input", "head trim length is too long")
+                    if mar_ref.get_triml() != 0:
+                        mar_ref.set_dna_ref(mar_ref.get_dna_ref()[mar_ref.get_triml():])
+                    if len(mar_ref.get_dna_ref()) == 0:
+                        messagebox.showerror("Invalid Input", "trim length is too long")
                     if row['snppos'].replace(' ', '') != "0":
                         snpos = [int(pos.strip()) for pos in row['snppos'].replace(" ", "").split('|')]
+                        snpos = sorted(snpos)
                         if len(snpos) != 0:
-                            mar_ref.set_snppos(sorted(snpos))
+                            mar_ref.set_orisnppos(sorted(snpos))
+                            if mh:
+                                trimmedsnpos = []
+                                if mar_ref.get_trimr() != 0:
+                                    trimmedsnpos=[pos for pos in snpos if pos <= (len(mar_ref.get_ori_dna_ref()) - mar_ref.get_trimr())]
+                                if mar_ref.get_triml() != 0:
+                                    trimmedsnpos=[(pos - mar_ref.get_triml()) for pos in trimmedsnpos if (pos >= mar_ref.get_triml())]
+                                if len(trimmedsnpos) != 0:
+                                    mar_ref.set_snppos(trimmedsnpos)
+                            else:
+                                mar_ref.set_snppos(sorted(snpos))
+                    #pdb.set_trace()
                     if mh:
                         if row['codingpos'].replace(' ', '') != '0':
                             codingpos = split_codingpos(row['codingpos'])
+                            if mar_ref.get_triml() != 0 or mar_ref.get_trimr() != 0:
+                                newcodingpos = get_new_codingpos(codingpos, mar_ref.get_triml(), mar_ref.get_trimr(), len(mar_ref.get_ori_dna_ref()))
+                                if len(newcodingpos) == 0:
+                                    messagebox.showerror("Invalid Input", "trim lengths have sth wrong")
+                                    raise ValueError("triml or trimr has the problem with exon pos!")
+                                codingpos = newcodingpos
                             if codingpos is not None and len(codingpos) != 0:
                                 mar_ref.set_has_splicer(True)
                                 mar_ref.set_overlapped_gene(not check_overlapping_gene(codingpos))
@@ -154,6 +184,7 @@ class MetaDataClass:
             self.set_ref_markers_list(sorted(locitable['locus'].unique()))
             if len(self.get_ref_markers_list()) == 0:
                 raise ValueError(f"please upload loci file first")
+
     def read_cur_microhap_file(self, parameter_class):
         #pdb.set_trace()
         fpath = parameter_class.get_cur_microhap_input_file()

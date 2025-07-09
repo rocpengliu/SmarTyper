@@ -81,7 +81,7 @@ def display_dna_seq_align(genotab, genoclass):
     fig_frame.grid_rowconfigure(0,weight=1)
     fig_frame.grid_columnconfigure(0,weight=1)
     fig_frame.grid(row=0, column=0, sticky="nws", padx=5, pady=(2,2))
-    create_fig(working_splicer_ref_compre, cur_compre_mt, fig_frame, genoclass)
+    create_fig(ref_mar_refmt, working_splicer_ref_compre, cur_compre_mt, fig_frame, genoclass)
 
     # Frames for content
     tbl_frame = ctk.CTkFrame(scroll_frame, fg_color='white')
@@ -136,7 +136,7 @@ def on_canvas_configure(canvas, event):
     canvas.itemconfig('inner_frame', width=canvas_width, height=canvas_height)
     canvas.configure(scrollregion=canvas.bbox("all"))
     
-def create_fig(working_splicer_ref_compre, cur_compre_mt, fig_frame, genoclass):
+def create_fig(ref_mar_refmt, working_splicer_ref_compre, cur_compre_mt, fig_frame, genoclass):
     #pdb.set_trace()
     base_freq_df = working_splicer_ref_compre.get_dna_base_freq_df()
     if base_freq_df.shape[0] == 0:
@@ -152,7 +152,7 @@ def create_fig(working_splicer_ref_compre, cur_compre_mt, fig_frame, genoclass):
     # print_time(f'index_list is {index_list}')
     # ori_index_list = ref_compre_mt.convert_pos_cur_2_ori(index_list)
     # print_time(f'convert index list is {ori_index_list}')
-    tick_labels = list(map(str, index_list))
+    tick_labels = list(map(str, [(idx + ref_mar_refmt.get_triml()) for idx in index_list]))
     #tick_labels = list(map(str, ori_index_list))
     
     base_freq_df.reset_index(drop=True, inplace=True)
@@ -218,8 +218,11 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
         exon_list = ref_mar_refmt.get_splicer_exon_list_dict().get(ref_compre_mt.get_splicer())
         if (exon_list is None) or (not exon_list):
             raise ValueError(f'No exon list for splicer {ref_compre_mt.get_splicer()}')
-    refseq = ref_mar_refmt.get_dna_ref()
+    refseq = ref_mar_refmt.get_ori_dna_ref()
     target_snppos = working_splicer_ref_compre.get_target_dna_snp_pos_list()
+    #print(f"target_snppos1: {target_snppos}")
+    target_snppos = [pos + ref_mar_refmt.get_triml() for pos in target_snppos]
+    #print(f"target_snppos2: {target_snppos}")
     ref_label = working_splicer_ref_compre.get_label()
     max_label_len = max(len(ref_label), working_splicer_ref_compre.cal_longest_compre_var_label())
     seq_len = len(refseq)
@@ -233,10 +236,11 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
         cur_exon_start_end_pos_list = ref_compre_mt.extract_exon_cur_start_end_pos_list()
         for idx, pos_tuple in enumerate(cur_exon_start_end_pos_list):
             start, end = pos_tuple
+            start += ref_mar_refmt.get_triml()
+            end += ref_mar_refmt.get_triml()
             start += (max_label_len + 2)
             end += (max_label_len + 2)
             exon_len = end - start
-            
             exon = str(exon_list[idx]) if exon_list else str(idx)
             if exon_len < len(exon):
                 exon = 'E'
@@ -271,11 +275,12 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
             ii += 1
     seq_widget.insert(f'{line_num}.0', star_padding + '\n')
     line_num += 1
-    
+
     padding = '*' * (max_label_len - len(ref_label))
     seq_widget.insert(f'{line_num}.0', f'{padding}{ref_label}: ' + refseq + '\n')
 
     snp_pos = working_splicer_ref_compre.get_tot_dna_snp_pos_list()
+    snp_pos = [pos + ref_mar_refmt.get_triml() for pos in snp_pos]
     uniq_snp_pos = [elem for elem in target_snppos if elem not in snp_pos]#for green
     union_snp_pos = uniq_snp_pos + snp_pos
     union_snp_pos = sorted(union_snp_pos)
@@ -301,9 +306,13 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
         #pdb.set_trace()
         label_len = len(compre_var.get_id())
         padding = '*' * (max_label_len - label_len)
-        seq_widget.insert(f'{idx+line_num}.0', padding + f'{compre_var.get_id()}: ' + f'{compre_var.get_seq()}' + '\n')
+        seq_widget.insert(f'{idx+line_num}.0', padding + f'{compre_var.get_id()}: ' +
+                          f'{ref_mar_refmt.get_triml() * "*"}' +
+                          f'{compre_var.get_seq()}' +
+                          f'{ref_mar_refmt.get_trimr() * "*"}' + '\n')
         if len(compre_var.get_indel_pos_list()) == 0:
             pos_list = copy.copy(sorted(compre_var.get_snp_pos_list()))
+            pos_list = [pos + ref_mar_refmt.get_triml() for pos in pos_list ]
             if len(pos_list) != 0:
                 pos_list = [n + max_label_len + 2 for n in pos_list]
                 union2 = sorted(uniq_snp_pos + [n for n in pos_list if n not in uniq_snp_pos])

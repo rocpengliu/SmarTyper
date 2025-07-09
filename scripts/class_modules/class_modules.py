@@ -100,10 +100,10 @@ class GenotypeClass:
                 raise ValueError("sex must be an instance of SexClass")
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
-            
+
     def get_parameter(self):
         return self._parameter
-    
+
     def set_parameter(self, parameter):
         try:
             if isinstance(parameter, ParameterClass):
@@ -112,18 +112,18 @@ class GenotypeClass:
                 raise ValueError("parameter must be an instance of ParameterClass")
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
-            
+
     def read_sam_outputs(self,sample):
         anal_type = self.get_parameter().get_analtype()
         markers = self.get_metadata().get_ref_markers_list()
         fpath = self.get_parameter().get_outputdir()
         print(f"starting to read output of sample: {sample}")
-        self.get_microhap().read_sam_genotype(sample,markers,fpath,anal_type)
+        self.get_microhap().read_sam_genotype(sample,markers,fpath,anal_type, self.get_post_microhap())
         self.get_microhap().pro_sam_mar_reads_distri_fig(sample,fpath,anal_type)
         self.get_reads_res().process_json_file(sample,self.get_parameter().get_outputdir())
         self.get_reads_res().produce_reads_qual_pdf(sample,self.get_parameter().get_outputdir())
         print(f"finished to read output of sample: {sample}")
-    
+
     def pro_all_sample_figs(self, output_queue):
         output_queue.put(f'starting to generate quality fig for all samples\n')
         self.get_reads_res().pro_all_sample_qual_fig(self.get_parameter().get_outputdir(), output_queue)

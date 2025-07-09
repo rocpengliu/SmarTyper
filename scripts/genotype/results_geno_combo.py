@@ -329,9 +329,7 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         table_frame.grid(row=row_index + 1, column=0, sticky="new", padx=5, pady=5)  # Place table below the figure
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
-        
         s_table, marker_tmp = create_table(table_frame, hap, tbl)
-        
         if hap is not None:
             if hap['Zygosity'].iloc[0] == "heter":
                 toggle_row_background(s_table, 0, 'bg_red')
@@ -343,15 +341,12 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         h_table_scrollbar = ttk.Scrollbar(table_frame, orient="horizontal", command=s_table.xview)
 
         s_table.configure(yscrollcommand=v_table_scrollbar.set, xscrollcommand=h_table_scrollbar.set)
-        
         marker_tmp = marker_tmp[:(marker_tmp.rfind('_'))]
         genotab.s_table_list[marker_tmp]=s_table
-        
         # Place table and scrollbars
         #s_table.grid(row=0, column=0, sticky="nsew")
         v_table_scrollbar.grid(row=0, column=1, sticky="ns")
         h_table_scrollbar.grid(row=1, column=0, sticky="ew")
-        
         seq_widget = tk.Text(figures_frame, wrap="none", bg="white", fg="black", 
                              font=("Courier New", 11), height=10, width=200)
         seq_widget.grid(row=row_index + 2, column=0, sticky="news", padx=5, pady=5)

@@ -17,6 +17,7 @@ class RefMicrotype:
         self._triml=0
         self._trimr=0
         self._snppos=[]
+        self._orisnppos=[]
         self._sappos=[] # sap is single aa polymorphism, this is only valid for _aa_ref, see _aa_ref
         self._codingpos=[] # must start with 0, if the full length should be 0:(len-1); but after the spliting, it should become 0:len 
                             #"2:20, 30:50, 50:70, 80:90, 100:120|2:20, 80:90, 100:120|50:70, 80:90, 100:120" to [[(2, 20), (30, 50), (50,70), (80,90), (100,120)], [(2, 20), (70, 80)], [(3, 30), (90, 120)]]
@@ -27,6 +28,7 @@ class RefMicrotype:
                                         #{'splicer_0': [0, 1, 2, 3], 'splicer_1': [0, 1], 'splicer_2': [2, 3], 'splicer_3': [1, 2, 3]}
                                         #this is true if it is not overlapped gene, this is used to map the aaseq seq codingpos
         self._aa_codingpos=[] # for aaseqs
+        self._ori_dna_ref=""
         self._dna_ref=""
         self._aa_ref = "" # only for the non overlapped genes with splicers, and this is the longest possible exon list, the splicer_0, same as dna_ref.
         self._ref_microtype_dict:Dict[str, CompreMicrotypeClass] = {} #key is splicer_0 value is CompreMicrotypeClass
@@ -177,6 +179,14 @@ class RefMicrotype:
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
     
+    def get_orisnppos(self):
+        return self._orisnppos
+
+    def set_orisnppos(self, orisnppos):
+        try:
+            self._orisnppos = sorted(orisnppos)
+        except ValueError as e:
+            messagebox.showerror("Invalid Input", str(e))
     def get_dnaref(self):
         return self._dnaref
     
@@ -212,7 +222,16 @@ class RefMicrotype:
                 raise ValueError("dna_ref must be a string")
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
-    
+    def get_ori_dna_ref(self):
+        return self._ori_dna_ref
+    def set_ori_dna_ref(self, ori_dna_ref):
+        try:
+            if isinstance(ori_dna_ref, str):
+                self._ori_dna_ref = ori_dna_ref
+            else:
+                raise ValueError("dna_ref must be a string")
+        except ValueError as e:
+            messagebox.showerror("Invalid Input", str(e))
     def get_aa_ref(self):
         return self._aa_ref
     

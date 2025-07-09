@@ -5,8 +5,9 @@ from ..utils.common import micro_microhap_df_columns, micro_micohap_df_empty_row
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from ..utils.utils_common import print_time, thread_lock
+from ..utils.utils_alignment import do_pairwise_alignment
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+import pdb
 
 class MicroHapClass:
     def __init__(self):
@@ -115,7 +116,7 @@ class MicroHapClass:
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
     
-    def read_amplicon_file(self, file, mars, sample, type):
+    def read_amplicon_file(self, file, mars, sample, type, post_microhap_class):
         print_time(f"starting to read sample {sample} {type} file")
         tmp_df = pd.DataFrame()
         mars_amplicon = {}
@@ -128,6 +129,10 @@ class MicroHapClass:
             print_time(f"Warning: Sample {sample} {type} file not found")
         num_reads=0
         for mar in mars:
+            mar_ref = post_microhap_class.get_loc_ref_dict().get(mar, None)
+            ref_seq = ""
+            if mar_ref is not None:
+                ref_seq = mar_ref.get_dna_ref()
             if os.path.isfile(file):
                 tmp = tmp_df.query(f'Locus == "{mar}"')
                 if tmp is None or tmp.empty:
@@ -153,10 +158,26 @@ class MicroHapClass:
                         row1[-1]=f"{mar}_1"
                         mars_amplicon[mar].loc[1]=row1
                 else:
+                    #pdb.set_trace()
                     tmp = tmp.reset_index(drop=True)
                     tmp = tmp.pipe(lambda df : df.assign(id=df['Locus'] + '_' + df.index.astype(str)))
                     if 'NumReads' in tmp.columns:
                         tmp['NumReads'] = pd.to_numeric(tmp['NumReads'], errors='coerce')
+                    if type == "microhap":
+                        totsnpstr = ""
+                        snpstr_ref0 = ""
+                        snpstr_ref1 = ""
+                        snpstr_ref2=""
+                        ref1 = tmp.at[0, 'Sequence']
+                        ref2 = tmp.at[1, 'Sequence'] if tmp.shape[0] > 1 else ""
+                        _, _, snpstr_ref0 = do_pairwise_alignment(ref_seq, ref1, mar_ref.get_triml(), True)
+                        if ref2 != "":
+                            _, _, snpstr_ref1 = do_pairwise_alignment(ref_seq, ref2, mar_ref.get_triml(), True)
+                            _, _, snpstr_ref2 = do_pairwise_alignment(ref1, ref2, mar_ref.get_triml(), True)
+                            totsnpstr = snpstr_ref0 + ";" + snpstr_ref1 + ";" + snpstr_ref2
+                        tmp.at[0, 'BaseChange'] = snpstr_ref0
+                        if tmp.shape[0] > 1 and ref2 != "":
+                            tmp.at[1, 'BaseChange'] = snpstr_ref1
                     mars_amplicon[mar] = tmp
                     self._assigned_reads_dict[sample][mar]=mars_amplicon[mar]['TotalReads'][0]
                     num_reads+=tmp['TotalReads'].iloc[0]
@@ -186,17 +207,19 @@ class MicroHapClass:
             self._assigned_sam_reads_dict[sample]=num_reads
         print_time(f"finished to read sample {sample} {type} file")
         return mars_amplicon
-    def read_sam_genotype(self,sample,markers,fpath,anal_type):
+    def read_sam_genotype(self,sample,markers,fpath,anal_type, post_microhap_class):
         print_time(f"starting to read geno output file for sample: {sample}")
         if anal_type == "snp":
+            print_time(f"starting to read amplicon output file for sample: {sample}")
             amplicon_path = os.path.join(fpath, sample + "_all_amplicon.txt")
-            amplicon_dir = self.read_amplicon_file(amplicon_path, markers, sample, "amplicon")
+            amplicon_dir = self.read_amplicon_file(amplicon_path, markers, sample, "amplicon", post_microhap_class)
             self._sam_amplicons_dir[sample]=amplicon_dir
+            print_time(f"starting to read microhap output file for sample: {sample}")
             microhap_path = os.path.join(fpath, sample + "_snps_haplotype.txt")
-            microhap_dir = self.read_amplicon_file(microhap_path, markers, sample, "microhap")
+            microhap_dir = self.read_amplicon_file(microhap_path, markers, sample, "microhap", post_microhap_class)
             self._sam_microhaps_dir[sample]=microhap_dir
         print_time(f"finished to read geno output file for sample: {sample}")
-    
+
     def update_sam_mar_reads_dict(self, sam, markers, sam_mar_reads_dict):
         with thread_lock:
             sam_mar_reads_dict.update({sam: {mar : 0 for mar in markers}})
@@ -336,7 +359,7 @@ class MicroHapClass:
         sorted_data={k:v for k,v in sorted(data_dict.items(),
                                            key=lambda item:item[1],
                                            reverse=True)}
-        pdf_file=os.path.join(fpath,f"all_sample_read_distribution.pdf")
+        pdf_file=os.path.join(fpath,f"All_sample_read_distribution.pdf")
         with PdfPages(pdf_file) as pdf:
             bars_per_subplot=10
             num_subplots_per_page=4
