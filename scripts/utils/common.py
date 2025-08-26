@@ -9,6 +9,9 @@ micro_micohap_df_empty_row=['nan','nan',0,'nan',0,0,'nan',0,0,'N','inconclusive'
 
 micro_amplicon_df_columns=['Sample','Locus','NumReads','TotalReads','ReadRatio','BaseChange','Length','Sequence', 'id']
 micro_amplicon_df_empty_row=['nan','nan',0,0,0,'nan',0,'nan','nan']
+
+ml_mh_df_columns = ['Locus', 'TotRead', 'Read1', 'Read2', 'Read3', 'NumMut1', 'NumMut2', 'Prop1', 'Prop2', 'Prop3', 'MhProp1', 'MhProp2', 'Indel', 'Zygosity']
+
 color_bars={"dgreen":(0.0, 0.39, 0.0, 1.0),
             "orange":(1.0, 0.65, 0.0, 1.0),
             "lgray":(0.83, 0.83, 0.83, 1.0)}

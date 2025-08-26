@@ -35,6 +35,11 @@ pip3 install pillow
 pip3 install matplotlib
 pip3 install typing
 pip3 install dill
+pip3 install logomaker
+pip3 install seaborn
+pip3 install joblib
+pip3 install sklearn
+sudo apt-get install mafft
 ```
 
 ### Step 2. Install smartyper

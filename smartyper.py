@@ -12,7 +12,6 @@ from customtkinter import CTkImage
 import tkinter as tk
 
 from scripts.home_page import create_home
-from scripts.project.project_module import create_project_module
 from scripts.genotype.genotype_module import create_genotype_module
 from scripts.genotype.data_loader import data_loader
 from scripts.genotype.parameter_setter import parameter_setter
@@ -20,9 +19,12 @@ from scripts.genotype.job_runner import job_runner
 from scripts.genotype.results_viewer import results_viewer
 from scripts.genotype.results_summary import results_summary
 from scripts.project.project_loader import project_loader
+from scripts.project.project_module import create_project_module
 from scripts.microtype.micro_module import create_micro_module
 from scripts.microtype.micro_loader import micro_loader
 from scripts.microtype.micro_viewer import micro_viewer
+from scripts.machine_learning.modeling_loader import modeling_loader
+from scripts.machine_learning.machine_learning import create_ml_module
 from PIL import Image, ImageTk
 import os
 from scripts.class_modules.class_modules import GenotypeClass
@@ -30,9 +32,9 @@ from scripts.class_modules.class_modules import GenotypeClass
 ctk.set_appearance_mode("dark")
 class SmarTyperApp(ctk.CTk):
     def __init__(self):
-        print(ctk.__version__)
-        print(tk.TkVersion)  # Tk version (e.g., 8.6)
-        print(tk.TclVersion) # Tcl version (e.g., 8.6)
+        #print(ctk.__version__)
+        #print(tk.TkVersion)  # Tk version (e.g., 8.6)
+        #print(tk.TclVersion) # Tcl version (e.g., 8.6)
         super().__init__()
         self.title("SmarTyper")
         #self.geometry("900x600")
@@ -68,19 +70,22 @@ class SmarTyperApp(ctk.CTk):
             "run": "genotype",
             "results": "genotype",
             "summary": "genotype",
+            "modeling": "machine learning",
             "micro_data": "microtype",
             "micro_res": "microtype",
             "opener": "project"
         }
-        self.tab_names = ["home", "genotype", "microtype", "project"]
+        self.tab_names = ["home", "genotype", "machine learning", "microtype", "project"]
         self.children_buttons = {
             "genotype": ["data", "parameters", "run", "results", "summary"],
+            "machine learning": ["modeling"],
             "microtype": ["micro_data", "micro_res"],
             "project": ["opener"]
         }
         self.menu_expanded = {
             "genotype": False,
             "microtype": False,
+            "machine learning": False,
             "project": False
         }
         self.home_path = os.path.dirname(os.path.realpath(__file__))
@@ -93,6 +98,8 @@ class SmarTyperApp(ctk.CTk):
             "run": os.path.join(self.home_path, "images", "run.png"),
             "parameters": os.path.join(self.home_path, "images", "parameters.png"),
             "data": os.path.join(self.home_path, "images", "data.png"),
+            "machine learning": os.path.join(self.home_path, "images", "machine_learning.png"),
+            "modeling": os.path.join(self.home_path, "images", "modeling.png"),
             "micro_data": os.path.join(self.home_path, "images", "data.png"),
             "micro_res": os.path.join(self.home_path, "images", "results.png"),
             "results": os.path.join(self.home_path, "images", "results.png"),
@@ -109,6 +116,8 @@ class SmarTyperApp(ctk.CTk):
             "run": job_runner(self.right_panel),
             "results": results_viewer(self.right_panel),
             "summary": results_summary(self.right_panel),
+            "machine learning": create_ml_module(self.right_panel),
+            "modeling": modeling_loader(self.right_panel),
             "microtype": create_micro_module(self.right_panel),
             "micro_data": micro_loader(self.right_panel),
             "micro_res": micro_viewer(self.right_panel),
@@ -258,7 +267,7 @@ class SmarTyperApp(ctk.CTk):
         # Toggle menus
         if page_name == "home":
             self.toggle_menu(page_name, True)
-        elif page_name in ["genotype", "microtype", "project"]:
+        elif page_name in ["genotype", "microtype", "machine learning", "project"]:
             self.toggle_menu(page_name)
             
     def switch_theme(self, theme_mode):

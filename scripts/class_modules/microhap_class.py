@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from tkinter import messagebox  # Importing messagebox for error handling
-from ..utils.common import micro_microhap_df_columns, micro_micohap_df_empty_row, micro_amplicon_df_columns, micro_amplicon_df_empty_row
+from ..utils.common import micro_microhap_df_columns, micro_micohap_df_empty_row, micro_amplicon_df_columns, micro_amplicon_df_empty_row, ml_mh_df_columns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from ..utils.utils_common import print_time, thread_lock
@@ -17,10 +17,15 @@ class MicroHapClass:
         self._loci = pd.DataFrame()
         self._sam_amplicons_dir = {}# is {mar = {}}, nested dic
         self._sam_microhaps_dir = {}
+        self._sam_mar_ml_dir = {} # this is a nested dic {sam: {mar:}}
         #self._microhap_dict = {}#nested {marker:{seq:nm}}
         self._assigned_reads_dict={}#nested dictionary {sam, and each markers are the keys,}
         self._assigned_sam_reads_dict={}# sam is the key and total assigned reads for each marker is the value
     
+    def get_sam_mar_ml_dir(self):
+        return self._sam_mar_ml_dir
+    def set_sam_mar_ml_dir(self, sam_mar_ml_dir):
+        self._sam_mar_ml_dir = sam_mar_ml_dir
     def get_assigned_sam_reads_dict(self):
         return self._assigned_sam_reads_dict
     def set_assigned_sam_reads_dict(self, assigned_sam_reads_dict):
@@ -103,10 +108,10 @@ class MicroHapClass:
                 raise ValueError("amplicons must be a dictionary")
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
-            
+
     def get_sam_microhaps_dir(self):
         return self._sam_microhaps_dir
-    
+
     def set_sam_microhaps_dir(self, sam_microhaps_dir):
         try:
             if isinstance(sam_microhaps_dir, dict):
@@ -115,9 +120,9 @@ class MicroHapClass:
                 raise ValueError("microhap must be a dictionary")
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
-    
-    def read_amplicon_file(self, file, mars, sample, type, post_microhap_class):
-        print_time(f"starting to read sample {sample} {type} file")
+
+    def read_amplicon_file(self, file, mars, sample, post_microhap_class, machine_learning_class, parameter_class):
+        print_time(f"starting to read sample {sample} amplicon file")
         tmp_df = pd.DataFrame()
         mars_amplicon = {}
         if os.path.isfile(file):
@@ -130,59 +135,9 @@ class MicroHapClass:
         num_reads=0
         for mar in mars:
             mar_ref = post_microhap_class.get_loc_ref_dict().get(mar, None)
-            ref_seq = ""
-            if mar_ref is not None:
-                ref_seq = mar_ref.get_dna_ref()
             if os.path.isfile(file):
                 tmp = tmp_df.query(f'Locus == "{mar}"')
                 if tmp is None or tmp.empty:
-                    if type == "amplicon":
-                        mars_amplicon[mar] = pd.DataFrame(columns=micro_amplicon_df_columns)
-                        row0=micro_amplicon_df_empty_row[:]
-                        row0[:2]=(sample,mar)
-                        row0[-1]=f"{mar}_0"
-                        mars_amplicon[mar].loc[0]=row0
-                        row1=micro_amplicon_df_empty_row[:]
-                        row1[:2]=(sample,mar)
-                        row1[-1]=f"{mar}_1"
-                        mars_amplicon[mar].loc[1]=row1
-                    elif type == "microhap":
-                        mars_amplicon[mar] = pd.DataFrame(columns=micro_microhap_df_columns)
-                        row0=micro_micohap_df_empty_row[:]
-                        row0[:2]=(sample,mar)
-                        row0[-1]=f"{mar}_0"
-                        mars_amplicon[mar].loc[0]=row0
-                        row1=micro_micohap_df_empty_row[:]
-                        row1[:2]=(sample,mar)
-                        row1[2]=1
-                        row1[-1]=f"{mar}_1"
-                        mars_amplicon[mar].loc[1]=row1
-                else:
-                    #pdb.set_trace()
-                    tmp = tmp.reset_index(drop=True)
-                    tmp = tmp.pipe(lambda df : df.assign(id=df['Locus'] + '_' + df.index.astype(str)))
-                    if 'NumReads' in tmp.columns:
-                        tmp['NumReads'] = pd.to_numeric(tmp['NumReads'], errors='coerce')
-                    if type == "microhap":
-                        totsnpstr = ""
-                        snpstr_ref0 = ""
-                        snpstr_ref1 = ""
-                        snpstr_ref2=""
-                        ref1 = tmp.at[0, 'Sequence']
-                        ref2 = tmp.at[1, 'Sequence'] if tmp.shape[0] > 1 else ""
-                        _, _, snpstr_ref0 = do_pairwise_alignment(ref_seq, ref1, mar_ref.get_triml(), True)
-                        if ref2 != "":
-                            _, _, snpstr_ref1 = do_pairwise_alignment(ref_seq, ref2, mar_ref.get_triml(), True)
-                            _, _, snpstr_ref2 = do_pairwise_alignment(ref1, ref2, mar_ref.get_triml(), True)
-                            totsnpstr = snpstr_ref0 + ";" + snpstr_ref1 + ";" + snpstr_ref2
-                        tmp.at[0, 'BaseChange'] = snpstr_ref0
-                        if tmp.shape[0] > 1 and ref2 != "":
-                            tmp.at[1, 'BaseChange'] = snpstr_ref1
-                    mars_amplicon[mar] = tmp
-                    self._assigned_reads_dict[sample][mar]=mars_amplicon[mar]['TotalReads'][0]
-                    num_reads+=tmp['TotalReads'].iloc[0]
-            else:
-                if type == "amplicon":
                     mars_amplicon[mar] = pd.DataFrame(columns=micro_amplicon_df_columns)
                     row0=micro_amplicon_df_empty_row[:]
                     row0[:2]=(sample,mar)
@@ -192,32 +147,165 @@ class MicroHapClass:
                     row1[:2]=(sample,mar)
                     row1[-1]=f"{mar}_1"
                     mars_amplicon[mar].loc[1]=row1
-                elif type == "microhap":
-                    mars_amplicon[mar] = pd.DataFrame(columns=micro_microhap_df_columns)
+                else:
+                    #pdb.set_trace()
+                    tmp = tmp.reset_index(drop=True)
+                    tmp = tmp.pipe(lambda df : df.assign(id=df['Locus'] + '_' + df.index.astype(str)))
+                    if 'NumReads' in tmp.columns:
+                        tmp['NumReads'] = pd.to_numeric(tmp['NumReads'], errors='coerce')
+                    mars_amplicon[mar] = tmp
+                    self._assigned_reads_dict[sample][mar]=tmp['TotalReads'].iloc[0]
+                    num_reads+=tmp['TotalReads'].iloc[0]
+                    #pdb.set_trace()
+                    ref1 = tmp.at[0, 'Sequence']
+                    ml_tmp = pd.DataFrame(columns = ml_mh_df_columns)
+                    ml_tmp.at[0, 'Locus'] = mar
+                    ml_tmp.at[0, 'TotRead'] = tmp.at[0, 'TotalReads']
+                    ml_tmp.at[0, 'Read1'] = tmp.at[0, 'NumReads']
+                    ml_tmp.at[0, 'Read2'] = 0
+                    ml_tmp.at[0, 'Read3'] = 0
+                    ml_tmp.at[0, 'NumMut1'] = 0
+                    ml_tmp.at[0, 'NumMut2'] = 0
+                    ml_tmp.at[0, 'Prop1'] = 1.0
+                    ml_tmp.at[0, 'Prop2'] = 0.0
+                    ml_tmp.at[0, 'Prop3'] = 0.0
+                    ml_tmp.at[0, 'MhProp1'] = 1.0
+                    ml_tmp.at[0, 'MhProp2'] = 0.0
+                    ml_tmp.at[0, 'Indel'] = 0
+                    ml_tmp.at[0, 'Zygosity'] = 0
+                    if tmp.shape[0] == 2:
+                        ref2 = tmp.at[1, 'Sequence']
+                        indels_set, mismatches_set, _ = do_pairwise_alignment(ref1, ref2, mar_ref.get_triml(), True)
+                        ml_tmp.at[0, 'Read2'] = tmp.at[1, 'NumReads']
+                        ml_tmp.at[0, 'Read3'] = 0
+                        ml_tmp.at[0, 'NumMut1'] = len(mismatches_set) if len(indels_set) == 0 else 0
+                        ml_tmp.at[0, 'NumMut2'] = 0
+                        ml_tmp.at[0, 'Prop1'] = tmp.at[0, 'NumReads'] / tmp.at[0, 'TotalReads']
+                        ml_tmp.at[0, 'Prop2'] = tmp.at[1, 'NumReads'] / tmp.at[0, 'TotalReads']
+                        ml_tmp.at[0, 'Prop3'] = 0.0
+                        ml_tmp.at[0, 'MhProp1'] =  tmp.at[0, 'NumReads']/(tmp.at[0, 'NumReads'] + tmp.at[1, 'NumReads'])
+                        ml_tmp.at[0, 'MhProp2'] = 0.0
+                        ml_tmp.at[0, 'Indel'] = 0 if len(indels_set) == 0 else 1
+                        ml_tmp.at[0, 'Zygosity'] = 0
+                    elif tmp.shape[0] > 2:
+                        tmp2 = tmp.head(3).copy()
+                        ref2 = tmp2.at[1, 'Sequence']
+                        indels_set1, mismatches_set1, _ = do_pairwise_alignment(ref1, ref2, mar_ref.get_triml(), True)
+                        ref3 = tmp.at[2, 'Sequence']
+                        indels_set2, mismatches_set2, _ = do_pairwise_alignment(ref2, ref3, mar_ref.get_triml(), True)
+                        ml_tmp.at[0, 'Read2'] = tmp.at[1, 'NumReads']
+                        ml_tmp.at[0, 'Read3'] = tmp.at[2, 'NumReads']
+                        ml_tmp.at[0, 'NumMut1'] = len(mismatches_set1) if len(indels_set1) == 0 else 0
+                        ml_tmp.at[0, 'NumMut2'] = len(mismatches_set2) if len(indels_set2) == 0 else 0
+                        ml_tmp.at[0, 'Prop1'] = tmp.at[0, 'NumReads'] / tmp.at[0, 'TotalReads']
+                        ml_tmp.at[0, 'Prop2'] = tmp.at[1, 'NumReads'] / tmp.at[0, 'TotalReads']
+                        ml_tmp.at[0, 'Prop3'] = tmp.at[2, 'NumReads'] / tmp.at[0, 'TotalReads']
+                        ml_tmp.at[0, 'MhProp1'] = tmp.at[0, 'NumReads']/(tmp.at[0, 'NumReads'] + tmp.at[1, 'NumReads'])
+                        ml_tmp.at[0, 'MhProp2'] = tmp.at[1, 'NumReads']/(tmp.at[1, 'NumReads'] + tmp.at[2, 'NumReads'])
+                        ml_tmp.at[0, 'Indel'] = 0 if len(indels_set1) == 0 else 1
+                        ml_tmp.at[0, 'Zygosity'] = 0
+                    auto_mh_df = self._sam_microhaps_dir[sample][mar]
+                    if auto_mh_df is not None and parameter_class.is_mlmodel():
+                        if machine_learning_class.get_mh_training_model_clf_dict() and mar in machine_learning_class.get_mh_training_model_clf_dict():
+                            predict = machine_learning_class.predict_zygosity(parameter_class, mar, ml_tmp)
+                            if predict is not None:
+                                if predict[0] == 1:
+                                    auto_mh_df['Zygosity'] = "homo"
+                                elif predict[0] == 2:
+                                    auto_mh_df['Zygosity'] = "heter"
+                                else:
+                                    auto_mh_df['Zygosity'] = "inconclusive"
+                                ml_tmp['Zygosity'] = predict
+                    self._sam_mar_ml_dir[sample][mar] = ml_tmp
+            else:
+                mars_amplicon[mar] = pd.DataFrame(columns=micro_amplicon_df_columns)
+                row0=micro_amplicon_df_empty_row[:]
+                row0[:2]=(sample,mar)
+                row0[-1]=f"{mar}_0"
+                mars_amplicon[mar].loc[0]=row0
+                row1=micro_amplicon_df_empty_row[:]
+                row1[:2]=(sample,mar)
+                row1[-1]=f"{mar}_1"
+                mars_amplicon[mar].loc[1]=row1
+        self._assigned_sam_reads_dict[sample]=num_reads
+        print_time(f"finished to read sample {sample} amplicon file")
+        return mars_amplicon
+    
+    def read_mh_file(self, file, mars, sample, post_microhap_class):
+        print_time(f"starting to read sample {sample} mh file")
+        tmp_df = pd.DataFrame()
+        mh_amplicon = {}
+        if os.path.isfile(file):
+            tmp_df = (pd.read_csv(file, delimiter = '\t')
+                        .pipe(lambda df : df.rename(columns={df.columns[0]:'Locus'}))
+                        .pipe(lambda df: df.assign(Sample=sample)))
+            tmp_df = tmp_df.reindex(columns=['Sample'] + [col for col in tmp_df.columns if col != 'Sample'])
+        else:
+            print_time(f"Warning: Sample {sample} mh file not found")
+        for mar in mars:
+            mar_ref = post_microhap_class.get_loc_ref_dict().get(mar, None)
+            ref_seq = ""
+            if mar_ref is not None:
+                ref_seq = mar_ref.get_dna_ref()
+            if os.path.isfile(file):
+                tmp = tmp_df.query(f'Locus == "{mar}"')
+                if tmp is None or tmp.empty:
+                    mh_amplicon[mar] = pd.DataFrame(columns=micro_microhap_df_columns)
                     row0=micro_micohap_df_empty_row[:]
                     row0[:2]=(sample,mar)
                     row0[-1]=f"{mar}_0"
-                    mars_amplicon[mar].loc[0]=row0
+                    mh_amplicon[mar].loc[0]=row0
                     row1=micro_micohap_df_empty_row[:]
                     row1[:2]=(sample,mar)
                     row1[2]=1
                     row1[-1]=f"{mar}_1"
-                    mars_amplicon[mar].loc[1]=row1
-        if type == "amplicon":
-            self._assigned_sam_reads_dict[sample]=num_reads
-        print_time(f"finished to read sample {sample} {type} file")
-        return mars_amplicon
-    def read_sam_genotype(self,sample,markers,fpath,anal_type, post_microhap_class):
+                    mh_amplicon[mar].loc[1]=row1
+                else:
+                    #pdb.set_trace()
+                    tmp = tmp.reset_index(drop=True)
+                    tmp = tmp.pipe(lambda df : df.assign(id=df['Locus'] + '_' + df.index.astype(str)))
+                    if 'NumReads' in tmp.columns:
+                        tmp['NumReads'] = pd.to_numeric(tmp['NumReads'], errors='coerce')
+                    #totsnpstr = ""
+                    snpstr_ref0 = ""
+                    snpstr_ref1 = ""
+                    #snpstr_ref2=""
+                    ref1 = tmp.at[0, 'Sequence']
+                    ref2 = tmp.at[1, 'Sequence'] if tmp.shape[0] > 1 else ""
+                    _, _, snpstr_ref0 = do_pairwise_alignment(ref1, ref_seq, mar_ref.get_triml(), True)
+                    if ref2 != "":
+                        _, _, snpstr_ref1 = do_pairwise_alignment(ref2, ref_seq, mar_ref.get_triml(), True)
+                        #_, _, snpstr_ref2 = do_pairwise_alignment(ref1, ref2, mar_ref.get_triml(), True)
+                        #totsnpstr = snpstr_ref0 + ";" + snpstr_ref1 + ";" + snpstr_ref2
+                    tmp.at[0, 'BaseChange'] = snpstr_ref0
+                    if tmp.shape[0] > 1 and ref2 != "":
+                        tmp.at[1, 'BaseChange'] = snpstr_ref1
+                    mh_amplicon[mar] = tmp
+            else:
+                mh_amplicon[mar] = pd.DataFrame(columns=micro_microhap_df_columns)
+                row0=micro_micohap_df_empty_row[:]
+                row0[:2]=(sample,mar)
+                row0[-1]=f"{mar}_0"
+                mh_amplicon[mar].loc[0]=row0
+                row1=micro_micohap_df_empty_row[:]
+                row1[:2]=(sample,mar)
+                row1[2]=1
+                row1[-1]=f"{mar}_1"
+                mh_amplicon[mar].loc[1]=row1
+        print_time(f"finished to read sample {sample} mh file")
+        return mh_amplicon
+    
+    def read_sam_genotype(self,sample,markers,fpath,anal_type, post_microhap_class, machine_learning_class, parameter_class):
         print_time(f"starting to read geno output file for sample: {sample}")
         if anal_type == "snp":
-            print_time(f"starting to read amplicon output file for sample: {sample}")
-            amplicon_path = os.path.join(fpath, sample + "_all_amplicon.txt")
-            amplicon_dir = self.read_amplicon_file(amplicon_path, markers, sample, "amplicon", post_microhap_class)
-            self._sam_amplicons_dir[sample]=amplicon_dir
             print_time(f"starting to read microhap output file for sample: {sample}")
             microhap_path = os.path.join(fpath, sample + "_snps_haplotype.txt")
-            microhap_dir = self.read_amplicon_file(microhap_path, markers, sample, "microhap", post_microhap_class)
+            microhap_dir = self.read_mh_file(microhap_path, markers, sample, post_microhap_class)
             self._sam_microhaps_dir[sample]=microhap_dir
+            print_time(f"starting to read amplicon output file for sample: {sample}")
+            amplicon_path = os.path.join(fpath, sample + "_all_amplicon.txt")
+            amplicon_dir = self.read_amplicon_file(amplicon_path, markers, sample, post_microhap_class, machine_learning_class, parameter_class)
+            self._sam_amplicons_dir[sample]=amplicon_dir
         print_time(f"finished to read geno output file for sample: {sample}")
 
     def update_sam_mar_reads_dict(self, sam, markers, sam_mar_reads_dict):
@@ -229,6 +317,9 @@ class MicroHapClass:
     def update_sam_amplicons_dir(self, sam, markers, sam_amp_dir):
         with thread_lock:
             sam_amp_dir.update({sam : {mar : pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers}})
+    def update_sam_ml_dir(self, sam, markers, sam_mar_ml_dir):
+        with thread_lock:
+            sam_mar_ml_dir.update({sam : {mar : pd.DataFrame(columns = micro_amplicon_df_columns) for mar in markers}})
     def init_sam_mar_dicts(self,genotype_class):
         anal_type = genotype_class.get_parameter().get_analtype()
         samples=genotype_class.get_metadata().get_samples_list()
@@ -244,7 +335,7 @@ class MicroHapClass:
                     try:
                         future.result()
                     except Exception as exc:
-                        print(f"Error while reading geno output file for sample: {exc}")
+                        print(f"Error while update sam mar reads dict for sample: {exc}")
             self.set_assigned_reads_dict(sam_mar_reads_dict)
             
             print_time(f"begain to initiate sam_microhaps_dir")
@@ -255,7 +346,7 @@ class MicroHapClass:
                     try:
                         future.result()
                     except Exception as exc:
-                        print(f"Error while reading geno output file for sample: {exc}")
+                        print(f"Error while update sam micrhps dict for sample: {exc}")
             self.set_sam_microhaps_dir(sam_micro_dir)
             
             print_time(f"begain to initiate sam_amplicons_dir")
@@ -266,8 +357,19 @@ class MicroHapClass:
                     try:
                         future.result()
                     except Exception as exc:
-                        print(f"Error while reading geno output file for sample: {exc}")
+                        print(f"Error while update sam amplicon dict for sample: {exc}")
             self.set_sam_amplicons_dir(sam_amp_dir)
+            
+            print_time(f"begain to initiate sam_ml_dir")
+            sam_ml_dir=self.get_sam_mar_ml_dir()
+            with ThreadPoolExecutor(max_workers=n_threads) as executor:
+                futures=[executor.submit(self.update_sam_ml_dir, sam, markers, sam_ml_dir) for sam in samples]
+                for future in futures:
+                    try:
+                        future.result()
+                    except Exception as exc:
+                        print(f"Error while update sam ml dict for sample: {exc}")
+            self.set_sam_mar_ml_dir(sam_ml_dir)
         else:
             pass
         print_time(f"finished to initiate sam_mar_dict")

@@ -129,6 +129,7 @@ def insert_to_log_text(frame, msg):
     frame.log_text.insert("end", str(msg) + "\n")
     frame.log_text.yview("end")
     frame.update_idletasks()  # Process internal Tkinter event queue
+    
 def update_timer(run_frame):
     if not run_frame.run_finished.is_set():
         elapsed_time = int(time.time() - run_frame.start_time)
@@ -153,15 +154,11 @@ def update_progressbar(run_frame):
 
 def capture_output(run_frame):
     while True:
-        #print_time(f"00000000000000000000000000000000000")
-        #run_frame.output_queue.put(f"0000000000000000000000")
         output = str(seqtyper_core.get_seqtyper_output())
-        #print_time(f"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ {output} #######################################")
         if output:
             time.sleep(0.05)
             with run_update_lock:
                 run_frame.output_queue.put(output)
-                #print_time(f"capture_output {output}, ***********************************")
                 if run_frame.run_finished.is_set():
                     break
         else:

@@ -115,6 +115,17 @@ def create_body(parent, frame):
     loci_rev_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_revcom(loci_rev_var.get()))
     row += 1
     
+    # training model
+    model_var = ctk.StringVar(value=genotype_class.get_parameter().get_mlmodelinputfile())
+    ctk.CTkLabel(top_panel, text="training model (optional):", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
+    top_panel.model_entry = ctk.CTkEntry(top_panel, width=250, textvariable=model_var)
+    top_panel.model_entry.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
+    ctk.CTkButton(top_panel, text="Browse",font=body_frame.brfont, height=20, width=50, 
+                  command=lambda: infile_browser(top_panel.model_entry, "index")).grid(row=row, column=1, pady=(1,1), sticky="w")
+    model_var.trace_add("write", lambda *args: (genotype_class.get_parameter().set_mlmodelinputfile(model_var.get()), 
+                                              genotype_class.get_machine_learning().load_training_model_clf(genotype_class.get_parameter())))
+    row +=1
+    
     # sex file
     sex_var = ctk.StringVar(value=genotype_class.get_parameter().get_sexfile())
     ctk.CTkLabel(top_panel, text="Sex file (optional):", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")

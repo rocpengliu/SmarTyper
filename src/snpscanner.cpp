@@ -899,7 +899,6 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         //"#Locus\tAllele\tBaseChange\tNumReads\tAlleleReadsPer\tTotalReads\tReadsPer\tConclusive\tZygosity\tIndel\tSequence\n";
         if (mOptions->verbose) loginfo("Starting to write MH table for " + locSnpIt->name + "!");
         if (locSnpIt->genoStr3 == "homo") {
-
             *fout2 << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->getHaploStr() << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getHaploReadsRatio(0) << "\t" <<
                     locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(0), locSnpIt->totReads) << "\t" << 
                     "Y" << "\t" << locSnpIt->genoStr3 << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(0).seq << "\n";
@@ -909,25 +908,6 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
                     locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads) << "\t" << 
                     "N" << "\t" << "NA" << "\t" << (locSnpIt->status.first.second ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(1).seq << "\n";
             }
-            /*
-            if(locSnpIt->seqVarVec.size() > 1){
-                *fout2 << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->getHaploStr() << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getHaploReadsRatio(0) << "\t" <<
-                    locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(0), locSnpIt->totReads) << "\t" << 
-                    "Y" << "\t" << locSnpIt->genoStr3 << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(0).seq << "\n";
-
-                *fout2 << locSnpIt->name << "\t" << "2" << "\t" << locSnpIt->getSnpStr(1) << "\t" << locSnpIt->getVarReads(1) << "\t" << locSnpIt->getHaploReadsRatio(1) << "\t" <<
-                    locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads) << "\t" << 
-                    "N" << "\t" << "NA" << "\t" << (locSnpIt->status.first.second ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(1).seq << "\n";
-            } else {
-                 *fout2 << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->getHaploStr() << "\t" << (locSnpIt->getVarReads(0)/2) << "\t" << locSnpIt->getHaploReadsRatio(0) << "\t" <<
-                    locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(0)/2, locSnpIt->totReads) << "\t" << 
-                    "Y" << "\t" << locSnpIt->genoStr3 << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(0).seq << "\n";
-
-                *fout2 << locSnpIt->name << "\t" << "2" << "\t" << locSnpIt->getHaploStr() << "\t" << (locSnpIt->getVarReads(0)/2) << "\t" << locSnpIt->getHaploReadsRatio(0) << "\t" <<
-                    locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(0)/2, locSnpIt->totReads) << "\t" << 
-                    "Y" << "\t" << locSnpIt->genoStr3 << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(0).seq << "\n";
-            }
-            */
         } else {
             *fout2 << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->getHaploStr() << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getHaploReadsRatio(0) << "\t" <<
                     locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(0), locSnpIt->totReads) << "\t" << 

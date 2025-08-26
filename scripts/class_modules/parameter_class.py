@@ -9,6 +9,10 @@ class ParameterClass:
         self._inputdir = ""
         self._outputdir = ""
         self._samplefile = ""
+        self._mlinputfile = ""
+        self._mloutputdir = ""
+        self._mlmodelinputfile = ""
+        self._mlmodel = False
         self._num_samples = 0
         
         self._project_genotype_model = False
@@ -42,15 +46,33 @@ class ParameterClass:
         self._has_pre_mh = False
         self._pro_figure = True
     
+    def is_mlmodel(self):
+        return self._mlmodel
+    def set_mlmodel(self, mlmodel):
+        self._mlmodel = mlmodel
+    
+    def set_mlinputfile(self, mlinputfile):
+        self._mlinputfile = mlinputfile
+    def get_mlinputfile(self):
+        return self._mlinputfile
+    
+    def set_mloutputdir(self, mloutputdir):
+        self._mloutputdir = mloutputdir
+    def get_mloutputdir(self):
+        return self._mloutputdir
+    
+    def set_mlmodelinputfile(self, mlmodelinputfile):
+        self._mlmodelinputfile = mlmodelinputfile
+    def get_mlmodelinputfile(self):
+        return self._mlmodelinputfile
+    
     def is_pro_figure(self):
         return self._pro_figure
-    
     def set_pro_figure(self, pro_figure):
         self._pro_figure = pro_figure if isinstance(pro_figure, bool) else bool(pro_figure)
         
     def get_has_pre_mh(self):
         return self._has_pre_mh
-    
     def set_has_pre_mh(self, has_pre_mh):
         self._has_pre_mh = has_pre_mh if isinstance(has_pre_mh, bool) else bool(has_pre_mh)
         

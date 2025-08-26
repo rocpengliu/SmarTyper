@@ -12,6 +12,7 @@ from .parameter_class import ParameterClass
 from .result_parameter_class import ResultParameter
 from .read_class import ReadsClass
 from .metadata_class import MetaDataClass
+from .machine_learning_class import MachineLearningClass
 
 class GenotypeClass:
     def __init__(self):
@@ -24,8 +25,14 @@ class GenotypeClass:
         self._res_param = ResultParameter()
         self._reads_res=ReadsClass()
         self._metadata=MetaDataClass()
+        self._machine_learning = MachineLearningClass()
         self._data_changed=False
     
+    def get_machine_learning(self):
+        return self._machine_learning
+    def set_machine_learning(self, machine_learning):
+        self._machine_learning = machine_learning
+        
     def get_metadata(self):
         return self._metadata
     def set_metadata(self, metadata):
@@ -118,7 +125,7 @@ class GenotypeClass:
         markers = self.get_metadata().get_ref_markers_list()
         fpath = self.get_parameter().get_outputdir()
         print(f"starting to read output of sample: {sample}")
-        self.get_microhap().read_sam_genotype(sample,markers,fpath,anal_type, self.get_post_microhap())
+        self.get_microhap().read_sam_genotype(sample,markers, fpath,anal_type, self.get_post_microhap(), self.get_machine_learning(), self.get_parameter())
         self.get_microhap().pro_sam_mar_reads_distri_fig(sample,fpath,anal_type)
         self.get_reads_res().process_json_file(sample,self.get_parameter().get_outputdir())
         self.get_reads_res().produce_reads_qual_pdf(sample,self.get_parameter().get_outputdir())
@@ -131,12 +138,10 @@ class GenotypeClass:
         output_queue.put(f'starting to generate reads distributions fig for all samples\n')
         self.get_microhap().pro_all_sample_read_distri_fig_pdf(self.get_parameter().get_outputdir(), output_queue)
         output_queue.put(f'finished to generate all reads distributions fig for all samples\n')
+    
     def generate_all(self):
         samples=self.get_metadata().get_samples_list()
         anal_type = self.get_parameter().get_analtype()
-        print_time("begin to process all_sample")
-        output_all_geno_table(self)
-        print_time('finished to process all the samples')
         print_time('starting to process each the sample')
         with ThreadPoolExecutor(max_workers=self.get_parameter().get_thread()) as executor:
                 futures={executor.submit(output_all_fig_tab, self, sam, 'snp'): sam for sam in samples}
@@ -169,6 +174,10 @@ class GenotypeClass:
                     except Exception as e:
                             print_time(f'Error processing marker: {mar}: {e}')
             print_time(f'finished to process all the markers')
+
+        print_time("begin to process all_sample")
+        output_all_geno_table(self, anal_type)
+        print_time('finished to process all the samples')
 
     def dump_session(self, project):
         try:

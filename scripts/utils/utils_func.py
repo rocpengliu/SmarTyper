@@ -8,9 +8,12 @@ from PIL import Image, ImageTk
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 from Bio.Seq import Seq
-from .utils_common import matplotlib_lock, print_time
+from .utils_common import matplotlib_lock, print_time, thread_lock
+from .common import *
 import traceback
 import numpy as np
+import pdb
+import copy
 
 def load_pdf(file_path, canvas):
     try:
@@ -35,6 +38,7 @@ def output_all_fig_tab(genoclass,selected_sample,anal_type)->bool:
     if genoclass.get_parameter().is_pro_figure():
         produce_fig_sam_mar_pdf(genoclass,selected_sample,anal_type)
     output_geno_table(genoclass,selected_sample,anal_type)
+    prod_ml_tbl(genoclass, selected_sample, anal_type)
     print_time(f"finished to output_all_fig_tab for {selected_sample}")
     return True
 
@@ -44,8 +48,26 @@ def output_geno_table(genoclass,selected_sample,anal_type)->bool:
     geno_df = pd.concat(geno_df_dict.values(), ignore_index=True)
     geno_df.to_csv(tab_file_path, sep="\t", index=False)
     return True
-
-def output_all_geno_table(genoclass):
+def prod_ml_tbl(genoclass, selected_sample, anal_type):
+    #pdb.set_trace()
+    #tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_sample}_ml.txt")
+    geno_df_dict = genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample)
+    if genoclass.get_microhap().get_sam_mar_ml_dir().get(selected_sample) is None:
+        print(f"sample {selected_sample} not found!")
+        return
+    else:
+        ml_df_dict = copy.deepcopy(genoclass.get_microhap().get_sam_mar_ml_dir().get(selected_sample))
+    if ml_df_dict is not None:
+        for mar, microh_df in geno_df_dict.items():
+            if mar in ml_df_dict.keys():
+                zygo = microh_df.at[0, 'Zygosity']
+                if zygo == 'heter':
+                    ml_df_dict[mar].at[0, 'Zygosity'] = 2
+                elif zygo == 'homo':
+                    ml_df_dict[mar].at[0, 'Zygosity'] = 1
+    with thread_lock:
+        genoclass.get_microhap().get_sam_mar_ml_dir()[selected_sample] = ml_df_dict
+def output_all_geno_table(genoclass, anal_type):
     tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"All_sample_final_genotype.txt")
     for idx, (sam, sam_dict) in enumerate(genoclass.get_microhap().get_sam_microhaps_dir().items()):
         geno_df = pd.concat(sam_dict.values(), ignore_index=True)
@@ -54,6 +76,13 @@ def output_all_geno_table(genoclass):
         else:
             geno_df.to_csv(tab_file_path, sep="\t", index=False, header=False, mode='a')
     
+    tab_file_path2 = os.path.join(genoclass.get_parameter().get_outputdir(), "All_ml_table.txt")
+    ml_df = pd.concat(
+                    [df for od in genoclass.get_microhap().get_sam_mar_ml_dir().values() for df in od.values() if df is not None],
+                    axis = 0, ignore_index = True)
+    ml_df = ml_df.sort_values(by=['Locus']).reset_index(drop=True)
+    ml_df.to_csv(tab_file_path2, sep = "\t", index = False)
+
 def produce_fig_sam_mar_pdf(genoclass,selected_sample,anal_type)->bool:
     print(f"Thread {threading.current_thread().name}: Starting to process sample: {selected_sample}")
     markers = genoclass.get_metadata().get_ref_markers_list()

@@ -46,13 +46,17 @@ def create_home(parent):
     data_loader_btn = ctk.CTkButton(content_frame, text="Genotype", width=size*2, height=size, font=default_font30,
                                     command=lambda: parent.master.show_page("genotype"))
     data_loader_btn.grid(row=0, column=0, padx=(50, 25), pady=(10, 10), sticky="e")
+    
+    project_opener_btn = ctk.CTkButton(content_frame, text="Machine Learning", width=size*2, height=size, font=default_font30,
+                                        command=lambda: parent.master.show_page("machine learning"))
+    project_opener_btn.grid(row=0, column=1, padx=(50, 25), pady=(10, 10), sticky="w")
 
     project_opener_btn = ctk.CTkButton(content_frame, text="Microtype", width=size*2, height=size, font=default_font30,
                                         command=lambda: parent.master.show_page("microtype"))
-    project_opener_btn.grid(row=0, column=1, padx=(50, 25), pady=(10, 10), sticky="w")
+    project_opener_btn.grid(row=1, column=0, padx=(50, 25), pady=(10, 10), sticky="e")
     
     microtype_btn = ctk.CTkButton(content_frame, text="Project", width=size*2, height=size, font=default_font30,
                                     command=lambda: parent.master.show_page("project"))
-    microtype_btn.grid(row=1, column=0, padx=(25, 25), pady=(0, 10), sticky="en")
+    microtype_btn.grid(row=1, column=1, padx=(50, 25), pady=(10, 10), sticky="w")
 
     return page
