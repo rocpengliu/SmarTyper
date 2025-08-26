@@ -59,5 +59,5 @@ python smartyper
 ## To do list
 
 ```
-1. add microtype looking up table
+
 ```
