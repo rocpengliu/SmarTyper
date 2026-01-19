@@ -146,8 +146,8 @@ class MetaDataClass:
                         mar_ref.set_dna_ref(mar_ref.get_dna_ref()[mar_ref.get_triml():])
                     if len(mar_ref.get_dna_ref()) == 0:
                         messagebox.showerror("Invalid Input", "trim length is too long")
-                    if row['snppos'].replace(' ', '') != "0":
-                        snpos = [int(pos.strip()) for pos in row['snppos'].replace(" ", "").split('|')]
+                    if pd.notna(row['snppos']) and str(row['snppos']).replace(' ', '') not in ["0", "0.0", "na", "nan", ""]:
+                        snpos = [int(pos.strip()) for pos in str(row['snppos']).replace(" ", "").split('|')]
                         snpos = sorted(snpos)
                         if len(snpos) != 0:
                             mar_ref.set_orisnppos(sorted(snpos))
@@ -163,7 +163,7 @@ class MetaDataClass:
                                 mar_ref.set_snppos(sorted(snpos))
                     #pdb.set_trace()
                     if mh:
-                        if row['codingpos'].replace(' ', '') != '0':
+                        if str(row['codingpos']).replace(' ', '') != '0':
                             codingpos = split_codingpos(row['codingpos'])
                             if mar_ref.get_triml() != 0 or mar_ref.get_trimr() != 0:
                                 newcodingpos = get_new_codingpos(codingpos, mar_ref.get_triml(), mar_ref.get_trimr(), len(mar_ref.get_ori_dna_ref()))

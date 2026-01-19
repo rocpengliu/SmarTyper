@@ -7,12 +7,14 @@ from .micro_aa_align import display_aa_seq_align
 from .micro_table_fig import update_com_tab, update_sim_tab
 from .micro_all_table_fig import display_all_mh_com_table, display_all_mh_sim_table
 from .micro_tree import display_phylotre
-from ..utils.common import child_button_size
+from ..utils.common import child_button_size, pnbuttonfont, fig_font, header_font, bmbfont, brfont, bfont
+from ..utils.colors import COLORS
 
 matplotlib.use("Agg")
 
+
 def micro_viewer(parent):
-    frame = ctk.CTkFrame(parent, fg_color="#3b3b3b")
+    frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
     frame.grid(row=0, column=0, sticky="nsew")
 
     # Configure grid rows and columns
@@ -28,18 +30,16 @@ def micro_viewer(parent):
     return frame
 
 def create_header(frame):
-    header_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
-    header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(10, 5), padx=(10, 10))
-    header_frame.grid_columnconfigure(0, weight=1)  # Center header content
-    label = ctk.CTkLabel(header_frame, text="Microtype Viewing", font=("Helvetica", 30, "bold"),
-                         fg_color="#2b2b2b", text_color="green")
-    label.pack(side=tk.LEFT, pady=(10, 10), padx=(100, 10))
+    header_frame = ctk.CTkFrame(frame, fg_color=COLORS['card'], corner_radius=12)
+    header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(15, 10), padx=(15, 15))
+    header_frame.grid_columnconfigure(0, weight=1)
+    label = ctk.CTkLabel(header_frame, text="◇ Microhap Viewing", font=header_font,
+                         fg_color="transparent", text_color=COLORS['accent'])
+    label.pack(side=tk.LEFT, pady=(15, 15), padx=(30, 10))
     return header_frame
 
 def create_body(parent, frame):
-    body_frame = ctk.CTkFrame(frame, fg_color="#3b3b3b")
-    body_frame.bfont = ("Helvetica", 15, "bold")
-    body_frame.brfont = ("Helvetica", 10, "bold")
+    body_frame = ctk.CTkFrame(frame, fg_color="transparent")
     body_frame.padx = (10, 10)
     body_frame.pady = (5, 5)
     body_frame.grid(row=1, column=0, sticky="nsew")
@@ -55,37 +55,92 @@ def create_body(parent, frame):
 
 def create_top_panel(parent, body_frame):
     genoclass = parent.master.genotype_class
-    #top_panel = ctk.CTkFrame(body_frame, width=200, height = 50, fg_color="#3b3b3b")
-    top_panel = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")
+    top_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
     top_panel.grid(row=0, column=0, sticky="ew", padx=body_frame.padx, pady=body_frame.pady)
-    
-    top_panel.grid_rowconfigure(0, weight=0)  # Ensure the top row does not expand vertically
-    top_panel.grid_rowconfigure(1, weight=0)  # Ensure the top row does not expand vertically
-    #top_panel.grid_rowconfigure(2, weight=0)  # Ensure the top row does not expand vertically
-    top_panel.grid_columnconfigure('all', weight=0)  # Adjust if needed
+    top_panel.grid_rowconfigure(0, weight=0)
+    top_panel.grid_rowconfigure(1, weight=0)
+    top_panel.grid_columnconfigure('all', weight=0)
 
     row = 0
-    ctk.CTkLabel(top_panel, text="Marker:", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,3), sticky="e")
+    ctk.CTkLabel(top_panel, text="Marker:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,3), sticky="e")
 
     top_panel.options = []
     selected_option = tk.StringVar(value="")
-    top_panel.combobox = ctk.CTkComboBox(top_panel, values=top_panel.options, variable=selected_option, font=body_frame.brfont)
+    top_panel.combobox = ctk.CTkComboBox(top_panel, values=top_panel.options, variable=selected_option, font=brfont)
     top_panel.combobox.grid(row=row, column=1, padx=(25, 10), pady=(3,3), sticky="w")
     selected_option.trace_add("write", lambda *args: (genoclass.get_post_microhap().set_selected_marker(selected_option.get()),
                                                       create_microhap_align_panel(body_frame.bottom_panel, genoclass)))
     row += 1
-    ctk.CTkButton(top_panel, text="microtype alignment", font=("Helvetica", 12, "bold"),
-                width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda:create_microhap_align_panel(body_frame.bottom_panel, genoclass)).grid(row=row, column=0, padx=(20,5), pady=(15,1), sticky='w')
-    
-    ctk.CTkButton(top_panel, text="microtype table", font=("Helvetica", 12, "bold"),
-                width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda:create_microhap_fig_tbl_panel(body_frame.bottom_panel, genoclass)).grid(row=row, column=1, padx=(20,5), pady=(15,1), sticky='w')
-    
-    ctk.CTkButton(top_panel, text="microtype table (all)", font=("Helvetica", 12, "bold"),
-                width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda:create_all_microhap_fig_tbl_panel(body_frame.bottom_panel, genoclass)).grid(row=row, column=2, padx=(20,5), pady=(15,1), sticky='w')
-    
+
+    # --- Button highlight/dim logic ---
+    def highlight_buttons(parent_name=None, child_name=None):
+        highlight_fg = COLORS['accent']
+        highlight_hover = COLORS['primary']
+        dim_fg = COLORS['card']
+        dim_hover = COLORS['secondary']
+        # Parent: 'microtype alignment', 'microtype table', 'microtype table (all)'
+        # No nested children, so treat each as a parent with itself as child
+        for name, btn in top_panel.button_refs.items():
+            if parent_name and name == parent_name:
+                btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+            elif child_name and name == child_name:
+                btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+            else:
+                btn.configure(fg_color=dim_fg, hover_color=dim_hover)
+
+    # Store button references
+    top_panel.button_refs = {}
+    def add_button_ref(name, btn):
+        top_panel.button_refs[name] = btn
+
+    # Parent/child buttons
+    def on_parent_click(name, child_default=None, action=None):
+        def handler():
+            if action:
+                action()
+            highlight_buttons(parent_name=name)
+            # Highlight first child by default (here, parent is its own child)
+            if child_default:
+                highlight_buttons(parent_name=name, child_name=child_default)
+        return handler
+
+    def on_child_click(parent_name, child_name, action=None):
+        def handler():
+            if action:
+                action()
+            highlight_buttons(parent_name=parent_name, child_name=child_name)
+        return handler
+
+    # microtype alignment (parent/child)
+    align_btn = ctk.CTkButton(top_panel, text="microtype alignment", font=bmbfont,
+        width=child_button_size['width'], height=child_button_size['height'],
+        fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+        command=on_parent_click("microtype alignment", child_default="microtype alignment", action=lambda: create_microhap_align_panel(body_frame.bottom_panel, genoclass)))
+    align_btn.grid(row=row, column=0, padx=(20,5), pady=(15,1), sticky='w')
+    add_button_ref("microtype alignment", align_btn)
+
+    # microtype table (parent/child)
+    table_btn = ctk.CTkButton(top_panel, text="microtype table", font=bmbfont,
+        width=child_button_size['width'], height=child_button_size['height'],
+        fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+        command=on_parent_click("microtype table", child_default="microtype table", action=lambda: create_microhap_fig_tbl_panel(body_frame.bottom_panel, genoclass)))
+    table_btn.grid(row=row, column=1, padx=(20,5), pady=(15,1), sticky='w')
+    add_button_ref("microtype table", table_btn)
+
+    # microtype table (all) (parent/child)
+    table_all_btn = ctk.CTkButton(top_panel, text="microtype table (all)", font=bmbfont,
+        width=child_button_size['width'], height=child_button_size['height'],
+        fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+        command=on_parent_click("microtype table (all)", child_default="microtype table (all)", action=lambda: create_all_microhap_fig_tbl_panel(body_frame.bottom_panel, genoclass)))
+    table_all_btn.grid(row=row, column=2, padx=(20,5), pady=(15,1), sticky='w')
+    add_button_ref("microtype table (all)", table_all_btn)
+
+    # Highlight the first parent and its child by default
+    parent_default = "microtype alignment"
+    highlight_buttons(parent_name=parent_default, child_name=parent_default)
+
+    # Attach highlight_buttons for external use if needed
+    top_panel.highlight_buttons = highlight_buttons
     return top_panel
 
 def update_combox(genoclass, top_panel, type):
@@ -98,10 +153,10 @@ def update_combox_from_others(parent):
     """Update the ComboBox options from other components."""
     try:
         genoclass = parent.master.genotype_class
-        res_frame = parent.master.pages.get('micro_res', None)
+        res_frame = parent.master.pages.get('microtype_results', None)
 
         if res_frame is None:
-            print("Error: 'micro_res' page is not available.")
+            print("Error: 'microtype_results' page is not available.")
             return
         top_panel = res_frame.body_frame.top_panel
         if top_panel is None:
@@ -119,23 +174,28 @@ def update_combox_from_others(parent):
         # Handle the error, maybe log it or notify the user
 
 def create_footer(parent, frame):
-    footer_frame = ctk.CTkFrame(frame, fg_color="#3b3b3b")
+    footer_frame = ctk.CTkFrame(frame, fg_color="transparent")
     footer_frame.grid(row=2, column=0, columnspan=2, pady=(0, 0), padx=(10, 10), sticky="ew")
 
     #footer_frame.grid_rowconfigure(0, weight=1)
     footer_frame.grid_columnconfigure(0, weight=1)
     footer_frame.grid_columnconfigure(1, weight=1)
 
-    footer_frame.previous_button = ctk.CTkButton(footer_frame, text="Previous", font=("Helvetica", 12, "bold"),
+    footer_frame.previous_button = ctk.CTkButton(footer_frame, text="← Previous", font=pnbuttonfont,
+                                                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                                                corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
                                                 command=lambda: on_previous_button_click(parent))
     footer_frame.previous_button.grid(row=0, column=0, padx=(10, 100), pady=(10, 10), sticky="e")
 
-    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next", font=("Helvetica", 12, "bold"))
+    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next →", font=pnbuttonfont,
+                                            fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                                            corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
+                                            command=lambda: parent.master.show_page("home"))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), pady=(10, 10), sticky="w")
     return footer_frame
 
 def on_previous_button_click(parent):
-    parent.master.show_page("micro_data")
+    parent.master.show_page("microtype_data")
 
 def on_next_button_click(parent):
     pass
@@ -158,7 +218,7 @@ def on_next_button_click(parent):
     # parent.master.show_page("micro_data")
 
 def create_bottom_panel(parent, body_frame):
-    bottom_panel = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")
+    bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
     bottom_panel.grid(row=1, column=0, sticky="news", padx=(0,0), pady=(0,0))
     bottom_panel.grid_rowconfigure(0, weight=1)
     #bottom_panel.grid_rowconfigure(1,weight=1)#for the page flib page
@@ -188,14 +248,40 @@ def create_microhap_fig_tbl_panel(bottom_panel, genoclass):
     fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)  # Ensure vertical expansion
     fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)  # Ensure horizontal expansion
     
-    update_com_tab(genoclass, fig_tab_bottom_panel)
-    ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=("Helvetica", 10, "bold"),
-                  width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: update_com_tab(genoclass, fig_tab_bottom_panel)).grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
+    # --- Child button highlight/dim logic ---
+    child_btn_refs = {}
+    def highlight_child(child_name):
+        highlight_fg = COLORS['accent']
+        highlight_hover = COLORS['secondary']
+        dim_fg = COLORS['card']
+        dim_hover = COLORS['secondary']
+        for name, btn in child_btn_refs.items():
+            if name == child_name:
+                btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+            else:
+                btn.configure(fg_color=dim_fg, hover_color=dim_hover)
 
-    ctk.CTkButton(fig_tab_top_panel, text="simple", font=("Helvetica", 10, "bold"),
+    def on_child_click(child_name, action):
+        def handler():
+            highlight_child(child_name)
+            action()
+        return handler
+
+    child_btn_refs["comprehensive"] = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font,
                   width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: update_sim_tab(genoclass, fig_tab_bottom_panel)).grid(row=0, column=1, padx=5, pady=5, sticky="w")
+                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("comprehensive", lambda: update_com_tab(genoclass, fig_tab_bottom_panel)))
+    child_btn_refs["comprehensive"].grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
+
+    child_btn_refs["simple"] = ctk.CTkButton(fig_tab_top_panel, text="simple", font=fig_font,
+                  width=child_button_size['width'], height=child_button_size['height'],
+                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("simple", lambda: update_sim_tab(genoclass, fig_tab_bottom_panel)))
+    child_btn_refs["simple"].grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+    # Highlight the first child by default
+    highlight_child("comprehensive")
+    update_com_tab(genoclass, fig_tab_bottom_panel)
 
     # Add a frame to act as the resize handle
     resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")
@@ -237,19 +323,45 @@ def create_all_microhap_fig_tbl_panel(bottom_panel, genoclass):
     bottom_panel.grid_rowconfigure(1, weight=1)
     bottom_panel.grid_columnconfigure(0, weight=1)
     
-    fig_tab_top_panel = ctk.CTkFrame(bottom_panel, fg_color="#3b3b3b")
-    fig_tab_top_panel.grid(row=0, column=0, sticky="ew")
+    fig_tab_top_panel = ctk.CTkFrame(bottom_panel, fg_color="transparent")
+    fig_tab_top_panel.grid(row=0, column=0, sticky='ew')
     
-    fig_tab_bottom_panel=ctk.CTkFrame(bottom_panel, fg_color="#3b3b3b")
+    fig_tab_bottom_panel=ctk.CTkFrame(bottom_panel, fg_color="transparent")
     fig_tab_bottom_panel.grid(row=1, column=0, sticky="news")
     fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)
     fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)
+    # --- Child button highlight/dim logic ---
+    child_btn_refs = {}
+    def highlight_child(child_name):
+        highlight_fg = COLORS['accent']
+        highlight_hover = COLORS['secondary']
+        dim_fg = COLORS['card']
+        dim_hover = COLORS['secondary']
+        for name, btn in child_btn_refs.items():
+            if name == child_name:
+                btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+            else:
+                btn.configure(fg_color=dim_fg, hover_color=dim_hover)
+
+    def on_child_click(child_name, action):
+        def handler():
+            highlight_child(child_name)
+            action()
+        return handler
+
+    child_btn_refs["comprehensive"] = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("comprehensive", lambda: display_all_mh_com_table(fig_tab_bottom_panel, genoclass)))
+    child_btn_refs["comprehensive"].grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
+
+    child_btn_refs["simple"] = ctk.CTkButton(fig_tab_top_panel, text="simple", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("simple", lambda: display_all_mh_sim_table(fig_tab_bottom_panel, genoclass)))
+    child_btn_refs["simple"].grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+    # Highlight the first child by default
+    highlight_child("comprehensive")
     display_all_mh_com_table(fig_tab_bottom_panel, genoclass)
-    ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=("Helvetica", 10, "bold"), width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: display_all_mh_com_table(fig_tab_bottom_panel, genoclass)).grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
-    
-    ctk.CTkButton(fig_tab_top_panel, text="simple", font=("Helvetica", 10, "bold"), width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: display_all_mh_sim_table(fig_tab_bottom_panel, genoclass)).grid(row=0, column=1, padx=5, pady=5, sticky="w")
     
      # Add a frame to act as the resize handle
     resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")
@@ -291,24 +403,52 @@ def create_microhap_align_panel(bottom_panel, genoclass):
     bottom_panel.grid_rowconfigure(1, weight=1)
     bottom_panel.grid_columnconfigure(0, weight=1)
     
-    fig_tab_top_panel = ctk.CTkFrame(bottom_panel, fg_color="#3b3b3b")
+    fig_tab_top_panel = ctk.CTkFrame(bottom_panel, fg_color="transparent")
     fig_tab_top_panel.grid(row=0, column=0, sticky="ew")
     fig_tab_top_panel.grid_rowconfigure(0,weight=0)
     
-    fig_tab_bottom_panel=ctk.CTkFrame(bottom_panel, fg_color="#3b3b3b")
+    fig_tab_bottom_panel=ctk.CTkFrame(bottom_panel, fg_color="transparent")
     fig_tab_bottom_panel.grid(row=1, column=0, sticky="news")
     fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)
     fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)
     fig_tab_bottom_panel.page_num = 0
+    # --- Child button highlight/dim logic ---
+    child_btn_refs = {}
+    def highlight_child(child_name):
+        highlight_fg = COLORS['accent']
+        highlight_hover = COLORS['secondary']
+        dim_fg = COLORS['card']
+        dim_hover = COLORS['secondary']
+        for name, btn in child_btn_refs.items():
+            if name == child_name:
+                btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+            else:
+                btn.configure(fg_color=dim_fg, hover_color=dim_hover)
+
+    def on_child_click(child_name, action):
+        def handler():
+            highlight_child(child_name)
+            action()
+        return handler
+
+    child_btn_refs["DNA"] = ctk.CTkButton(fig_tab_top_panel, text="DNA", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("DNA", lambda: display_align(fig_tab_bottom_panel, genoclass, 'dna')))
+    child_btn_refs["DNA"].grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
+
+    child_btn_refs["protien"] = ctk.CTkButton(fig_tab_top_panel, text="protien", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("protien", lambda: display_align(fig_tab_bottom_panel, genoclass, 'aa')))
+    child_btn_refs["protien"].grid(row=0, column=1, padx=5, pady=5, sticky="w")
+
+    child_btn_refs["phylo tree"] = ctk.CTkButton(fig_tab_top_panel, text="phylo tree", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=on_child_click("phylo tree", lambda: display_phylotre(fig_tab_bottom_panel, genoclass)))
+    child_btn_refs["phylo tree"].grid(row=0, column=2, padx=5, pady=5, sticky="w")
+
+    # Highlight the first child by default
+    highlight_child("DNA")
     display_align(fig_tab_bottom_panel, genoclass, 'dna')
-    ctk.CTkButton(fig_tab_top_panel, text="DNA", font=("Helvetica", 10, "bold"), width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: display_align(fig_tab_bottom_panel, genoclass, 'dna')).grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
-    
-    ctk.CTkButton(fig_tab_top_panel, text="protien", font=("Helvetica", 10, "bold"), width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: display_align(fig_tab_bottom_panel, genoclass, 'aa')).grid(row=0, column=1, padx=5, pady=5, sticky="w")
-    
-    ctk.CTkButton(fig_tab_top_panel, text="phylo tree", font=("Helvetica", 10, "bold"), width=child_button_size['width'], height=child_button_size['height'],
-                command=lambda: display_phylotre(fig_tab_bottom_panel, genoclass)).grid(row=0, column=2, padx=5, pady=5, sticky="w")
      # Add a frame to act as the resize handle
 
     resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")

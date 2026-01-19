@@ -21,15 +21,15 @@ def update_geno_tab(parent, fig_tab_bottom_panel):
     columns = ['Id']+micro_microhap_df_columns[:-1]
     
     # Create a frame to contain the Treeview and Scrollbars
-    frame = tk.Canvas(fig_tab_bottom_panel, bg="white")
-    frame.grid(row=0,column=0,sticky="news",padx=5,pady=5)
-    # Update the grid weights
+    frame = ctk.CTkFrame(fig_tab_bottom_panel, fg_color="white", height=144)
+    frame.grid(row=0, column=0, sticky="nsew", padx=0, pady=10)  # Expand in all directions
+    frame.grid_propagate(False)
     frame.grid_rowconfigure(0, weight=1)
     frame.grid_columnconfigure(0, weight=1)
     
     # Create Treeview
-    tree = ttk.Treeview(frame, columns=columns, show='headings')
-    tree.grid(row=0,column=0,sticky="news",padx=15,pady=15)
+    tree = ttk.Treeview(frame, columns=columns, show='headings', height=5)
+    tree.grid(row=0, column=0, sticky="nsew", padx=0, pady=10)  # Expand in all directions
     
     # Create Scrollbars
     v_scroll = ttk.Scrollbar(frame, orient='vertical', command=tree.yview)
@@ -46,12 +46,13 @@ def update_geno_tab(parent, fig_tab_bottom_panel):
         tree.heading(col, text=col)
 
     populate_geno_tab(parent, tree)
-        
-    frame.bind_all("<Button-4>", lambda event: frame.yview_scroll(-1, "units"))
-    frame.bind_all("<Button-5>", lambda event: frame.yview_scroll(1, "units"))
     print_time("finished to update_geno_tab")
 
 def populate_geno_tab(parent, tree):
+    # Clear existing items first
+    for item in tree.get_children():
+        tree.delete(item)
+    
     genoclass = parent.master.genotype_class
     sam_mar_df = pd.DataFrame()
     if genoclass.get_res_param().get_res_type() == "sample":
@@ -71,10 +72,7 @@ def populate_geno_tab(parent, tree):
     else:
         return
     
-    max_widths = [max([len(str(cell)) for cell in sam_mar_df[col]]) for col in sam_mar_df.columns]
-    for col, width in zip(tree['columns'], max_widths):
-        tree.column(col, anchor=tk.CENTER, stretch=False)
-        
+    # First insert all data
     for idx,row in sam_mar_df.iterrows():
         tree.insert('','end',
                     values=(str(idx),
@@ -90,5 +88,23 @@ def populate_geno_tab(parent, tree):
                     row['Conclusive'],
                     row['Zygosity'],
                     row['Indel'],
-                    row['Sequence']
-                    ))
+                    row['Sequence']))
+    
+    # Then calculate and set column widths based on all inserted data
+    for col in tree['columns']:
+        # Calculate header width with generous padding
+        header_width = len(str(col)) * 12 + 50  # Extra space for header
+        
+        # Get max content width from all rows
+        max_content_width = 0
+        for item in tree.get_children():
+            item_text = str(tree.set(item, col))
+            text_width = len(item_text) * 8 + 20
+            max_content_width = max(max_content_width, text_width)
+        
+        # Use the larger of header width or content width, capped at 1400px for a much wider table
+        final_width = min(max(header_width, max_content_width), 1400)
+        tree.column(col, anchor=tk.CENTER, width=final_width, minwidth=header_width, stretch=False)
+    
+    # Force update to apply column widths
+    tree.update_idletasks()

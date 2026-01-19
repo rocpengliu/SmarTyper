@@ -1,6 +1,6 @@
 
 import pandas as pd
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 
 class SatClass:
     def __init__(self):
@@ -18,7 +18,7 @@ class SatClass:
             else:
                 raise ValueError("samples must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for loci
     def get_loci(self):
@@ -31,4 +31,4 @@ class SatClass:
             else:
                 raise ValueError("loci must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))

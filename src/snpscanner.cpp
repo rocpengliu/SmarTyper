@@ -39,11 +39,9 @@ std::string SnpScanner::scanVar(Read* & r1) {
     std::map<std::string, MatchTrim> locMap;
 
     for (auto & it : mOptions->mLocSnps.refLocMap) {
-
         if (r1->mSeq.length() < (it.second.fp.length() + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length())) {
             continue;
         }
-
         bool goRP = false;
         int trimF = 0;
         int fpMismatches = (int) edit_distance(it.second.fp.mStr, r1->mSeq.mStr.substr(0, it.second.fp.length()));

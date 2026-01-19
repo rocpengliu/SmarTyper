@@ -1,5 +1,5 @@
 
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 import pandas as pd
     
 class MicrohapCombo:
@@ -19,7 +19,7 @@ class MicrohapCombo:
             else:
                 raise ValueError("Name must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     def get_snp_pos(self):
         return self._snp_pos
     
@@ -30,7 +30,7 @@ class MicrohapCombo:
             else:
                 raise ValueError("snp_pos must be a list")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     def get_base_freq_df(self):
         return self._base_freq_df
@@ -42,4 +42,4 @@ class MicrohapCombo:
             else:
                 raise ValueError("base_freq_df must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))

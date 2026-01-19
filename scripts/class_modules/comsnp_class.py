@@ -1,4 +1,4 @@
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 
 class ComSnpClass:
     def __init__(self):
@@ -17,7 +17,7 @@ class ComSnpClass:
             else:
                 raise ValueError("Name must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_snp_pos(self):
         return self._snp_pos
@@ -29,7 +29,7 @@ class ComSnpClass:
             else:
                 raise ValueError("snp_pos must be a set")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_indel_pos(self):
         return self._indel_pos
@@ -41,7 +41,7 @@ class ComSnpClass:
             else:
                 raise ValueError("indel_pos must be a set")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_snp_str(self):
         return self._snp_str
@@ -53,7 +53,7 @@ class ComSnpClass:
             else:
                 raise ValueError("snp_str must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     def is_only_snp(self):
         return self._only_snp
@@ -65,5 +65,5 @@ class ComSnpClass:
             else:
                 raise ValueError("only_snps must be a boolean")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
       

@@ -6,7 +6,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import logomaker
 from ..utils.utils_common import print_time
-from ..utils.common import child_button_size
+from ..utils.common import child_button_size, bmbfont
+from ..utils.colors import COLORS
 import pdb
 import copy
 import os
@@ -90,19 +91,23 @@ def display_phylotre(genotab, genoclass):
     fig_frame = ctk.CTkFrame(scroll_frame, fg_color='white')
     fig_frame.grid_rowconfigure(0,weight=1)
     fig_frame.grid_columnconfigure(0,weight=1)
-    fig_frame.grid(row=0, column=0, sticky="nws", padx=5, pady=(2,2))
+    fig_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=(2,2))
     create_phy_fig(title_label, ref_mar_refmt, dna_working_splicer_ref_compre, aa_working_splicer_ref_compre, fig_frame, genoclass)
     
-    page_flip_frame=ctk.CTkFrame(genotab, fg_color='#3b3b3b')
+    page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
     page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
     
-    genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="Previous", font=("Helvetica", 12, "bold"),
+    genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=bmbfont,
                                          width=child_button_size['width'], height=child_button_size['height'],
+                                         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                                         corner_radius=10,
                                          command=lambda:change_page(-1, genotab, genoclass))
     genotab.previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
     #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
-    genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next", font=("Helvetica", 12, "bold"),
+    genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=bmbfont,
                                      width=child_button_size['width'], height=child_button_size['height'],
+                                     fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                                     corner_radius=10,
                                      command=lambda:change_page(1, genotab, genoclass))
     genotab.next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(2,2))
     
@@ -148,7 +153,7 @@ def change_page(page, genotab, genoclass, change = True):
 
 def create_phy_fig(title_label, ref_mar_refmt, dna_working_splicer_ref_compre, aa_working_splicer_ref_compre, fig_frame, genoclass):
     if ref_mar_refmt.get_has_splicer():
-        fig, (ax1, ax2)=plt.subplots(1, 2, figsize=(20, 8))
+        fig, (ax1, ax2)=plt.subplots(1, 2, figsize=(20, 10))
         Phylo.draw(dna_working_splicer_ref_compre.get_dna_tre(), do_show=False, axes = ax1)
         ax1.set_title("DNA tree")
         ax1.set_ylabel("microtype")
@@ -157,14 +162,14 @@ def create_phy_fig(title_label, ref_mar_refmt, dna_working_splicer_ref_compre, a
         ax2.set_ylabel("microtype")
         fig.suptitle(f"Phylogenetic Trees {title_label}", fontsize=16)
     else:
-        fig, (ax1)=plt.subplots(1,figsize=(15, 8))
+        fig, (ax1)=plt.subplots(1,figsize=(15, 10))
         Phylo.draw(dna_working_splicer_ref_compre.get_dna_tre(), do_show=False, axes = ax1)
         ax1.set_title("DNA tree")
         ax1.set_ylabel("microtype")
         fig.suptitle(f"Phylogenetic Tree {title_label}", fontsize=16)
-    plt.subplots_adjust(left=0.2, right=0.9, top=0.8, bottom=0.2)
+    plt.subplots_adjust(left=0.15, right=0.95, top=0.9, bottom=0.1)
     fig_canvas = FigureCanvasTkAgg(fig, master=fig_frame)
     fig_canvas.draw()
     fig_widget = fig_canvas.get_tk_widget()
-    fig_widget.grid(row=0, column=0, sticky="nsew", padx=(10,0))  # Ensure full expansion
+    fig_widget.grid(row=0, column=0, sticky="nsew", padx=(10,10), pady=(10,10))  # Ensure full expansion with padding
     plt.close(fig)

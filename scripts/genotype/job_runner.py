@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 import threading
 import queue
-from tkinter import messagebox
 import seqtyper_core
 import time
 import datetime
@@ -11,9 +10,12 @@ import os
 from .results_geno_combo import update_genotype_tab
 import pdb
 from ..utils.utils_common import print_time, run_update_lock
+from ..utils.common import parent_button_size, child_button_size, bfont,brfont,bmbfont,pnbuttonfont, header_font
+from ..utils.colors import COLORS
+from ..utils import modern_messagebox
 
 def job_runner(parent):
-    frame = ctk.CTkFrame(parent, fg_color="#3b3b3b")
+    frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
     frame.grid(row=0, column=0, sticky="nsew")
 
     # Configure grid weights
@@ -22,18 +24,13 @@ def job_runner(parent):
     frame.grid_rowconfigure(2, weight=0)  # Footer row doesn't expand
     frame.grid_columnconfigure(0, weight=1)  # Center content horizontally
 
-    frame.bfont = ("Helvetica", 15, "bold")
-    frame.brfont = ("Helvetica", 10, "bold")
-
     frame.header_frame = create_header(frame)
     frame.body_frame = create_body(parent, frame)
     frame.footer_frame = create_footer(parent, frame)
     return frame
 
 def create_body(parent, frame):
-    body_frame = ctk.CTkFrame(frame, fg_color="#3b3b3b")
-    body_frame.bfont = ("Helvetica", 15, "bold")
-    body_frame.brfont = ("Helvetica", 10, "bold")
+    body_frame = ctk.CTkFrame(frame, fg_color="transparent")
     body_frame.padx = (10, 10)
     body_frame.pady = (5, 5)
     body_frame.grid(row=1, column=0, sticky="nsew")
@@ -45,44 +42,60 @@ def create_body(parent, frame):
     body_frame.grid_rowconfigure(2, weight=1)  # Log text row expands
     body_frame.grid_columnconfigure(0, weight=1)  # Center content horizontally
 
-   
-    body_frame.progress_label = ctk.CTkLabel(body_frame, text="0 / 0 samples (0%)", font=frame.bfont, text_color = "yellow", fg_color="transparent")
-    body_frame.progress_label.grid(row=0, column=0, padx=(100,10), pady=body_frame.pady, sticky="w")
-     # Timer label
-    body_frame.timer_label = ctk.CTkLabel(body_frame, text="Elapsed time: 0s", font=frame.bfont, text_color="white")
-    body_frame.timer_label.grid(row=0, column=0, padx=(300, 10), pady=body_frame.pady, sticky="w")
+    # Create a frame for progress info
+    progress_info_frame = ctk.CTkFrame(body_frame, fg_color="transparent")
+    progress_info_frame.grid(row=0, column=0, padx=(20,20), pady=(10,5), sticky="ew")
+    progress_info_frame.grid_columnconfigure(0, weight=1)
+    progress_info_frame.grid_columnconfigure(1, weight=1)
+    progress_info_frame.grid_columnconfigure(2, weight=1)
     
-    body_frame.progress_bar = ttk.Progressbar(body_frame, orient="horizontal", mode="determinate")
-    body_frame.progress_bar.grid(row=1, column=0, padx=(100,100), pady=body_frame.pady, sticky="ew")
-    body_frame.progress_bar["maximum"] = 100  # Set maximum value
-    body_frame.progress_bar["value"] = 0
+    body_frame.progress_label = ctk.CTkLabel(progress_info_frame, text="0 / 0 samples (0%)", 
+                                             font=bfont, 
+                                             text_color=COLORS['text_primary'])
+    body_frame.progress_label.grid(row=0, column=0, padx=(10,20), pady=5, sticky="w")
     
-    body_frame.log_text = ctk.CTkTextbox(body_frame, wrap="word", font=("Helvetica", 15), state="normal", text_color="white")
+    body_frame.timer_label = ctk.CTkLabel(progress_info_frame, text="Elapsed time: 0s", 
+                                          font=bfont, 
+                                          text_color=COLORS['secondary'])
+    body_frame.timer_label.grid(row=0, column=1, padx=(0,20), pady=5, sticky="w")
+    
+    # Modern progress bar with CustomTkinter
+    body_frame.progress_bar = ctk.CTkProgressBar(body_frame, height=25, corner_radius=10,
+                                                 progress_color=COLORS['primary'],
+                                                 fg_color=COLORS['card'])
+    body_frame.progress_bar.grid(row=1, column=0, padx=(20,20), pady=(5,10), sticky="ew")
+    body_frame.progress_bar.set(0)  # Set initial value to 0
+    
+    body_frame.log_text = ctk.CTkTextbox(body_frame, wrap="word", font=bmbfont, state="normal", text_color="white", fg_color=COLORS['background'])
     body_frame.log_text.grid(row=2, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="nsew")
 
     return body_frame
 
 def create_header(frame):
-    header_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
-    header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(10, 5), padx=(10, 10))
+    header_frame = ctk.CTkFrame(frame, fg_color=COLORS['card'], corner_radius=12)
+    header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(15, 10), padx=(15, 15))
     header_frame.grid_columnconfigure(0, weight=1)  # Center header content
-    label = ctk.CTkLabel(header_frame, text="Job monitoring", font=("Helvetica", 30, "bold"),
-                         fg_color="#2b2b2b", text_color="green")
-    label.pack(side=tk.LEFT, pady=(10, 10), padx=(100, 10))
+    label = ctk.CTkLabel(header_frame, text="► Job Monitoring", font=header_font,
+                         fg_color="transparent", text_color=COLORS['primary'])
+    label.pack(side=tk.LEFT, pady=(15, 15), padx=(30, 10))
     return header_frame
 
 def create_footer(parent, frame):
-    footer_frame = ctk.CTkFrame(frame, fg_color="#3b3b3b")
-    footer_frame.grid(row=2, column=0, sticky="ew", pady=(10, 10), padx=(10, 10))
+    footer_frame = ctk.CTkFrame(frame, fg_color="transparent")
+    footer_frame.grid(row=2, column=0, sticky="ew", pady=(10, 10), padx=(15, 15))
     footer_frame.grid_columnconfigure(0, weight=1)
     footer_frame.grid_columnconfigure(1, weight=1)
 
-    footer_frame.previous_button = ctk.CTkButton(footer_frame, text="Previous", font=("Helvetica", 12, "bold"),
-                                    command=lambda: parent.master.show_page("parameters"))
+    footer_frame.previous_button = ctk.CTkButton(footer_frame, text="← Previous", font=pnbuttonfont,
+                                        fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                        corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
+                                        command=lambda: parent.master.show_page("parameters"))
     footer_frame.previous_button.grid(row=0, column=0, padx=(10, 100), sticky="e")
 
-    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next", font=("Helvetica", 12, "bold"), state="disabled",
-                                command=lambda:on_click_res(parent))
+    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next →", font=pnbuttonfont, state="disabled",
+                                    fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                    corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
+                                    command=lambda:on_click_res(parent))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
     return footer_frame
 
@@ -144,12 +157,11 @@ def update_progressbar(run_frame):
         s3 = run_frame.cur_sam_idx * 100 / run_frame.tot_sams
         formatted_s3 = f"{s3:.2f}"
         formatted_s3=str(formatted_s3)
-        run_frame.progress_bar["value"] = s3
+        run_frame.progress_bar.set(s3 / 100)  # CTkProgressBar uses 0.0 to 1.0
         run_frame.progress_label.configure(text=f"{str(run_frame.cur_sam_idx)}/{str(run_frame.tot_sams)} samples ({formatted_s3}%)")
         run_frame.update_idletasks()
     else:
-            #frame.progress_bar.set(100)
-        run_frame.progress_bar["value"] = 100
+        run_frame.progress_bar.set(1.0)  # CTkProgressBar uses 0.0 to 1.0 (1.0 = 100%)
         run_frame.progress_label.configure(text=f"{str(run_frame.tot_sams)}/{str(run_frame.tot_sams)} samples (100%)")
 
 def capture_output(run_frame):
@@ -268,15 +280,15 @@ def run_wrapper(parent, run_frame):
         if genoclass.get_parameter().is_pro_figure():
             genoclass.pro_all_sample_figs(run_frame.output_queue)
         with run_update_lock:
-            run_frame.output_queue.put("\nCongrats! SeqTyper run completed successfully.\n")
-            parent.master.after(0, lambda: messagebox.showinfo("Success", "SeqTyper ran successfully"))
+            run_frame.output_queue.put("\nCongrats! Seq2Typer run completed successfully.\n")
+            parent.master.after(0, lambda: modern_messagebox.showsuccess(parent.master, "Success", "Seq2Typer ran successfully"))
             parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
             run_frame.run_finished.set()
     except Exception as e:
-        emsg = f"Error running SeqTyper: {str(e)}"
+        emsg = f"Error running Seq2Typer: {str(e)}"
         with run_update_lock:
             run_frame.output_queue.put(emsg)
-        parent.master.after(0, lambda msg=emsg: messagebox.showerror("Error", msg))
+        parent.master.after(0, lambda msg=emsg: modern_messagebox.showerror(parent.master, "Error", msg))
     finally:
         with run_update_lock:
             run_frame.run_finished.set()

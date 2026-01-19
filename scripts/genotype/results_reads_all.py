@@ -2,6 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 import os
 from ..utils.utils_func import load_pdf
+from ..utils.mouse import _on_mousewheel
 
 def update_all_reads_qual_distri(parent,show_panel,type):
     print("starting to update_all_reads_qual_distri")
@@ -16,20 +17,28 @@ def update_all_reads_qual_distri(parent,show_panel,type):
     
     canvas=tk.Canvas(container,bg="white")
     canvas.grid(row=0,column=0,sticky="news",padx=5,pady=5)
-    
+
     v_scrollbar=tk.Scrollbar(container,orient="vertical",command=canvas.yview)
     h_scrollbar=tk.Scrollbar(container,orient="horizontal",command=canvas.xview)
     v_scrollbar.grid(row=0,column=1,sticky="ns")
     h_scrollbar.grid(row=1,column=0,sticky="ew")
-    
+
     canvas.configure(yscrollcommand=v_scrollbar.set,xscrollcommand=h_scrollbar.set)
+
+    # Bind mouse wheel and keyboard events for scrolling (only when mouse is over the canvas)
+    canvas.bind('<MouseWheel>', lambda event: _on_mousewheel(canvas, event))
+    canvas.bind('<Button-4>', lambda event: _on_mousewheel(canvas, event))
+    canvas.bind('<Button-5>', lambda event: _on_mousewheel(canvas, event))
+
+    def _on_arrow(event):
+        if hasattr(canvas, 'yview_scroll'):
+            if event.keysym == 'Down':
+                canvas.yview_scroll(1, "units")
+            elif event.keysym == 'Up':
+                canvas.yview_scroll(-1, "units")
+    canvas.bind('<Down>', _on_arrow)
+    canvas.bind('<Up>', _on_arrow)
     load_pdf_from_here(genoclass,canvas,type)
-    
-    def universal_scroll(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-    canvas.bind_all("<MouseWheel>", universal_scroll)
-    canvas.bind_all("<Button-4>", lambda event: canvas.yview_scroll(-1, "units"))
-    canvas.bind_all("<Button-5>", lambda event: canvas.yview_scroll(1, "units"))
     print("finished to update_all_reads_qual_distri")
 
 def load_pdf_from_here(genoclass,canvas,fig_type):

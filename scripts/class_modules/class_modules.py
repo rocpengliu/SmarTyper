@@ -1,4 +1,4 @@
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import dill
 from ..utils.utils_func import output_all_fig_tab, produce_fig_mar_sam_pdf, output_all_geno_table
@@ -68,7 +68,7 @@ class GenotypeClass:
             else:
                 raise ValueError("snp must be an instance of SnpClass")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for microhap
     def get_microhap(self):
@@ -81,7 +81,7 @@ class GenotypeClass:
             else:
                 raise ValueError("microhap must be an instance of MicroHapClass")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for sat (assuming SatClass is similar)
     def get_sat(self):
@@ -94,7 +94,7 @@ class GenotypeClass:
             else:
                 raise ValueError("sat must be an instance of SatClass")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_sex(self):
         return self._sex
@@ -106,7 +106,7 @@ class GenotypeClass:
             else:
                 raise ValueError("sex must be an instance of SexClass")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     def get_parameter(self):
         return self._parameter
@@ -132,11 +132,12 @@ class GenotypeClass:
         print(f"finished to read output of sample: {sample}")
 
     def pro_all_sample_figs(self, output_queue):
-        output_queue.put(f'starting to generate quality fig for all samples\n')
-        self.get_reads_res().pro_all_sample_qual_fig(self.get_parameter().get_outputdir(), output_queue)
+        n_threads = self.get_parameter().get_thread()
+        output_queue.put(f'starting to generate quality fig for all samples with {n_threads} threads\n')
+        self.get_reads_res().pro_all_sample_qual_fig(self.get_parameter().get_outputdir(), output_queue, n_threads)
         output_queue.put(f'finished to generate quality fig for all samples\n')
-        output_queue.put(f'starting to generate reads distributions fig for all samples\n')
-        self.get_microhap().pro_all_sample_read_distri_fig_pdf(self.get_parameter().get_outputdir(), output_queue)
+        output_queue.put(f'starting to generate reads distributions fig for all samples with {n_threads} threads\n')
+        self.get_microhap().pro_all_sample_read_distri_fig_pdf(self.get_parameter().get_outputdir(), output_queue, n_threads)
         output_queue.put(f'finished to generate all reads distributions fig for all samples\n')
     
     def generate_all(self):
@@ -186,15 +187,15 @@ class GenotypeClass:
             elif project == "microtype":
                 output_path = self.get_parameter().get_outputmicrotypeproject()
             else:
-                messagebox.showerror("Invalid Project Output", f"Unknown project type: {project}")
+                modern_messagebox.showerror(None, "Invalid Project Output", f"Unknown project type: {project}")
                 return
             with open(output_path, 'wb') as f:
                 dill.dump(self, f)
             print(f"Session successfully saved to: {output_path}")
         except Exception as e:
-            messagebox.showerror("Error Saving Session", str(e))
+            modern_messagebox.showerror(None, "Error Saving Session", str(e))
 
-    def load_session(self, project):
+    def load_session(self, project, parent=None):
         try:
             # Determine input path based on project type
             if project == "genotype":
@@ -202,14 +203,14 @@ class GenotypeClass:
             elif project == "microtype":
                 input_path = self.get_parameter().get_outputmicrotypeproject()
             else:
-                messagebox.showerror("Invalid Project Input", f"Unknown project type: {project}")
+                modern_messagebox.showerror(parent, "Invalid Project Input", f"Unknown project type: {project}")
                 return False
             # Load the saved object
             with open(input_path, 'rb') as f:
                 loaded_obj = dill.load(f)
             # Optional: verify type (optional but safe)
             if not isinstance(loaded_obj, self.__class__):
-                messagebox.showerror("Type Mismatch", f"Loaded object is not a {self.__class__.__name__} instance.")
+                modern_messagebox.showerror(parent, "Type Mismatch", f"Loaded object is not a {self.__class__.__name__} instance.")
                 return False
             # Update current instance with loaded data
             self.__dict__.update(loaded_obj.__dict__)
@@ -218,13 +219,13 @@ class GenotypeClass:
             elif project == "microtype":
                 self.get_parameter().set_project_microtype_model(True)
             else:
-                messagebox.showerror("Invalid Project Input", f"Unknown project type: {project}")
+                modern_messagebox.showerror(parent, "Invalid Project Input", f"Unknown project type: {project}")
                 return False
             print(f"[INFO] Session successfully loaded from: {input_path}")
             return True
         except FileNotFoundError:
-            messagebox.showerror("File Not Found", f"No file found at: {input_path}")
+            modern_messagebox.showerror(parent, "File Not Found", f"No file found at: {input_path}")
             return False
         except Exception as e:
-            messagebox.showerror("Error Loading Session", f"Failed to load session from {input_path}\n\n{str(e)}")
+            modern_messagebox.showerror(parent, "Error Loading Session", f"Failed to load session from {input_path}\n\n{str(e)}")
             return False

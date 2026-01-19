@@ -45,8 +45,15 @@ def update_com_tab(genoclass, fig_tab_bottom_panel):
         tree.heading(col, text=col)
         tree.column(col, anchor=tk.CENTER, stretch=False)
     populate_geno_com_tab(genoclass, tree)
-    frame.bind_all("<Button-4>", lambda event: frame.yview_scroll(-1, "units"))
-    frame.bind_all("<Button-5>", lambda event: frame.yview_scroll(1, "units"))
+    
+    # Auto-adjust column widths based on content
+    for col in columns:
+        max_width = len(col) * 10  # Header width
+        for item in tree.get_children():
+            item_text = str(tree.set(item, col))
+            text_width = len(item_text) * 8
+            max_width = max(max_width, text_width)
+        tree.column(col, width=min(max_width + 20, 400))
     print_time("finished to update_geno_tab")
 
 def populate_geno_com_tab(genoclass, tree):
@@ -115,9 +122,16 @@ def update_sim_tab(genoclass, fig_tab_bottom_panel):
         tree.column(col, anchor=tk.CENTER, stretch=False)
 
     populate_geno_sim_tab(genoclass, tree)
+    
+    # Auto-adjust column widths based on content
+    for col in columns:
+        max_width = len(col) * 10  # Header width
+        for item in tree.get_children():
+            item_text = str(tree.set(item, col))
+            text_width = len(item_text) * 8
+            max_width = max(max_width, text_width)
+        tree.column(col, width=min(max_width + 20, 400))
 
-    frame.bind_all("<Button-4>", lambda event: frame.yview_scroll(-1, "units"))
-    frame.bind_all("<Button-5>", lambda event: frame.yview_scroll(1, "units"))
     print_time("finished to update_geno_tab")
 
 def populate_geno_sim_tab(genoclass, tree):

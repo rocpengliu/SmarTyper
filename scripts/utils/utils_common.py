@@ -2,7 +2,7 @@ import platform
 import ctypes
 import os
 import re
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 import customtkinter as ctk
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
@@ -101,25 +101,74 @@ def get_com_prefix(fl1, fl2):
         com_prefix = com_prefix[:-1]
     return com_prefix
 
-def infile_browser(entry_widget, filetype):
-    cur_dir = os.path.dirname(entry_widget.get()) or '.'
-    filename = filedialog.askopenfilename(initialdir=cur_dir, filetypes=get_fl_types(cur_dir, filetype))
+def infile_browser(entry_widget, filetype, button_widget=None):
+    from .modern_file_dialog import modern_file_dialog
+    print(f"[DEBUG] infile_browser called for entry: {entry_widget}, filetype: {filetype}, button_widget: {button_widget}")
+    cur_dir = entry_widget.get() or '.'
+    if not os.path.exists(cur_dir):
+        cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
+    try:
+        filename = modern_file_dialog(entry_widget.winfo_toplevel(), 
+                                   title="Select File", 
+                                   mode="file", 
+                                   filetype=filetype,
+                                   initialdir=cur_dir,
+                                   button_widget=button_widget)
+    except Exception as e:
+        print(f"[DEBUG] modern_file_dialog failed, error: {e}. Retrying with button_widget=None.")
+        filename = modern_file_dialog(entry_widget.winfo_toplevel(), 
+                                   title="Select File", 
+                                   mode="file", 
+                                   filetype=filetype,
+                                   initialdir=cur_dir,
+                                   button_widget=None)
+    if filename:
+        print(f"[DEBUG] File selected: {filename}")
+        entry_widget.delete(0, 'end')
+        entry_widget.insert(0, filename)
+    else:
+        print(f"[DEBUG] No file selected or dialog cancelled.")
+
+def indir_browser(entry_widget, filetype, button_widget=None):
+    from .modern_file_dialog import modern_file_dialog
+    cur_dir = entry_widget.get() or '.'
+    if not os.path.exists(cur_dir):
+        cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
+    filename = modern_file_dialog(entry_widget.winfo_toplevel(),
+                                   title="Select Directory",
+                                   mode="directory",
+                                   filetype=filetype,
+                                   initialdir=cur_dir,
+                                   button_widget=button_widget)
     if filename:
         entry_widget.delete(0, 'end')
         entry_widget.insert(0, filename)
 
-def indir_browser(entry_widget, filetype):
-    cur_dir = os.path.dirname(entry_widget.get()) or '.'
-    filename = filedialog.askdirectory(initialdir=cur_dir, mustexist=True)
-    if filename:
-        entry_widget.delete(0, 'end')
-        entry_widget.insert(0, filename)
-def outfile_browser(entry_widget, ext = False):
-    cur_dir = os.path.dirname(entry_widget.get()) or '.'
-    filename = filedialog.askdirectory(initialdir=cur_dir, mustexist=ext)
-    if filename:
-        entry_widget.delete(0, 'end')
-        entry_widget.insert(0, filename)
+def outfile_browser(entry_widget, ext = False, button_widget=None):
+    from .modern_file_dialog import modern_file_dialog
+    try:
+        cur_dir = entry_widget.get() or '.'
+        if not os.path.exists(cur_dir):
+            cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
+        filename = modern_file_dialog(entry_widget.winfo_toplevel(),
+                                       title="Select Output Directory",
+                                       mode="directory",
+                                       filetype="all",
+                                       initialdir=cur_dir,
+                                       button_widget=button_widget)
+        if filename:
+            entry_widget.delete(0, 'end')
+            entry_widget.insert(0, filename)
+    except Exception as e:
+        print(f"Error in outfile_browser: {e}")
+        import traceback
+        traceback.print_exc()
+        # Fallback to standard dialog
+        from tkinter import filedialog
+        filename = filedialog.askdirectory(initialdir=cur_dir, title="Select Output Directory")
+        if filename:
+            entry_widget.delete(0, 'end')
+            entry_widget.insert(0, filename)
 
 def update_state(in1_entry, in2_entry, in2_button):
     if in1_entry.get():  # If entry1 is not empty

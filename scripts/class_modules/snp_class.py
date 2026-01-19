@@ -1,4 +1,4 @@
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 import pandas as pd
      
 class SnpClass:
@@ -18,7 +18,7 @@ class SnpClass:
             else:
                 raise ValueError("samples must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for microhaps
     def get_microhaps(self):
@@ -31,7 +31,7 @@ class SnpClass:
             else:
                 raise ValueError("microhaps must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for loci
     def get_loci(self):
@@ -44,4 +44,4 @@ class SnpClass:
             else:
                 raise ValueError("loci must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))

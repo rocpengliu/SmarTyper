@@ -4,6 +4,7 @@ import os
 import matplotlib
 matplotlib.use("Agg") 
 from ..utils.utils_func import load_pdf, produce_fig_sam_mar_pdf, produce_fig_mar_sam_pdf
+from ..utils.mouse import _on_mousewheel
 
 
 def update_geno_figs(parent, fig_tab_bottom_panel):
@@ -26,7 +27,7 @@ def update_geno_figs(parent, fig_tab_bottom_panel):
         return
     
     # Create a container frame for the canvas
-    container = ctk.CTkFrame(fig_tab_bottom_panel, fg_color="#3b3b3b")
+    container = ctk.CTkFrame(fig_tab_bottom_panel, fg_color="transparent")
     container.grid(row=0, column=0, sticky="nsew", padx=0, pady=0)
     container.grid_rowconfigure(0, weight=1)
     container.grid_columnconfigure(0, weight=1)
@@ -34,28 +35,36 @@ def update_geno_figs(parent, fig_tab_bottom_panel):
     # Create a canvas widget
     canvas = tk.Canvas(container, bg="white")
     canvas.grid(row=0, column=0, sticky="nsew")
-    
+
     # Create scrollbars
     v_scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
     h_scrollbar = tk.Scrollbar(container, orient="horizontal", command=canvas.xview)
-    
+
     # Place scrollbars
     v_scrollbar.grid(row=0, column=1, sticky="ns")
     h_scrollbar.grid(row=1, column=0, sticky="ew")
-    
+
     # Configure canvas scrollbars
     canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
-    
+
+    # Bind mouse wheel and keyboard events for scrolling (only when mouse is over the canvas)
+        # Linux uses Button-4 and Button-5, Windows/Mac use MouseWheel
+    canvas.bind('<MouseWheel>', lambda event: _on_mousewheel(canvas, event))  # Windows/Mac
+    canvas.bind('<Button-4>', lambda event: _on_mousewheel(canvas, event))    # Linux scroll up
+    canvas.bind('<Button-5>', lambda event: _on_mousewheel(canvas, event))    # Linux scroll down
+
+    # Optionally, bind up/down keys
+    def _on_arrow(event):
+        if hasattr(canvas, 'yview_scroll'):
+            if event.keysym == 'Down':
+                canvas.yview_scroll(1, "units")
+            elif event.keysym == 'Up':
+                canvas.yview_scroll(-1, "units")
+    canvas.bind('<Down>', _on_arrow)
+    canvas.bind('<Up>', _on_arrow)
+
     # Load the PDF into the canvas
     load_pdf_from_here(genoclass, canvas)
-    
-    # Bind mouse scroll events for scrolling
-    def universal_scroll(event):
-        canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
-
-    canvas.bind_all("<MouseWheel>", universal_scroll)
-    canvas.bind_all("<Button-4>", lambda event: canvas.yview_scroll(-1, "units"))
-    canvas.bind_all("<Button-5>", lambda event: canvas.yview_scroll(1, "units"))
 
     print("finished to update_geno_figs")
 

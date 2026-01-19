@@ -25,35 +25,36 @@
 SmarTyper  is written in Python/Cython, C/C++11 and can be installed on Linux or Mac OS X (with Xcode and Xcode Command Line Tools installed).
 We have tested SmarTyper on Ubuntu (Ubuntu 22.04.3 LTS)
 
-```
-sudo apt install python3 python3-pip
+#### Install system dependencies:
+```bash
+sudo apt install python3 python3-pip python3-venv python3-full
 sudo apt install cython3
 sudo apt install python3-tk
-pip3 install customtkinter
-pip3 install biopython
-pip3 install pillow
-pip3 install matplotlib
-pip3 install typing
-pip3 install dill
-pip3 install logomaker
-pip3 install seaborn
-pip3 install joblib
-pip3 install sklearn
 sudo apt-get install mafft
 ```
 
-### Step 2. Install smartyper
+### Step 2. Clone and set up SmarTyper
 
-```
+```bash
 git clone https://github.com/rocpengliu/SmarTyper.git
 cd SmarTyper
-python setup.py clean --all && python setup.py build_ext --inplace #compile seq2type
+
+pip3 install setuptools Cython
+pip3 install customtkinter biopython pillow matplotlib typing dill logomaker seaborn joblib scikit-learn
+pip3 install --break-system-packages setuptools Cython
+pip3 install --break-system-packages customtkinter biopython pillow matplotlib typing dill logomaker seaborn joblib scikit-learn
 ```
 
-### Step 3. Launch smartyper
+### Step 3. Compile the C++ extension
 
+```bash
+python3 setup.py clean --all && python3 setup.py build_ext --inplace
 ```
-python smartyper
+
+### Step 4. Launch SmarTyper
+
+```bash
+python3 smartyper.py
 ```
 
 ## To do list

@@ -6,14 +6,15 @@ import pandas as pd
 import matplotlib
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 from itertools import repeat
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import datetime
 import traceback
-from ..utils.common import color_bars, child_button_size
+from ..utils.common import color_bars, child_button_size, bmbfont, fig_font, seq_font
 from ..utils.utils_common import matplotlib_lock, print_time
+from ..utils.colors import COLORS
 
 matplotlib.use("Agg")
 
@@ -21,7 +22,7 @@ def update_genotype_tab(parent, genotab):
     genoclass = parent.master.genotype_class
     if len(genoclass.get_microhap().get_assigned_reads_dict())==0:
         return
-    genotab.n_rows=8
+    genotab.n_rows=5
     figures = []
     seq_tables = []
     hap_tables = []
@@ -46,7 +47,7 @@ def update_genotype_tab(parent, genotab):
                     else:
                         hap_tables.append(hap_df)
             except ValueError as e:
-                messagebox.showerror("Invalid Input", str(e))
+                modern_messagebox.showerror(None, "Invalid Input", str(e))
     elif genoclass.get_res_param().get_res_type() == "marker":
         selected_marker=genoclass.get_res_param().get_marker()
         samples = genoclass.get_metadata().get_samples_list()
@@ -66,7 +67,7 @@ def update_genotype_tab(parent, genotab):
                     else:
                         hap_tables.append(hap_df)
             except ValueError as e:
-                messagebox.showerror("Invalid Input", str(e))
+                modern_messagebox.showerror(None, "Invalid Input", str(e))
     else:
         return
     print("Figures length:", len(figures))
@@ -80,78 +81,78 @@ def update_genotype_tab(parent, genotab):
         return
     display_page(genotab, genoclass)   
 
-def update_genotype_tab2(parent, genotab):
-    genoclass = parent.master.genotype_class
-    if len(genoclass.get_microhap().get_assigned_reads_dict())==0:
-        return
-    genotab.n_rows=8
-    genotab.figures_lock = threading.Lock()
-    genotab.tables_lock = threading.Lock() 
-    genotab.figures = {}
-    genotab.seq_tables = {}
-    genotab.hap_tables = {}
-    genotab.s_table_list = {}
-    genotab.sam_mar_option=genoclass.get_res_param().get_res_type()
-    #sam_mar_future=list()
-    cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
-    print(f"{cur_time}starting to generate fig table")
-    sam_mar_future_dict={}
-    if genoclass.get_res_param().get_res_type() == "sample":
-        markers = genoclass.get_metadata().get_ref_markers_list()
-        selected_sample = genoclass.get_res_param().get_sample()
-        if not selected_sample or len(markers)==0:
-            return
-        print(f'selected sample: {selected_sample}')
-        with ThreadPoolExecutor(max_workers=genoclass.get_parameter().get_thread()) as executor:
-            for mar in markers:
-                future = executor.submit(process_fig_table, selected_sample, mar, genoclass, genotab)
-                sam_mar_future_dict[future]=mar
-    elif genoclass.get_res_param().get_res_type() == "marker":
-        selected_marker=genoclass.get_res_param().get_marker()
-        samples = genoclass.get_metadata().get_samples_list()
-        if not selected_marker or len(samples)==0:
-            return
-        print(f'selected marker: {selected_marker}')
-        with ThreadPoolExecutor(max_workers=genoclass.get_parameter().get_thread()) as executor:
-            for sam in samples:
-                future = executor.submit(process_fig_table, sam, selected_marker, genoclass, genotab)
-                sam_mar_future_dict[future]=sam
-    else:
-        return
+# def update_genotype_tab2(parent, genotab):
+#     genoclass = parent.master.genotype_class
+#     if len(genoclass.get_microhap().get_assigned_reads_dict())==0:
+#         return
+#     genotab.n_rows=5
+#     genotab.figures_lock = threading.Lock()
+#     genotab.tables_lock = threading.Lock() 
+#     genotab.figures = {}
+#     genotab.seq_tables = {}
+#     genotab.hap_tables = {}
+#     genotab.s_table_list = {}
+#     genotab.sam_mar_option=genoclass.get_res_param().get_res_type()
+#     #sam_mar_future=list()
+#     cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
+#     print(f"{cur_time}starting to generate fig table")
+#     sam_mar_future_dict={}
+#     if genoclass.get_res_param().get_res_type() == "sample":
+#         markers = genoclass.get_metadata().get_ref_markers_list()
+#         selected_sample = genoclass.get_res_param().get_sample()
+#         if not selected_sample or len(markers)==0:
+#             return
+#         print(f'selected sample: {selected_sample}')
+#         with ThreadPoolExecutor(max_workers=genoclass.get_parameter().get_thread()) as executor:
+#             for mar in markers:
+#                 future = executor.submit(process_fig_table, selected_sample, mar, genoclass, genotab)
+#                 sam_mar_future_dict[future]=mar
+#     elif genoclass.get_res_param().get_res_type() == "marker":
+#         selected_marker=genoclass.get_res_param().get_marker()
+#         samples = genoclass.get_metadata().get_samples_list()
+#         if not selected_marker or len(samples)==0:
+#             return
+#         print(f'selected marker: {selected_marker}')
+#         with ThreadPoolExecutor(max_workers=genoclass.get_parameter().get_thread()) as executor:
+#             for sam in samples:
+#                 future = executor.submit(process_fig_table, sam, selected_marker, genoclass, genotab)
+#                 sam_mar_future_dict[future]=sam
+#     else:
+#         return
     
-    for future in as_completed(sam_mar_future_dict):
-        sam_mar = sam_mar_future_dict[future]
-        try:
-            res=future.result()
-            with genotab.figures_lock:
-                print(f"starting to process {sam_mar}")
-                genotab.figures[sam_mar]=res[0]
-                genotab.seq_tables[sam_mar]=res[1]
-                genotab.hap_tables[sam_mar]=res[2]
-                print(f"finished to process {sam_mar}")
-        except Exception as e:
-                print(f"Eror processing fig tab: {e}")
+#     for future in as_completed(sam_mar_future_dict):
+#         sam_mar = sam_mar_future_dict[future]
+#         try:
+#             res=future.result()
+#             with genotab.figures_lock:
+#                 print(f"starting to process {sam_mar}")
+#                 genotab.figures[sam_mar]=res[0]
+#                 genotab.seq_tables[sam_mar]=res[1]
+#                 genotab.hap_tables[sam_mar]=res[2]
+#                 print(f"finished to process {sam_mar}")
+#         except Exception as e:
+#                 print(f"Eror processing fig tab: {e}")
     
-    print("Figures length:", len(genotab.figures))
-    print("33333333333333333333333333333333333")
-    cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
-    print(f"{cur_time}finished to generate fig table")
-    genotab.figures={k:genotab.figures[k] for k in sorted(genotab.figures)}
-    genotab.seq_tables={k:genotab.seq_tables[k] for k in sorted(genotab.seq_tables)}
-    genotab.hap_tables={k : genotab.hap_tables[k] for k in sorted(genotab.hap_tables)}
-    print("555555555555555555555555555555")
-    if (not (set(genotab.figures.keys()) == set(genotab.seq_tables.keys()) == set(genotab.hap_tables.keys()))):
-        return
-    print("6666666666666666666666666666666666666")
-    genotab.current_page = 0
-    genotab.fig_per_page = 10
-    genotab.tot_pages=int(len(genotab.figures) / genotab.fig_per_page) if (len(genotab.figures) % genotab.fig_per_page == 0) else (int(len(genotab.figures) / genotab.fig_per_page) + 1)
-    genotab.figures=list(genotab.figures.values())
-    genotab.seq_tables=list(genotab.seq_tables.values())
-    genotab.hap_tables=list(genotab.hap_tables.values())
-    print("77777777777777777777")
-    display_page(genotab, genoclass) 
-    print("88888888888888888888888")
+#     print("Figures length:", len(genotab.figures))
+#     print("33333333333333333333333333333333333")
+#     cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
+#     print(f"{cur_time}finished to generate fig table")
+#     genotab.figures={k:genotab.figures[k] for k in sorted(genotab.figures)}
+#     genotab.seq_tables={k:genotab.seq_tables[k] for k in sorted(genotab.seq_tables)}
+#     genotab.hap_tables={k : genotab.hap_tables[k] for k in sorted(genotab.hap_tables)}
+#     print("555555555555555555555555555555")
+#     if (not (set(genotab.figures.keys()) == set(genotab.seq_tables.keys()) == set(genotab.hap_tables.keys()))):
+#         return
+#     print("6666666666666666666666666666666666666")
+#     genotab.current_page = 0
+#     genotab.fig_per_page = 10
+#     genotab.tot_pages=int(len(genotab.figures) / genotab.fig_per_page) if (len(genotab.figures) % genotab.fig_per_page == 0) else (int(len(genotab.figures) / genotab.fig_per_page) + 1)
+#     genotab.figures=list(genotab.figures.values())
+#     genotab.seq_tables=list(genotab.seq_tables.values())
+#     genotab.hap_tables=list(genotab.hap_tables.values())
+#     print("77777777777777777777")
+#     display_page(genotab, genoclass) 
+#     print("88888888888888888888888")
     
 def display_page(genotab, genoclass):
     loci_table = genoclass.get_metadata().get_loc_df()
@@ -172,7 +173,7 @@ def display_page(genotab, genoclass):
     genotab.grid_columnconfigure(0, weight=1)
     
     # Set up the container with grid layout for better control
-    container = ctk.CTkFrame(genotab, fg_color="#3b3b3b")
+    container = ctk.CTkFrame(genotab, fg_color="transparent")
     container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
     container.grid_rowconfigure(0, weight=1)  # Canvas row (body) should expand
     container.grid_columnconfigure(0, weight=1)  # Canvas column should expand
@@ -214,19 +215,61 @@ def display_page(genotab, genoclass):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
     # Create page navigation buttons at the bottom
-    page_flip_frame = ctk.CTkFrame(genotab, fg_color="#3b3b3b")
+    page_flip_frame = ctk.CTkFrame(genotab, fg_color="transparent")
     page_flip_frame.grid(row=1, column=0, pady=(5, 5), sticky="ew")
+    page_flip_frame.grid_columnconfigure(0, weight=1)
+    page_flip_frame.grid_columnconfigure(1, weight=0)
+    page_flip_frame.grid_columnconfigure(2, weight=0)
+    page_flip_frame.grid_columnconfigure(3, weight=0)
+    page_flip_frame.grid_columnconfigure(4, weight=1)
 
-    previous_page_button = ctk.CTkButton(page_flip_frame, text="Previous", font=("Helvetica", 12, "bold"),
-                                         width=child_button_size['width'], height=child_button_size['height'],
-                                         command=lambda: on_previous_page_button_click(genotab, genoclass))
-    previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
-    #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
-    next_page_button = ctk.CTkButton(page_flip_frame, text="Next", font=("Helvetica", 12, "bold"),
+    previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=fig_font,
+                                             width=child_button_size['width'], height=child_button_size['height'],
+                                             fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                             corner_radius=10,
+                                             command=lambda: on_previous_page_button_click(genotab, genoclass))
+    previous_page_button.grid(row=0, column=0, sticky="e", padx=(10, 10), pady=(5, 5))
+    
+    # Page number display and input
+    page_info_label = ctk.CTkLabel(page_flip_frame, 
+                                   text=f"Page {genotab.current_page + 1} of {genotab.tot_pages}", 
+                                   font=fig_font,
+                                   text_color=COLORS['text_primary'])
+    page_info_label.grid(row=0, column=1, padx=(10, 10), pady=(5, 5))
+    
+    # Page input entry
+    page_var = tk.StringVar(value=str(genotab.current_page + 1))
+    page_entry = ctk.CTkEntry(page_flip_frame, width=60, height=22,
+                              textvariable=page_var, justify="center",
+                              font=bmbfont)
+    page_entry.grid(row=0, column=2, padx=(10, 10), pady=(5, 5))
+    
+    def go_to_page(event=None):
+        try:
+            page_num = int(page_var.get())
+            if 1 <= page_num <= genotab.tot_pages:
+                genotab.current_page = page_num - 1
+                display_page(genotab, genoclass)
+            else:
+                page_var.set(str(genotab.current_page + 1))
+        except ValueError:
+            page_var.set(str(genotab.current_page + 1))
+    
+    page_entry.bind("<Return>", go_to_page)
+
+    go_button = ctk.CTkButton(page_flip_frame, text="Go", font=fig_font,
+                              width=50, height=child_button_size['height'],
+                              fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                              corner_radius=10,
+                              command=go_to_page)
+    go_button.grid(row=0, column=3, padx=(10, 10), pady=(5, 5))
+
+    next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=fig_font,
                                      width=child_button_size['width'], height=child_button_size['height'],
+                                     fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                     corner_radius=10,
                                      command=lambda: on_next_page_button_click(genotab, genoclass))
-    next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(5,5))
-    #next_page_button.pack(side="right", padx=(50, 10), pady=(5,5))
+    next_page_button.grid(row=0, column=4, sticky='w', padx=(10, 10), pady=(5, 5))
 
     # Conditionally display navigation buttons
     if genotab.current_page == 0:
@@ -237,13 +280,35 @@ def display_page(genotab, genoclass):
         previous_page_button.configure(state='disabled')
         next_page_button.configure(state='disabled')
             
-    # Universal scrolling for the entire page, regardless of cursor position
-    def universal_scroll(event):
+    # Continuous scrolling for canvas area with proper scroll units
+    def on_mousewheel(event):
         canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"  # Prevent event propagation
+    
+    def on_shift_mousewheel(event):
+        canvas.xview_scroll(int(-1 * (event.delta / 120)), "units")
+        return "break"  # Prevent event propagation
 
-    canvas.bind_all("<MouseWheel>", universal_scroll)
-    canvas.bind_all("<Button-4>", lambda event: canvas.yview_scroll(-1, "units"))
-    canvas.bind_all("<Button-5>", lambda event: canvas.yview_scroll(1, "units"))
+    # Bind mouse wheel to container frame to capture all scroll events
+    def bind_mousewheel_recursive(widget):
+        widget.bind("<MouseWheel>", on_mousewheel, add="+")
+        widget.bind("<Button-4>", lambda event: canvas.yview_scroll(-3, "units"), add="+")
+        widget.bind("<Button-5>", lambda event: canvas.yview_scroll(3, "units"), add="+")
+        widget.bind("<Shift-MouseWheel>", on_shift_mousewheel, add="+")
+        widget.bind("<Shift-Button-4>", lambda event: canvas.xview_scroll(-3, "units"), add="+")
+        widget.bind("<Shift-Button-5>", lambda event: canvas.xview_scroll(3, "units"), add="+")
+        for child in widget.winfo_children():
+            bind_mousewheel_recursive(child)
+    
+    # Bind to container and all its children
+    container.bind("<MouseWheel>", on_mousewheel)
+    container.bind("<Button-4>", lambda event: canvas.yview_scroll(-3, "units"))
+    container.bind("<Button-5>", lambda event: canvas.yview_scroll(3, "units"))
+    container.bind("<Shift-MouseWheel>", on_shift_mousewheel)
+    container.bind("<Shift-Button-4>", lambda event: canvas.xview_scroll(-3, "units"))
+    container.bind("<Shift-Button-5>", lambda event: canvas.xview_scroll(3, "units"))
+    
+    bind_mousewheel_recursive(figures_frame)
 
 def process_fig_table(sample, marker, genoclass, genotab):
     try:
@@ -263,58 +328,60 @@ def process_fig_table(sample, marker, genoclass, genotab):
         traceback.print_exc()
         return None,None,None
     
-def process_fig_table3(sample, marker, genoclass, genotab)->bool:
-    try:
-        print(f"Thread {threading.current_thread().name}: 0 Starting to process fig table for {sample}_{marker}")
-        # Ensure the dictionaries return valid data before accessing it
-        amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
-        hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
-        sam_mar = f"{sample}_{marker}"
-        if amplicon_df is not None and not amplicon_df.empty:
-            fig = create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
-            tmp_df1=amplicon_df.head(genotab.n_rows)
-            tmp_df2=hap_df if (hap_df is not None and not hap_df.empty) else None
-            with genotab.figures_lock:
-                genotab.figures[sam_mar]=fig
-                genotab.seq_tables[sam_mar]=tmp_df1
-                genotab.hap_tables[sam_mar]=tmp_df2
-                return True
-            print(f"Thread {threading.current_thread().name}: 3 Finished to create figure and table for {sam_mar}")
-        print(f"Thread {threading.current_thread().name}: 4 Finished to process fig table for {sam_mar}")
-        return True
-    except Exception as e:
-        # Capture all exceptions for diagnostic information
-        print(f"5 Exception in {sam_mar}: {e}")
-        traceback.print_exc()
-        return True
-    finally:
-        # Add diagnostic to indicate the thread reached the end of the function
-        print(f"Thread {threading.current_thread().name}: 6 finished processing {sam_mar}")
-        return True
+# def process_fig_table3(sample, marker, genoclass, genotab)->bool:
+#     try:
+#         print(f"Thread {threading.current_thread().name}: 0 Starting to process fig table for {sample}_{marker}")
+#         # Ensure the dictionaries return valid data before accessing it
+#         amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
+#         hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
+#         sam_mar = f"{sample}_{marker}"
+#         if amplicon_df is not None and not amplicon_df.empty:
+#             fig = create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
+#             tmp_df1=amplicon_df.head(genotab.n_rows)
+#             tmp_df2=hap_df if (hap_df is not None and not hap_df.empty) else None
+#             with genotab.figures_lock:
+#                 genotab.figures[sam_mar]=fig
+#                 genotab.seq_tables[sam_mar]=tmp_df1
+#                 genotab.hap_tables[sam_mar]=tmp_df2
+#                 return True
+#             print(f"Thread {threading.current_thread().name}: 3 Finished to create figure and table for {sam_mar}")
+#         print(f"Thread {threading.current_thread().name}: 4 Finished to process fig table for {sam_mar}")
+#         return True
+#     except Exception as e:
+#         # Capture all exceptions for diagnostic information
+#         print(f"5 Exception in {sam_mar}: {e}")
+#         traceback.print_exc()
+#         return True
+#     finally:
+#         # Add diagnostic to indicate the thread reached the end of the function
+#         print(f"Thread {threading.current_thread().name}: 6 finished processing {sam_mar}")
+#         return True
 
-def process_fig_table2(sample, marker, genoclass, genotab):
-    try:
-        print(f"Thread {threading.current_thread().name}: Starting to process fig table for {sample}_{marker}")
-        amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
-        hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
-        sam_mar = f"{sample}_{marker}"
-        #print(f"starting to process figure table for {sam_mar}")
-        if amplicon_df is not None and not amplicon_df.empty:
-            with genotab.figures_lock:
-                genotab.figures[sam_mar]= create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
-            with genotab.tables_lock:
-                genotab.seq_tables[sam_mar]=amplicon_df.head(genotab.n_rows)
-                genotab.hap_tables[sam_mar]=(hap_df if not hap_df.empty else None) 
-        #print(f"finished to process figure table for {sam_mar}")
-        print(f"Thread {threading.current_thread().name}: Finished to process fig table for {sample}_{marker}")             
-    except ValueError as e:
-         print(f"Exception in {sample}_{marker}: {e}\n{traceback.format_exc()}")
-    finally:
-        print(f"Thread {threading.current_thread().name} finished processing {sample}_{marker}")
+# def process_fig_table2(sample, marker, genoclass, genotab):
+#     try:
+#         print(f"Thread {threading.current_thread().name}: Starting to process fig table for {sample}_{marker}")
+#         amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
+#         hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
+#         sam_mar = f"{sample}_{marker}"
+#         #print(f"starting to process figure table for {sam_mar}")
+#         if amplicon_df is not None and not amplicon_df.empty:
+#             with genotab.figures_lock:
+#                 genotab.figures[sam_mar]= create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
+#             with genotab.tables_lock:
+#                 genotab.seq_tables[sam_mar]=amplicon_df.head(genotab.n_rows)
+#                 genotab.hap_tables[sam_mar]=(hap_df if not hap_df.empty else None) 
+#         #print(f"finished to process figure table for {sam_mar}")
+#         print(f"Thread {threading.current_thread().name}: Finished to process fig table for {sample}_{marker}")             
+#     except ValueError as e:
+#          print(f"Exception in {sample}_{marker}: {e}\n{traceback.format_exc()}")
+#     finally:
+#         print(f"Thread {threading.current_thread().name} finished processing {sample}_{marker}")
 
 def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loci_table, genoclass):
     if len(genotab.figures) == 0:
         return
+    # Configure figures_frame to expand columns to full width
+    figures_frame.grid_columnconfigure(0, weight=1)
     row_index=0
     for fig, tbl, hap in zip(genotab.figures[start_index:end_index],
                         genotab.seq_tables[start_index:end_index],
@@ -326,7 +393,7 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
 
         # Create table frame
         table_frame = ctk.CTkFrame(figures_frame, fg_color="white")
-        table_frame.grid(row=row_index + 1, column=0, sticky="new", padx=5, pady=5)  # Place table below the figure
+        table_frame.grid(row=row_index + 1, column=0, sticky="nsew", padx=5, pady=5)  # Place table below the figure
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
         s_table, marker_tmp = create_table(table_frame, hap, tbl)
@@ -347,9 +414,10 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         #s_table.grid(row=0, column=0, sticky="nsew")
         v_table_scrollbar.grid(row=0, column=1, sticky="ns")
         h_table_scrollbar.grid(row=1, column=0, sticky="ew")
-        seq_widget = tk.Text(figures_frame, wrap="none", bg="white", fg="black", 
-                             font=("Courier New", 11), height=10, width=200)
-        seq_widget.grid(row=row_index + 2, column=0, sticky="news", padx=5, pady=5)
+        # Reduced sequence widget height from 10 to 6 for more compact display
+        seq_widget = tk.Text(figures_frame, wrap="none", bg="white", fg="black", font=seq_font, height=6)
+        figures_frame.grid_columnconfigure(0, weight=1)  # Ensure column expands
+        seq_widget.grid(row=row_index + 2, column=0, sticky="nsew", padx=5, pady=5)
         seq_widget.tag_configure("red_highlight", background="red", foreground="white")
         seq_widget.tag_configure("green_highlight", background='green', foreground='white')
         seq_widget.tag_configure("blue_highlight", background='blue', foreground='white')
@@ -433,9 +501,10 @@ def create_table(table_frame, hap, tbl):
             'id','sample', 'allele', 'base change', 't. reads', 'n. reads', 'percentage',
             'hap prop', 'allele prop', 'conclusive', 'zygosity', 'indel', 'len'
         ),
-        show='headings'
+        show='headings',
+        height=6  # 1 header + 5 data rows
     )
-    s_table.grid(row=0, column=0, sticky="we")
+    s_table.grid(row=0, column=0, sticky="nsew")
     
     # Configure tag styles
     s_table.tag_configure('bg_red', background='lightgray')
@@ -460,79 +529,85 @@ def create_table(table_frame, hap, tbl):
     marker_tmp = ""
     if hap is None:
         for index, row in tbl.iterrows():
-            if index == 0:
-                marker_tmp = str(row['Sample'])+"_"+row['id']
-            s_table.insert('', 'end',
-                values=(
-                    str(index),
-                    str(row['Sample']),
-                    row['id'],
-                    row['BaseChange'],
-                    str(row['TotalReads']),
-                    str(row['NumReads']),
-                    str(row['ReadRatio']),
-                    "nan",
-                    "nan",
-                    "nan",
-                    "nan",
-                    "nan",
-                    str(row['Length'])
-                )
-            )
+                if index == 0:
+                    marker_tmp = str(row['Sample'])+"_"+row['id']
+                if index < 5:  # Limit to 5 rows
+                    s_table.insert('', 'end',
+                        values=(
+                            str(index),
+                            str(row['Sample']),
+                            row['id'],
+                            row['BaseChange'],
+                            str(row['TotalReads']),
+                            str(row['NumReads']),
+                            str(row['ReadRatio']),
+                            "nan",
+                            "nan",
+                            "nan",
+                            "nan",
+                            "nan",
+                            str(row['Length'])
+                        )
+                    )
     else:
         for index, row in tbl.iterrows():
-            if index == 0:
-                marker_tmp = str(row['Sample'])+"_"+row['id']
-            if index <= (len(hap) - 1):
-                s_table.insert('', 'end',
-                    values=(
-                        str(index),
-                        str(row['Sample']),
-                        str(row['id']),
-                        hap.iloc[index]['BaseChange'],
-                        str(row['TotalReads']),
-                        str(row['NumReads']),
-                        str(row['ReadRatio']),
-                        str(hap.iloc[index]['AlleleReadsPer']),
-                        str(hap.iloc[index]['VarRatio']),
-                        hap.iloc[index]['Conclusive'],
-                        hap.iloc[index]['Zygosity'],
-                        hap.iloc[index]['Indel'],
-                        str(row['Length'])
-                    )
-                )
-            else:
-                s_table.insert('', 'end',
-                    values=(
-                        str(index),
-                        str(row['Sample']),
-                        str(row['id']),
-                        row['BaseChange'],
-                        str(row['TotalReads']),
-                        str(row['NumReads']),
-                        str(row['ReadRatio']),
-                        "nan",
-                        "nan",
-                        "nan",
-                        "nan",
-                        "nan",
-                        str(row['Length'])
-                    )
-                )
-    # Configure column widths
-    s_table.column('id', anchor=tk.CENTER, width=5)
-    s_table.column('sample', anchor=tk.CENTER, width=10)
-    s_table.column('allele', anchor=tk.CENTER, width=20)
-    s_table.column('base change', anchor=tk.CENTER, width=30)
-    s_table.column('t. reads', anchor=tk.CENTER, width=5)
-    s_table.column('n. reads', anchor=tk.CENTER, width=5)
-    s_table.column('percentage', anchor=tk.CENTER, width=10)
-    s_table.column('hap prop', anchor=tk.CENTER, width=10)
-    s_table.column('allele prop', anchor=tk.CENTER, width=10)
-    s_table.column('conclusive', anchor=tk.CENTER, width=10)
-    s_table.column('zygosity', anchor=tk.CENTER, width=10)
-    s_table.column('indel', anchor=tk.CENTER, width=5)
-    s_table.column('len', anchor=tk.CENTER, width=5)
+                if index == 0:
+                    marker_tmp = str(row['Sample'])+"_"+row['id']
+                if index < 5:  # Limit to 5 rows
+                    if index <= (len(hap) - 1):
+                        s_table.insert('', 'end',
+                            values=(
+                                str(index),
+                                str(row['Sample']),
+                                str(row['id']),
+                                hap.iloc[index]['BaseChange'],
+                                str(row['TotalReads']),
+                                str(row['NumReads']),
+                                str(row['ReadRatio']),
+                                str(hap.iloc[index]['AlleleReadsPer']),
+                                str(hap.iloc[index]['VarRatio']),
+                                hap.iloc[index]['Conclusive'],
+                                hap.iloc[index]['Zygosity'],
+                                hap.iloc[index]['Indel'],
+                                str(row['Length'])
+                            )
+                        )
+                    else:
+                        s_table.insert('', 'end',
+                            values=(
+                                str(index),
+                                str(row['Sample']),
+                                str(row['id']),
+                                row['BaseChange'],
+                                str(row['TotalReads']),
+                                str(row['NumReads']),
+                                str(row['ReadRatio']),
+                                "nan",
+                                "nan",
+                                "nan",
+                                "nan",
+                                "nan",
+                                str(row['Length'])
+                            )
+                        )
+    # Configure columns to auto-adjust based on content
+    # Calculate max width for each column based on content
+    for col in s_table['columns']:
+        # Get column heading text length
+        heading_width = len(str(s_table.heading(col)['text'])) * 8
+        
+        # Get max content width
+        max_content_width = heading_width
+        for item in s_table.get_children():
+            values = s_table.item(item)['values']
+            col_index = s_table['columns'].index(col)
+            if col_index < len(values):
+                content_width = len(str(values[col_index])) * 8
+                max_content_width = max(max_content_width, content_width)
+        
+        # Set column width with minimum and stretch
+        s_table.column(col, anchor=tk.CENTER, width=max_content_width, minwidth=50, stretch=True)
+    
     return s_table, marker_tmp
 
 def on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass):
@@ -600,7 +675,8 @@ def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
         return None
 
     with matplotlib_lock:
-        fig = Figure(figsize=(4,1.5), dpi=300)
+        # Reduced figure size for better fit - was (4,1.5), now (3,1)
+        fig = Figure(figsize=(3, 1), dpi=200)  # Reduced dpi from 300 to 200
         ax = fig.add_subplot(111)
         #bars = ax.bar(df['id'], df['NumReads'], tick_label=[str(x) for x in df['id']], color=colors)
         bars = ax.bar(df.index,
@@ -614,7 +690,7 @@ def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
         ax.set_xticklabels(df.index, fontsize=3)
         ax.set_yticks(ax.get_yticks())
         ax.set_yticklabels([str(int(i)) for i in ax.get_yticks()], fontsize=3)
-        fig.tight_layout(pad=2)
+        fig.tight_layout(pad=1)  # Reduced padding from 2 to 1
         fig.canvas.mpl_connect("button_press_event", lambda event: on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass))
         return fig
 def toggle_row_background(treeview, idx, tag_to_set=None, zygosity=None):

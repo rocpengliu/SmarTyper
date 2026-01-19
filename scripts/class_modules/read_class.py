@@ -79,15 +79,25 @@ class ReadsClass:
                     'sample':f'{sam}'
                 })).pipe(pd.melt, id_vars=['cycle','read','filtering', 'sample'],var_name='base',value_name='quality')
         return qual_df
-    def pro_all_sample_qual_fig(self, dir_path, output_queue):
+    def pro_all_sample_qual_fig(self, dir_path, output_queue, n_threads=4):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         print_time("starting to produce sample quality fig")
         output_queue.put(f'starting to produce sample quality fig!\n')
         combined_dic={}
-        for sam, vdic in self._sam_reads_qual_dict.items():
+        
+        def process_sample(sam, vdic):
             output_queue.put(f'starting to produce sample quality fig for {sam}!\n')
-            #combined_dfs=[df.dropna(axis=1,how='all') for df in vdic.values()]
-            #combined_dic[sam] = pd.concat(combined_dfs,axis=0,ignore_index=True)
-            combined_dic[sam] = pd.concat([df.dropna(axis=1, how='all') for df in vdic.values()], axis=0, ignore_index=True)
+            return sam, pd.concat([df.dropna(axis=1, how='all') for df in vdic.values()], axis=0, ignore_index=True)
+        
+        # Process samples in parallel using ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            futures = {executor.submit(process_sample, sam, vdic): sam for sam, vdic in self._sam_reads_qual_dict.items()}
+            for future in as_completed(futures):
+                try:
+                    sam, result_df = future.result()
+                    combined_dic[sam] = result_df
+                except Exception as exc:
+                    print(f"Error processing sample {futures[future]}: {exc}")
 
         output_queue.put(f'finished to combined_dic for quality fig!\n')
         combined_dfs=[df.dropna(axis=1,how='all') for df in combined_dic.values()]

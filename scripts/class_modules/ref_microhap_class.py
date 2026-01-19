@@ -1,7 +1,7 @@
 import warnings
 warnings.filterwarnings("ignore", message="mkl-service")
 
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 import pandas as pd
 from typing import Dict
 from ..utils.utils_func import trans_single_dna
@@ -78,7 +78,7 @@ class RefMicrotype:
             else:
                 raise ValueError(f"{overlapped_gene} is not a boolean")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
             
     def get_ref_microtype_dict(self):
         return self._ref_microtype_dict

@@ -1,6 +1,5 @@
 import os
 import pandas as pd
-from tkinter import messagebox
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier

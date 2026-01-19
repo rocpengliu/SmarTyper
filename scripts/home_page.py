@@ -1,62 +1,152 @@
 import customtkinter as ctk
-import tkinter.font as tkfont
+from .utils.colors import COLORS
+from .utils.common import title_font, subtitle_font, card_title_font, card_desc_font
+from .utils.smartyper_logo import SmarTyperLogo
 
-def create_home(parent):
-    default_font45 = ("Segoe UI", 45, "bold")
-    default_font15 = ("Segoe UI", 15, "bold")
-    default_font30 = ("Segoe UI", 30, "bold")
-    default_font25 = ("Segoe UI", 25, "bold")
-    page = ctk.CTkFrame(parent, fg_color="#3b3b3b")
-    page.grid_columnconfigure((0, 1, 2, 3), weight=1)
-    page.grid_rowconfigure(0, weight=1)  # Header row will expand
-    page.grid_rowconfigure(1, weight=3)  # Content row will expand
-    page.grid_rowconfigure(2, weight=1)  # Extra row to push buttons up
+def create_home(parent, app):
+    # Modern fonts
+    page = ctk.CTkFrame(parent, fg_color=COLORS['background'])
+    page.grid_columnconfigure(0, weight=1)
+    page.grid_rowconfigure(0, weight=3)  # Header row will expand more
+    page.grid_rowconfigure(1, weight=1)  # Content row will expand less (shorter)
+    page.grid_rowconfigure(2, weight=1)  # Footer row
 
-    # Header Frame
-    header_frame = ctk.CTkFrame(page, fg_color="#3b3b3b")
-    header_frame.grid(row=0, column=0, columnspan=4, sticky="nsew")
-    header_frame.grid_columnconfigure(0, weight=1)  # Make header frame expandable
+    # Modern Header Frame with gradient-like effect (AI style)
+
+    header_frame = ctk.CTkFrame(page, fg_color="transparent")
+    header_frame.grid(row=0, column=0, sticky="nsew", pady=(20, 0))
+    header_frame.grid_columnconfigure(0, weight=1)
     header_frame.grid_rowconfigure(0, weight=1)
+    header_frame.grid_rowconfigure(1, weight=0)
 
-    # Content Frame
-    content_frame = ctk.CTkFrame(page, fg_color="#3b3b3b")
-    content_frame.grid(row=1, column=0, columnspan=4, sticky="nsew")
-    content_frame.grid_columnconfigure((0, 1), weight=1)  # Columns in content_frame are expandable
-    content_frame.grid_rowconfigure(0, weight=1)  # Row in content_frame is expandable
+    # Composite label for colored S and T in SmarTyper
+    header_label_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+    header_label_frame.grid(row=0, column=0, pady=(18, 10), sticky="nsew")
+    header_label_frame.grid_columnconfigure(0, weight=1)
+    header_label_frame.grid_columnconfigure(1, weight=0)
+    header_label_frame.grid_columnconfigure(2, weight=1)
+    # Use an internal frame to center the label group in column 1
+    label_inner = ctk.CTkFrame(header_label_frame, fg_color="transparent")
+    label_inner.grid(row=0, column=1)
+    welcome_label = ctk.CTkLabel(
+        label_inner,
+        text="Welcome to ",
+        font=ctk.CTkFont(family="Segoe UI", size=64, weight="bold", slant="italic"),
+        fg_color="transparent",
+        text_color=COLORS['home']
+    )
+    welcome_label.pack(side="left")
+    s_label = ctk.CTkLabel(
+        label_inner,
+        text="S",
+        font=ctk.CTkFont(family="Segoe UI", size=64, weight="bold", slant="italic"),
+        fg_color="transparent",
+        text_color=COLORS['success']
+    )
+    s_label.pack(side="left")
+    mar_label = ctk.CTkLabel(
+        label_inner,
+        text="mar",
+        font=ctk.CTkFont(family="Segoe UI", size=64, weight="bold", slant="italic"),
+        fg_color="transparent",
+        text_color=COLORS['home']
+    )
+    mar_label.pack(side="left")
+    t_label = ctk.CTkLabel(
+        label_inner,
+        text="T",
+        font=ctk.CTkFont(family="Segoe UI", size=64, weight="bold", slant="italic"),
+        fg_color="transparent",
+        text_color=COLORS['primary']
+    )
+    t_label.pack(side="left")
+    yper_label = ctk.CTkLabel(
+        label_inner,
+        text="yper",
+        font=ctk.CTkFont(family="Segoe UI", size=64, weight="bold", slant="italic"),
+        fg_color="transparent",
+        text_color=COLORS['home']
+    )
+    yper_label.pack(side="left")
 
-    # Spacer Frame
-    spacer_frame = ctk.CTkFrame(page, fg_color="#3b3b3b")
-    spacer_frame.grid(row=2, column=0, columnspan=4, sticky="nsew")
-    
-    # Header Labels
-    header_label1 = ctk.CTkLabel(header_frame, text="Welcome to SmarTyper!", font=default_font45,
-                                 fg_color="#3b3b3b", text_color="green")
-    header_label1.pack(pady=(20, 10), padx=(50, 20), anchor="center")
+    header_label2 = ctk.CTkLabel(
+        header_frame,
+        text="-- A smart & comprehensive platform for SNP & microtype genotyping, visualization from amplicon sequence data",
+        font=subtitle_font,
+        fg_color="transparent",
+        text_color=COLORS['text_secondary'],
+        justify="center"
+    )
+    header_label2.grid(row=1, column=0, pady=(0, 10))
 
-    header_label2 = ctk.CTkLabel(header_frame, text="A smart platform for genotyping and comprehensive data statistics and visualization!",
-                                 font=default_font25, fg_color="#3b3b3b", text_color="green")
-    header_label2.pack(pady=(5, 5), padx=(50, 10), anchor="center")
+    # Main panel for the four cards
+    grid_padx = 40
+    main_panel = ctk.CTkFrame(page, fg_color="transparent")
+    main_panel.grid(row=1, column=0, sticky="nsew", padx=grid_padx, pady=(0, 5))
+    for i in range(2):
+        main_panel.grid_columnconfigure(i, weight=1, uniform="card")
+        main_panel.grid_rowconfigure(i, weight=1, uniform="card")
+    cards = [
+        {"title": "Genotype", "desc": "\u2022 Read raw amplicon sequence data (fastq.gz)\n\u2022 Conduct read quality control\n\u2022 Demultiplex reads based on locus's primer sequences\n\u2022 Extract various features\n\u2022 Predict zygosity & genotype\n\u2022 Review & correct genotype on interactive genotype plot\n\u2022 Based on software tool Seq2Type", "color": COLORS['primary'], "row": 0, "col": 0, "page": "genotype"},
+        {"title": "Microtype", "desc": "\u2022 Identify & visualize microhaplotypes\n\u2022 Align sequence & construct phylogenetic tree\n\u2022 Visualize microtype & sequence alignment\n\u2022 Visualize phylogenetic tree\n\u2022 Based on output genotype file from Genotype module\n\n", "color": COLORS['accent'], "row": 0, "col": 1, "page": "microtype"},
+        {"title": "Machine Learning", "desc": "\u2022 Train ML models\n\u2022 Apply models to feature table\n\u2022 Predict zygosity & genotype for smart genotyping\n\u2022Based on an existing genotype table (optional)", "color": COLORS['success'], "row": 1, "col": 0, "page": "machine learning"},
+        {"title": "Project Manager", "desc": "\u2022 Manage existing projects\n\u2022 Review & reedit genotype\n\u2022 Review microtype\n", "color": COLORS['workflow_gold'], "row": 1, "col": 1, "page": "project"}
+    ]
+    def create_modern_card(parent, card_data, app):
+        # Card with border color matching its main color
+        card = ctk.CTkFrame(parent, fg_color=COLORS['card'], corner_radius=14, border_width=2, border_color=card_data["color"])
+        card.grid_rowconfigure(0, weight=1)
+        card.grid_columnconfigure(0, weight=1)
+        # Card content
+        content_area = ctk.CTkFrame(card, fg_color="transparent")
+        content_area.pack(fill="both", expand=True, padx=25, pady=(20, 10))
+        title = ctk.CTkLabel(content_area, text=card_data["title"], font=card_title_font, text_color=card_data["color"])
+        title.pack(pady=(10, 8), fill="x")
+        # Display each bullet as a separate label (one line per bullet)
+        for line in card_data["desc"].split("\n"):
+            bullet_label = ctk.CTkLabel(
+                content_area,
+                text=line,
+                font=card_desc_font,
+                text_color=COLORS['text_secondary'],
+                justify="left",
+                anchor="w"
+            )
+            bullet_label.pack(anchor="w", padx=130, fill="x")
+        btn = ctk.CTkButton(
+            content_area,
+            text="Open →",
+            fg_color=card_data["color"],
+            hover_color="#7F5CFF",
+            corner_radius=10,
+            height=45,
+            font=("Segoe UI", 14, "bold"),
+            command=lambda: app.show_page(card_data["page"])
+        )
+        btn.pack(pady=(10, 15), padx=20, fill="x")
+        return card
 
-    header_label3 = ctk.CTkLabel(header_frame, text="--powered by Bioinforlligence", font=default_font15,
-                                 fg_color="#3b3b3b", text_color="green")
-    header_label3.pack(pady=(5, 20), padx=(50, 20), anchor="center")
+    for card in cards:
+        card_frame = create_modern_card(main_panel, card, app)
+        card_frame.grid(row=card["row"], column=card["col"], padx=15, pady=15, sticky="nsew")
 
-    # Place buttons side by side within the content_frame
-    size = 100
-    data_loader_btn = ctk.CTkButton(content_frame, text="Genotype", width=size*2, height=size, font=default_font30,
-                                    command=lambda: parent.master.show_page("genotype"))
-    data_loader_btn.grid(row=0, column=0, padx=(50, 25), pady=(10, 10), sticky="e")
-    
-    project_opener_btn = ctk.CTkButton(content_frame, text="Machine Learning", width=size*2, height=size, font=default_font30,
-                                        command=lambda: parent.master.show_page("machine learning"))
-    project_opener_btn.grid(row=0, column=1, padx=(50, 25), pady=(10, 10), sticky="w")
+    # Two horizontal panels for contact and citation, aligned side by side
+    lower_panel = ctk.CTkFrame(page, fg_color="transparent", corner_radius=12)
+    lower_panel.grid(row=2, column=0, sticky="ew", padx=40, pady=(2, 15))
+    lower_panel.grid_columnconfigure(0, weight=1)
+    lower_panel.grid_columnconfigure(1, weight=1)
+    lower_panel.grid_rowconfigure(0, weight=1)
 
-    project_opener_btn = ctk.CTkButton(content_frame, text="Microtype", width=size*2, height=size, font=default_font30,
-                                        command=lambda: parent.master.show_page("microtype"))
-    project_opener_btn.grid(row=1, column=0, padx=(50, 25), pady=(10, 10), sticky="e")
-    
-    microtype_btn = ctk.CTkButton(content_frame, text="Project", width=size*2, height=size, font=default_font30,
-                                    command=lambda: parent.master.show_page("project"))
-    microtype_btn.grid(row=1, column=1, padx=(50, 25), pady=(10, 10), sticky="w")
+    contact_info = "Contact: Dr. Peng Liu\nEnvironment and Climate Change Canada\nEmail: peng.liu@ec.gc.ca"
+    citation_info = "Citation: Liu, P. et al. SmarTyper: towards smart SNP and microhaplotype genotyping. (2026).\nGithub: https://github.com/rocpengliu/SmarTyper"
+
+    contact_panel = ctk.CTkFrame(lower_panel, fg_color="transparent")
+    contact_panel.grid(row=0, column=0, sticky="nse", padx=(0, 10))
+    ctk.CTkLabel(contact_panel, text=contact_info, font=("Segoe UI", 11), text_color=COLORS['text_secondary'], fg_color="transparent", anchor="e", justify="right").pack(fill="both", expand=True, pady=1)
+
+    citation_panel = ctk.CTkFrame(lower_panel, fg_color="transparent")
+    citation_panel.grid(row=0, column=1, sticky="nsw", padx=(10, 0))
+    ctk.CTkLabel(citation_panel, text=citation_info, font=("Segoe UI", 11), text_color=COLORS['text_secondary'], fg_color="transparent", anchor="w", justify="left").pack(fill="both", expand=True, pady=1)
 
     return page
+

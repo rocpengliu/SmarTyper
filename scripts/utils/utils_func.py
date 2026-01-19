@@ -1,5 +1,6 @@
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
+from . import modern_messagebox
 import os
 import threading
 import pandas as pd
@@ -31,7 +32,7 @@ def load_pdf(file_path, canvas):
             y_offset += pix.height  # Increment y-offset by the height of the image
         canvas.configure(scrollregion=canvas.bbox("all"))  # Update scroll region after all images are loaded
     except Exception as e:
-        messagebox.showerror("Error", f"Error loading PDF from {file_path}: {e}")
+        modern_messagebox.showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
 
 def output_all_fig_tab(genoclass,selected_sample,anal_type)->bool:
     print_time(f"starting to output_all_fig_tab for {selected_sample}")
@@ -152,31 +153,24 @@ def produce_fig_mar_sam_pdf(genoclass, selected_marker, anal_type) -> bool:
     pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_marker_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
-    print_time(f"aaaaaaaaaaaaaaaaaaaaaaaaaaaa")
     with matplotlib_lock:
         try:
-            print_time(f"bbbbbbbbbbbbbbbbbbbbbbbbbb")
             with PdfPages(pdf_file_path) as pdf:
-                print_time(f"cccccccccccccccccccccccccc")
                 tot_pages = 0
                 num_samples = len(samples)
-                print_time(f"dddddddddddddddddddddddddddddd")
                 for page_start in range(0, num_samples, max_plots_per_page):
-                    print_time(f"eeeeeeeeeeeeeeeeeeee")
                     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
                     # Normalize axes to always be 2D
                     axes = np.atleast_2d(axes)
                     # For a single subplot, axes is a scalar
                     if axes.shape == ():
                         axes = np.array([[axes]])
-                    print_time(f"fffffffffffffffffffffffffffffff")
                     page_samples = samples[page_start:page_start + max_plots_per_page]
                     for j, sam in enumerate(page_samples):
                         # Compute grid position
                         row = j // ncols
                         col = j % ncols
                         ax = axes[row, col]
-                        print_time(f"gggggggggggggggggggggggggggggggggg")
                         colors = ['lightgray', 'lightgray']
                         subset = genoclass.get_microhap().get_sam_microhaps_dir().get(sam, {}).get(selected_marker)
                         if subset is None or len(subset) == 0:
@@ -186,13 +180,11 @@ def produce_fig_mar_sam_pdf(genoclass, selected_marker, anal_type) -> bool:
                                 'Allele': [1, 2],
                                 'Zygosity': ['nan', 'nan']
                             })
-                        print_time(f"hhhhhhhhhhhhhhhhhhhhhh")
                         zygo = subset['Zygosity'].iloc[0]
                         if zygo == "heter":
                             colors[0:2] = ('darkgreen', 'orange')
                         elif zygo == "homo":
                             colors[0] = 'darkgreen'
-                        print_time(f"iiiiiiiiiiiiiiiiiiiiiiiiiiiii")
                         try:
                             ax.bar(x=subset['id'], height=subset['NumReads'], color=colors)
                             ax.set_xticks(range(len(subset)))
@@ -200,28 +192,22 @@ def produce_fig_mar_sam_pdf(genoclass, selected_marker, anal_type) -> bool:
                             ax.set_title(f'{sam} ({zygo})', fontsize=8)
                             ax.tick_params(axis='x', labelsize=6)
                             ax.tick_params(axis='y', labelsize=6)
-                            print_time(f"jjjjjjjjjjjjjjjjjjjjjjjjjj")
                         except Exception as plot_err:
                             print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                             traceback.print_exc()
-                        print_time(f"kkkkkkkkkkkkkkkkkkkkkkkk")
                         fig.subplots_adjust(hspace=0.8)
                         fig.suptitle(f"Genotypes of marker {selected_marker}")
                         fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                        print_time(f"llllllllllllllllllllllllll")
                     # Blank remaining axes (if any)
-                    print_time(f"mmmmmmmmmmmmmmmmmmmmmmmmmmmmmm")
                     total_plots = len(page_samples)
                     for blank_j in range(total_plots, max_plots_per_page):
                         row = blank_j // ncols
                         col = blank_j % ncols
                         axes[row, col].axis('off')
-                    print_time(f"nnnnnnnnnnnnnnnnnnnnnnnnnn")
                     fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
                     pdf.savefig(fig)
                     plt.close(fig)
                     tot_pages += 1
-                    print_time(f"oooooooooooooooooooooooooooooooo")
                 print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
                 return True
         except Exception as e:
@@ -326,7 +312,7 @@ def split_codingpos(pos_str:str)->list:
         else:
             raise ValueError(f"Invalid coding positions string: {pos_str}")
     except ValueError as e:
-        messagebox.showerror("Invalid Input", str(e))
+        modern_messagebox.showerror(None, "Invalid Input", str(e))
         return None
 
 def get_triml_pos(out_lst, trimlpos):

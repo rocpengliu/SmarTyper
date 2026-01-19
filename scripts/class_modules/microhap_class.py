@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 from ..utils.common import micro_microhap_df_columns, micro_micohap_df_empty_row, micro_amplicon_df_columns, micro_amplicon_df_empty_row, ml_mh_df_columns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -41,11 +41,11 @@ class MicroHapClass:
             else:
                 raise ValueError("assigned_reads_dict must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
             
     def get_microhap_file(self):
         return self._microhap_file
-    
+
     def set_microhap_file(self, microhap_file):
         try:
             if isinstance(microhap_file, str):
@@ -56,7 +56,7 @@ class MicroHapClass:
             else:
                 raise ValueError("microhap_file must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
             
     def get_samples(self):
         return self._samples
@@ -68,9 +68,8 @@ class MicroHapClass:
             else:
                 raise ValueError("samples must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
-    # Getter and Setter for microhaps
     def get_microhaps(self):
         return self._microhaps
 
@@ -81,7 +80,7 @@ class MicroHapClass:
             else:
                 raise ValueError("microhaps must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for loci
     def get_loci(self):
@@ -94,12 +93,12 @@ class MicroHapClass:
             else:
                 raise ValueError("loci must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     # Getter and Setter for amplicons
     def get_sam_amplicons_dir(self):
         return self._sam_amplicons_dir
-    
+
     def set_sam_amplicons_dir(self, sam_amplicons_dir):
         try:
             if isinstance(sam_amplicons_dir, dict):
@@ -107,7 +106,7 @@ class MicroHapClass:
             else:
                 raise ValueError("amplicons must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     def get_sam_microhaps_dir(self):
         return self._sam_microhaps_dir
@@ -119,7 +118,7 @@ class MicroHapClass:
             else:
                 raise ValueError("microhap must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     def read_amplicon_file(self, file, mars, sample, post_microhap_class, machine_learning_class, parameter_class):
         print_time(f"starting to read sample {sample} amplicon file")
@@ -454,7 +453,8 @@ class MicroHapClass:
                     n_page+=1
                     pdf.savefig(fig)
                     plt.close(fig)
-    def pro_all_sample_read_distri_fig_pdf(self, fpath, output_queue):
+    def pro_all_sample_read_distri_fig_pdf(self, fpath, output_queue, n_threads=4):
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         print_time("starting to produce sample read distribution fig")
         output_queue.put(f'starting to produce sample read distribution fig!\n')
         data_dict=self.get_assigned_sam_reads_dict()
@@ -462,27 +462,44 @@ class MicroHapClass:
                                            key=lambda item:item[1],
                                            reverse=True)}
         pdf_file=os.path.join(fpath,f"All_sample_read_distribution.pdf")
+        
+        bars_per_subplot=10
+        num_subplots_per_page=4
+        bars_per_page=bars_per_subplot*num_subplots_per_page
+        num_pages=len(sorted_data)/bars_per_page
+        if num_pages%1 == 0:
+            num_pages=int(num_pages)
+        else:
+            num_pages=int(num_pages)+1
+        
+        def generate_page(i):
+            output_queue.put(f'starting to produce sample read distribution fig page {i}\n')
+            fig, axs = self.produce_reads_dis_fig(i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page)
+            if fig is not None:
+                fig.suptitle(f"Reads distribution of all samples",fontsize=16,x=0.5,y=0.95,horizontalalignment='center')
+                fig.text(0.08,0.5,'n. of reads',va='center',rotation='vertical')
+                fig.text(0.5,0.01,f'page{i+1}',ha='center',fontsize=8)
+            return i, fig
+        
+        # Generate pages in parallel and collect results
+        page_figures = {}
+        with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            futures = {executor.submit(generate_page, i): i for i in range(num_pages)}
+            for future in as_completed(futures):
+                try:
+                    page_num, fig = future.result()
+                    if fig is not None:
+                        page_figures[page_num] = fig
+                except Exception as exc:
+                    print(f"Error generating page {futures[future]}: {exc}")
+        
+        # Save pages in correct order to PDF
         with PdfPages(pdf_file) as pdf:
-            bars_per_subplot=10
-            num_subplots_per_page=4
-            bars_per_page=bars_per_subplot*num_subplots_per_page
-            num_pages=len(sorted_data)/bars_per_page
-            if num_pages%1 == 0:
-                num_pages=int(num_pages)
-            else:
-                num_pages=int(num_pages)+1
-            n_page=0
-            fig, axs = None, None
             for i in range(num_pages):
-                output_queue.put(f'starting to produce sample read distribution fig page {i}')
-                fig,axs=self.produce_reads_dis_fig(i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page)
-                if fig is not None:
-                    fig.suptitle(f"Reads distribution of all samples",fontsize=16,x=0.5,y=0.95,horizontalalignment='center')
-                    fig.text(0.08,0.5,'n. of reads',va='center',rotation='vertical')
-                    fig.text(0.5,0.01,f'page{n_page+1}',ha='center',fontsize=8)
-                    n_page+=1
-                    pdf.savefig(fig)
-                    plt.close(fig)
+                if i in page_figures:
+                    pdf.savefig(page_figures[i])
+                    plt.close(page_figures[i])
+        
         print_time("finish to produce sample read distribution fig")
         output_queue.put(f'finished to produce sample read distribution fig!\n')
   

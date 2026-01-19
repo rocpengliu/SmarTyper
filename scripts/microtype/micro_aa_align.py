@@ -6,7 +6,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import logomaker
 from ..utils.utils_common import print_time
-from ..utils.common import child_button_size
+from ..utils.common import child_button_size, bmbfont, seq_font
+from ..utils.colors import COLORS
 import pdb
 import copy
 import os
@@ -100,16 +101,20 @@ def display_aa_seq_align(genotab, genoclass):
     tbl_frame.grid(row=1, column=0, sticky="news", padx=5, pady=(2,2))
     create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref_mar_refmt, ref_compre_mt, cur_compre_mt, tbl_frame)
     
-    page_flip_frame=ctk.CTkFrame(genotab, fg_color='#3b3b3b')
+    page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
     page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
     
-    genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="Previous", font=("Helvetica", 12, "bold"),
+    genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=bmbfont,
                                          width=child_button_size['width'], height=child_button_size['height'],
+                                         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                                         corner_radius=10,
                                          command=lambda:change_page(-1, genotab, genoclass))
     genotab.previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
     #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
-    genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next", font=("Helvetica", 12, "bold"),
+    genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=bmbfont,
                                      width=child_button_size['width'], height=child_button_size['height'],
+                                     fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                                     corner_radius=10,
                                      command=lambda:change_page(1, genotab, genoclass))
     genotab.next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(2,2))
 
@@ -208,7 +213,7 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
     v_scrollbar_seq.grid(row=0, column=1, sticky="ns")
     h_scrollbar_seq=ttk.Scrollbar(tbl_frame, orient="horizontal")
     h_scrollbar_seq.grid(row=1, column=0, sticky="ew")
-    seq_widget = tk.Text(tbl_frame, wrap="none", bg="white", fg="black", font=("Courier New", 11), yscrollcommand=v_scrollbar_seq.set)
+    seq_widget = tk.Text(tbl_frame, wrap="none", bg="white", fg="black", font=seq_font, yscrollcommand=v_scrollbar_seq.set)
     seq_widget.grid(row=0, column=0, sticky="nsew")  # Ensure full expansion
     seq_widget.configure(state='normal')
     v_scrollbar_seq.configure(command=seq_widget.yview)

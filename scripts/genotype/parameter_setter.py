@@ -1,9 +1,12 @@
+from ..utils.common import *
+from ..utils.colors import COLORS
 import customtkinter as ctk
 import tkinter as tk
 from .job_runner import run_seqtyper
+from ..utils.common import bfont, bmfont, header_font, child_button_size
 
 def parameter_setter(parent):
-    frame = ctk.CTkFrame(parent, fg_color="#3b3b3b")
+    frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
     frame.grid(row=0, column=0, sticky="nsew")
     
     # Configure grid row and column weights for expansion
@@ -19,32 +22,30 @@ def parameter_setter(parent):
     return frame
 
 def create_header(frame):
-    header_frame = ctk.CTkFrame(frame, fg_color="#2b2b2b")
-    header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(10, 5), padx=(10, 10))
+    header_frame = ctk.CTkFrame(frame, fg_color=COLORS['card'], corner_radius=12)
+    header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(15, 10), padx=(15, 15))
     header_frame.grid_columnconfigure(0, weight=1)  # Center header content
     
-    label = ctk.CTkLabel(header_frame, text="Parameter setting", font=("Helvetica", 30, "bold"),
-                         fg_color="#2b2b2b", text_color="green")
-    label.pack(side=tk.LEFT, pady=(10, 10), padx=(100, 10))
+    label = ctk.CTkLabel(header_frame, text="⚙ Parameter Setting", font=header_font,
+                         fg_color="transparent", text_color=COLORS['primary'])
+    label.pack(side=tk.LEFT, pady=(15, 15), padx=(30, 10))
     
     return header_frame
 
 def create_label_entry(body_frame, sub_frame, row, column, label_name, def_value, parameter_name, parma):
     label_var = ctk.StringVar(value=def_value)
-    ctk.CTkLabel(sub_frame, text=label_name, font=body_frame.bfont, text_color="white").grid(row=row, column=column, padx=(10, 10), pady=(5, 5), sticky="e")
-    ctk.CTkEntry(sub_frame, justify="center", width=80, textvariable=label_var).grid(row=row, column=(column + 1), padx=(10, 10), pady=(5, 5), sticky="w")
+    ctk.CTkLabel(sub_frame, text=label_name, font=bmbfont, text_color="white").grid(row=row, column=column, padx=(10, 10), pady=(5, 5), sticky="e")
+    ctk.CTkEntry(sub_frame, justify="center", width=80, textvariable=label_var, height=26).grid(row=row, column=(column + 1), padx=(10, 10), pady=(5, 5), sticky="w")
     label_var.trace_add("write", lambda *arg: getattr(parma, 'set_' + parameter_name, label_var.get()))
 
 def create_checkbox(body_frame, sub_frame, row, column, label_name, def_value, parameter_name, parma):
     checkbox_var = ctk.BooleanVar(value=def_value)
-    ctk.CTkLabel(sub_frame, text=label_name, font=body_frame.bfont, text_color="white").grid(row=row, column=column, padx=(10, 10), pady=(5, 5), sticky="e")
-    ctk.CTkCheckBox(sub_frame, text="yes", variable=checkbox_var, font=body_frame.bfont, text_color="white").grid(row=row, column=(column + 1), padx=(10, 10), pady=(5, 5), sticky="w")
+    ctk.CTkLabel(sub_frame, text=label_name, font=bmfont, text_color="white").grid(row=row, column=column, padx=(10, 10), pady=(5, 5), sticky="e")
+    ctk.CTkCheckBox(sub_frame, text="yes", variable=checkbox_var, font=bmfont, text_color="white").grid(row=row, column=(column + 1), padx=(10, 10), pady=(5, 5), sticky="w")
     checkbox_var.trace_add("write", lambda *arg: getattr(parma, 'set_' + parameter_name, checkbox_var.get()))
 
 def create_body(frame):
-    body_frame = ctk.CTkFrame(frame, fg_color="#3b3b3b")
-    body_frame.bfont = ("Helvetica", 15, "bold")
-    body_frame.brfont = ("Helvetica", 10, "bold")
+    body_frame = ctk.CTkFrame(frame, fg_color="transparent")
     body_frame.padx = (10, 10)
     body_frame.pady = (5, 5)
     body_frame.grid(row=1, column=0, columnspan=4, sticky="nsew")
@@ -59,17 +60,17 @@ def create_body(frame):
     
     body_frame.grid_rowconfigure('all', weight=1)
     
-        # Create left panel
-    left_body = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")
-    left_body.grid(row=0, column=0, columnspan=2, sticky="we")
+        # Create left panel blended with background
+    left_body = ctk.CTkFrame(body_frame, fg_color="transparent")
+    left_body.grid(row=0, column=0, columnspan=2, sticky="we", padx=5, pady=5)
 
-    # Create middle panel
-    middle_body = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")
-    middle_body.grid(row=0, column=2, columnspan=2, sticky="we")
+    # Create middle panel blended with background
+    middle_body = ctk.CTkFrame(body_frame, fg_color="transparent")
+    middle_body.grid(row=0, column=2, columnspan=2, sticky="we", padx=5, pady=5)
 
-    # Create right panel
-    right_body = ctk.CTkFrame(body_frame, fg_color="#3b3b3b")
-    right_body.grid(row=0, column=4, columnspan=2, sticky="w")
+    # Create right panel blended with background
+    right_body = ctk.CTkFrame(body_frame, fg_color="transparent")
+    right_body.grid(row=0, column=4, columnspan=2, sticky="w", padx=5, pady=5)
     
     # Configure panels
     left_body.grid_columnconfigure('all', weight=1)
@@ -83,7 +84,7 @@ def create_body(frame):
     param = frame.master.master.genotype_class.get_parameter()  # Adjusted to use parent.master.master
     
     row = 0
-    ctk.CTkLabel(left_body, text="General options", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
+    ctk.CTkLabel(left_body, text="General options:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
     row += 1
     create_label_entry(body_frame, left_body, row, 0, "Num. thread:", str(param.get_thread()), "thread", param)
     row += 1
@@ -97,14 +98,14 @@ def create_body(frame):
     row += 1
     
     fig_var = ctk.BooleanVar(value=param.is_pro_figure())
-    ctk.CTkLabel(left_body, text="Figure:", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
-    ctk.CTkCheckBox(left_body, text="", variable = fig_var, font =body_frame.bfont, text_color="white").grid(row=row, column=1, padx=(15, 15),sticky="w")
+    ctk.CTkLabel(left_body, text="Figure:", font=bmbfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
+    ctk.CTkCheckBox(left_body, text="", variable = fig_var, font =bmfont, text_color="white").grid(row=row, column=1, padx=(15, 15),sticky="w")
     fig_var.trace_add("write", lambda *args: param.set_pro_figure(fig_var.get()))
     row += 1
 
     row = 0
-    ctk.CTkLabel(middle_body, text="Anal type:", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
-    ctk.CTkLabel(middle_body, text=param.get_analtype(), font=body_frame.bfont, text_color="red").grid(row=row, column=1, padx=(30, 0), pady=body_frame.pady, sticky="w")
+    ctk.CTkLabel(middle_body, text="Analysis type:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
+    ctk.CTkLabel(middle_body, text=param.get_analtype(), font=bfont, text_color="red").grid(row=row, column=1, padx=(30, 0), pady=body_frame.pady, sticky="w")
     row += 1
 
     if param.get_analtype() == "snp":
@@ -122,7 +123,7 @@ def create_body(frame):
         pass
     
     row = 0
-    ctk.CTkLabel(right_body, text="Sex options", font=body_frame.bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
+    ctk.CTkLabel(right_body, text="Sex identification options:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
     row += 1
     create_label_entry(body_frame, right_body, row, 0, "htJetter:", str(param.get_htJetter()), "htJetter", param)
     row += 1
@@ -138,7 +139,7 @@ def create_body(frame):
     return body_frame
 
 def create_footer(parent, frame):
-    footer_frame = ctk.CTkFrame(frame, fg_color="#3b3b3b")
+    footer_frame = ctk.CTkFrame(frame, fg_color="transparent")
     footer_frame.grid(row=2, column=0, columnspan=2, pady=(10, 10), padx=(10, 10), sticky="ew")
     
     # Configure footer_frame to center its content
@@ -147,12 +148,16 @@ def create_footer(parent, frame):
     footer_frame.grid_columnconfigure(1, weight=1)
     
     # Previous Button
-    footer_frame.previous_button = ctk.CTkButton(footer_frame, text="Previous", font=("Helvetica", 12, "bold"),
+    footer_frame.previous_button = ctk.CTkButton(footer_frame, text="← Previous", font=pnbuttonfont,
+                                    fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                    corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
                                     command=lambda: on_previous_button_click(parent))
     footer_frame.previous_button.grid(row=0, column=0, padx=(10, 100), sticky="e")
     
     # Next Button
-    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next", font=("Helvetica", 12, "bold"), state='disabled',
+    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next →", font=pnbuttonfont,
+                                fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                corner_radius=10, height=child_button_size['height'], width=child_button_size['width'], state='disabled',
                                 command=lambda: on_run_button_click(parent, footer_frame))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
     return footer_frame

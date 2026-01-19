@@ -330,9 +330,14 @@ class PostMicrohapClass:
             print_time(f'{mar} ref_mh_class.get_ref_microtype_dict() len is {len(ref_mh_class.get_ref_microtype_dict())}')
             if not ref_mh_class.get_has_splicer():
                 print_time(f'{mar} does not have ref_mh_class.get_has_splicer()')
-                #pdb.set_trace()
                 splicer = "splicer_0"
-                ref_splicer0_mt_seq = copy.deepcopy(ref_mh_class.get_ref_microtype_dict().get(splicer).get_ref_dna_seq())#CompreMicrotypeClass
+                ref_microtype_dict = ref_mh_class.get_ref_microtype_dict()
+                print_time(f"Available splicers: {list(ref_microtype_dict.keys())}")
+                splicer_obj = ref_microtype_dict.get(splicer)
+                if splicer_obj is None:
+                    print_time(f"Splicer {splicer} not found in ref_microtype_dict for {mar}, skipping alignment.")
+                    return children_microtype_dict
+                ref_splicer0_mt_seq = copy.deepcopy(splicer_obj.get_ref_dna_seq())
                 tmp_compre_mt = CompreMicrotypeClass()
                 tmp_compre_mt.set_mar(mar)
                 tmp_compre_mt.set_splicer(splicer)
@@ -351,7 +356,9 @@ class PostMicrohapClass:
                     tmp_compre_var.set_mt(label)
                     tmp_compre_var.set_seq(seq)
                     tmp_compre_var.set_index(idx)
+                    print_time(f"Before do_pairwise_alignment for {id}")
                     indels_pos, mismatches_pos, snp_str = do_pairwise_alignment(ref_splicer0_mt_seq, seq)
+                    print_time(f"After do_pairwise_alignment for {id}")
                     tmp_compre_var.set_indel_pos_list(indels_pos)
                     tmp_compre_var.set_snp_pos_list(mismatches_pos)
                     tmp_compre_var.set_snp_str(snp_str)
@@ -521,37 +528,31 @@ class PostMicrohapClass:
 
     def populate_final_mar_mh_df_dict(self, parameter_class, metadata_class)->bool:
         print_time("staring to populate_final_mar_mh_df_dict")
-        n_threads = parameter_class.get_thread()
         cur_mh_df = metadata_class.get_cur_microhap_df()
         final_cur_mh_dict = {}
         final_cur_sim_mh_dict = {}
-        with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            futures ={}
-            for mar, mar_value in self.get_loc_ref_dict().items():
-                try:
-                    mh_lookup_table_dict = mar_value.get_mar_microhap_df().set_index('Seq')['Label'].to_dict()
-                    #print_time(f"mh_lookup_table_dict is {mh_lookup_table_dict}")
-                    if mh_lookup_table_dict is None or not mh_lookup_table_dict:
-                        continue
-                    cur_mar_mh_df = cur_mh_df[cur_mh_df['Locus'] == mar].reset_index(drop=True).copy()
-                    #print_time(f"cur_mar_mh_df is {cur_mar_mh_df}")
-                    if cur_mar_mh_df is None or len(cur_mar_mh_df) == 0:
-                        continue
-                    future = executor.submit(self.populate_each_mar_mh_dict, mar, cur_mar_mh_df, mh_lookup_table_dict)
-                    futures[future]=mar
-                except Exception as e:
-                        print(f"An error occurred while processing {mar}: {e}")
-            for future in as_completed(futures):
-                mar = futures[future]
-                try:
-                    final_sam_cur_mh_dict,final_sam_cur_mh_sim_dict = future.result()
-                    with thread_lock:
-                        self.get_loc_ref_dict().get(mar).set_final_mar_cur_microhap_nested_dict(final_sam_cur_mh_dict)
-                        final_cur_mh_dict[mar] = pd.concat(final_sam_cur_mh_dict.values(), ignore_index = True)
-                        self.get_loc_ref_dict().get(mar).set_final_mar_cur_sim_microhap_nested_dict(final_sam_cur_mh_sim_dict)
-                        final_cur_sim_mh_dict[mar] = pd.concat(final_sam_cur_mh_sim_dict.values(), ignore_index = True)
-                except Exception as exc:
-                    print(f"Error while populating final mh df for marker {mar}: {exc}")
+        
+        # Process sequentially to avoid threading issues with pandas groupby
+        for mar, mar_value in self.get_loc_ref_dict().items():
+            try:
+                mh_lookup_table_dict = mar_value.get_mar_microhap_df().set_index('Seq')['Label'].to_dict()
+                if mh_lookup_table_dict is None or not mh_lookup_table_dict:
+                    continue
+                cur_mar_mh_df = cur_mh_df[cur_mh_df['Locus'] == mar].reset_index(drop=True).copy()
+                if cur_mar_mh_df is None or len(cur_mar_mh_df) == 0:
+                    continue
+                
+                final_sam_cur_mh_dict, final_sam_cur_mh_sim_dict = self.populate_each_mar_mh_dict(mar, cur_mar_mh_df, mh_lookup_table_dict)
+                
+                self.get_loc_ref_dict().get(mar).set_final_mar_cur_microhap_nested_dict(final_sam_cur_mh_dict)
+                final_cur_mh_dict[mar] = pd.concat(final_sam_cur_mh_dict.values(), ignore_index = True)
+                self.get_loc_ref_dict().get(mar).set_final_mar_cur_sim_microhap_nested_dict(final_sam_cur_mh_sim_dict)
+                final_cur_sim_mh_dict[mar] = pd.concat(final_sam_cur_mh_sim_dict.values(), ignore_index = True)
+            except Exception as e:
+                print(f"An error occurred while processing {mar}: {e}")
+                import traceback
+                traceback.print_exc()
+        
         self.output_final_microhap_table(parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict)
         print_time("finished to populate_final_mar_mh_df_dict")
         return True

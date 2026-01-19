@@ -1,4 +1,4 @@
-from tkinter import messagebox  # Importing messagebox for error handling
+from ..utils import modern_messagebox
 import pandas as pd
 
 class SexClass:
@@ -18,7 +18,7 @@ class SexClass:
             else:
                 raise ValueError("samples must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for sex_loci
     def get_sex_loci(self):
@@ -31,7 +31,7 @@ class SexClass:
             else:
                 raise ValueError("sex_loci must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
 
     # Getter and Setter for loci
     def get_loci(self):
@@ -44,4 +44,4 @@ class SexClass:
             else:
                 raise ValueError("loci must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
