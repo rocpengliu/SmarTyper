@@ -307,67 +307,114 @@ class MicroHapClass:
             self._sam_amplicons_dir[sample]=amplicon_dir
         print_time(f"finished to read geno output file for sample: {sample}")
 
-    def update_sam_mar_reads_dict(self, sam, markers, sam_mar_reads_dict):
-        with thread_lock:
-            sam_mar_reads_dict.update({sam: {mar : 0 for mar in markers}})
-    def update_sam_microhaps_dir(self, sam, markers, sam_micro_dir):
-        with thread_lock:
-            sam_micro_dir.update({sam : {mar : pd.DataFrame(columns=micro_microhap_df_columns) for mar in markers}})
-    def update_sam_amplicons_dir(self, sam, markers, sam_amp_dir):
-        with thread_lock:
-            sam_amp_dir.update({sam : {mar : pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers}})
-    def update_sam_ml_dir(self, sam, markers, sam_mar_ml_dir):
-        with thread_lock:
-            sam_mar_ml_dir.update({sam : {mar : pd.DataFrame(columns = micro_amplicon_df_columns) for mar in markers}})
+    # def update_sam_mar_reads_dict(self, sam, markers, sam_mar_reads_dict):
+    #     with thread_lock:
+    #         sam_mar_reads_dict.update({sam: {mar : 0 for mar in markers}})
+    def update_sam_mar_reads_dict(self, sam, markers):
+        return sam, {mar : 0 for mar in markers}
+    # def update_sam_microhaps_dir(self, sam, markers, sam_micro_dir):
+    #     with thread_lock:
+    #         print_time(f"begain to update sam_micro_dir for sample: {sam}")
+    #         sam_micro_dir.update({sam : {mar : pd.DataFrame(columns=micro_microhap_df_columns) for mar in markers}})
+    def update_sam_microhaps_dir(self, sam, markers):
+        return sam, {mar : pd.DataFrame(columns = micro_microhap_df_columns) for mar in markers}
+    # def update_sam_amplicons_dir(self, sam, markers, sam_amp_dir):
+    #     with thread_lock:
+    #         sam_amp_dir.update({sam : {mar : pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers}})
+    def update_sam_amplicons_dir(self, sam, markers):
+        return sam, {mar : pd.DataFrame(columns = micro_amplicon_df_columns) for mar in markers}
+    # def update_sam_ml_dir(self, sam, markers, sam_mar_ml_dir):
+    #     with thread_lock:
+    #         sam_mar_ml_dir.update({sam : {mar : pd.DataFrame(columns = micro_amplicon_df_columns) for mar in markers}})
+    def update_sam_ml_dir(self, sam, markers):
+        return sam, {mar : pd.DataFrame(columns = ml_mh_df_columns) for mar in markers}
     def init_sam_mar_dicts(self,genotype_class):
         anal_type = genotype_class.get_parameter().get_analtype()
         samples=genotype_class.get_metadata().get_samples_list()
         markers=genotype_class.get_metadata().get_ref_markers_list()
-        n_threads=genotype_class.get_parameter().get_thread()
+        # n_threads=genotype_class.get_parameter().get_thread()
         print_time(f"begain to initiate sam_mar_dict")
         if anal_type == "snp":
             print_time(f"begain to initiate assigned_reads_dict")
             sam_mar_reads_dict=self.get_assigned_reads_dict()
-            with ThreadPoolExecutor(max_workers=n_threads) as executor:
-                futures = [executor.submit(self.update_sam_mar_reads_dict, sam, markers, sam_mar_reads_dict) for sam in samples]
-                for future in futures:
-                    try:
-                        future.result()
-                    except Exception as exc:
-                        print(f"Error while update sam mar reads dict for sample: {exc}")
+            sam_mar_reads_dict={sam:{mar:0 for mar in markers} for sam in samples}
+            # with ThreadPoolExecutor(max_workers = n_threads) as executor:
+            #     futures = [executor.submit(self.update_sam_mar_reads_dict, sam, markers) for sam in samples]
+            #     for future in as_completed(futures):
+            #         try:
+            #             sam, mar_dict = future.result()
+            #             sam_mar_reads_dict[sam] = mar_dict
+            #         except Exception as exc:
+            #             print(f"Error while update sam mar reads dict for sample: {exc}")
             self.set_assigned_reads_dict(sam_mar_reads_dict)
+            
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures = [executor.submit(self.update_sam_mar_reads_dict, sam, markers, sam_mar_reads_dict) for sam in samples]
+            #     for future in futures:
+            #         try:
+            #             future.result()
+            #         except Exception as exc:
+            #             print(f"Error while update sam mar reads dict for sample: {exc}")
+            # self.set_assigned_reads_dict(sam_mar_reads_dict)
             
             print_time(f"begain to initiate sam_microhaps_dir")
             sam_micro_dir=self.get_sam_microhaps_dir()
-            with ThreadPoolExecutor(max_workers=n_threads) as executor:
-                futures=[executor.submit(self.update_sam_microhaps_dir, sam, markers, sam_micro_dir) for sam in samples]
-                for future in futures:
-                    try:
-                        future.result()
-                    except Exception as exc:
-                        print(f"Error while update sam micrhps dict for sample: {exc}")
+            sam_micro_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures=[executor.submit(self.update_sam_microhaps_dir, sam, markers) for sam in samples]
+            #     for future in as_completed(futures):
+            #         try:
+            #             sam, mar_dict = future.result()
+            #             sam_micro_dir[sam] = mar_dict
+            #         except Exception as exc:
+            #             print(f"Error while update sam micrhps dict for sample: {exc}")
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures=[executor.submit(self.update_sam_microhaps_dir, sam, markers, sam_micro_dir) for sam in samples]
+            #     for future in futures:
+            #         try:
+            #             future.result()
+            #         except Exception as exc:
+            #             print(f"Error while update sam micrhps dict for sample: {exc}")
             self.set_sam_microhaps_dir(sam_micro_dir)
             
             print_time(f"begain to initiate sam_amplicons_dir")
             sam_amp_dir=self.get_sam_amplicons_dir()
-            with ThreadPoolExecutor(max_workers=n_threads) as executor:
-                futures=[executor.submit(self.update_sam_amplicons_dir, sam, markers, sam_amp_dir) for sam in samples]
-                for future in futures:
-                    try:
-                        future.result()
-                    except Exception as exc:
-                        print(f"Error while update sam amplicon dict for sample: {exc}")
+            sam_amp_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures=[executor.submit(self.update_sam_amplicons_dir, sam, markers) for sam in samples]
+            #     for future in as_completed(futures):
+            #         try:
+            #             sam, mar_dict = future.result()
+            #             sam_amp_dir[sam] = mar_dict
+            #         except Exception as exc:
+            #             print(f"Error while update sam amplicon dict for sample: {exc}")
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures=[executor.submit(self.update_sam_amplicons_dir, sam, markers, sam_amp_dir) for sam in samples]
+            #     for future in futures:
+            #         try:
+            #             future.result()
+            #         except Exception as exc:
+            #             print(f"Error while update sam amplicon dict for sample: {exc}")
             self.set_sam_amplicons_dir(sam_amp_dir)
             
             print_time(f"begain to initiate sam_ml_dir")
             sam_ml_dir=self.get_sam_mar_ml_dir()
-            with ThreadPoolExecutor(max_workers=n_threads) as executor:
-                futures=[executor.submit(self.update_sam_ml_dir, sam, markers, sam_ml_dir) for sam in samples]
-                for future in futures:
-                    try:
-                        future.result()
-                    except Exception as exc:
-                        print(f"Error while update sam ml dict for sample: {exc}")
+            sam_ml_dir={sam:{mar:pd.DataFrame(columns=ml_mh_df_columns) for mar in markers} for sam in samples}
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures=[executor.submit(self.update_sam_ml_dir, sam, markers) for sam in samples]
+            #     for future in as_completed(futures):
+            #         try:
+            #             sam, mar_dict = future.result()
+            #             sam_ml_dir[sam] = mar_dict
+            #         except Exception as exc:
+            #             print(f"Error while update sam ml dict for sample: {exc}")
+            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            #     futures=[executor.submit(self.update_sam_ml_dir, sam, markers, sam_ml_dir) for sam in samples]
+            #     for future in futures:
+            #         try:
+            #             future.result()
+            #         except Exception as exc:
+            #             print(f"Error while update sam ml dict for sample: {exc}")
             self.set_sam_mar_ml_dir(sam_ml_dir)
         else:
             pass

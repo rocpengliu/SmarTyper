@@ -88,20 +88,20 @@ class ParameterClass:
     def set_cur_microhap_input_file(self, cur_microhap_input_file):
         self._cur_microhap_input_file = cur_microhap_input_file if isinstance(cur_microhap_input_file, str) else str(cur_microhap_input_file)
         if not os.path.isfile(self._cur_microhap_input_file):
-            raise ValueError("Invalid post-microhap input file path does not exist.")
+            raise ValueError("Invalid post-microtype input file path does not exist.")
     
     def get_pre_microhap_input_file(self):
         return self._pre_microhap_input_file
     def set_pre_microhap_input_file(self, pre_microhap_input_file):
         self._pre_microhap_input_file = pre_microhap_input_file if isinstance(pre_microhap_input_file, str) else str(pre_microhap_input_file)
         if not os.path.isfile(self._pre_microhap_input_file):
-            raise ValueError("Invalid pre-microhap input file")
+            raise ValueError("Invalid pre-microtype input file")
     def get_post_microhap_output_dir(self):
         return self._post_microhap_output_dir
     def set_post_microhap_output_dir(self, post_microhap_output_dir):
         self._post_microhap_output_dir = post_microhap_output_dir if isinstance(post_microhap_output_dir, str) else str(post_microhap_output_dir)
         if not os.path.isdir(self._post_microhap_output_dir):
-            raise ValueError("Invalid microhap output directory path. Directory does not exist.")
+            raise ValueError("Invalid microtype output directory path. Directory does not exist.")
         
     def get_thread(self):
         return self._thread

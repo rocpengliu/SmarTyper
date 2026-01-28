@@ -28,7 +28,7 @@ def create_header(frame):
     header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(15, 10), padx=(15, 15))
     header_frame.grid_columnconfigure(0, weight=1)  # Center header content
     
-    label = ctk.CTkLabel(header_frame, text="◇ Microhap Loading", font=header_font,
+    label = ctk.CTkLabel(header_frame, text="◇ Microtype Loading", font=header_font,
                          fg_color="transparent", text_color=COLORS['accent'])
     label.pack(side=tk.LEFT, pady=(15, 15), padx=(30, 10))
     return header_frame
@@ -81,7 +81,7 @@ def create_body(parent, frame):
     row += 1
     
     body_frame.top_panel.inputdir_var = ctk.StringVar(value=genotype_class.get_parameter().get_cur_microhap_input_file())
-    ctk.CTkLabel(body_frame.top_panel, text="Microhap input file:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
+    ctk.CTkLabel(body_frame.top_panel, text="Microtype input file:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.in_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=body_frame.top_panel.inputdir_var,
                                          height=26, corner_radius=8, border_width=2)
     body_frame.top_panel.in_entry.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
@@ -146,7 +146,7 @@ def confirm_inputfiles(frame, genotype_class, confirm_btn):
         confirm_btn.configure(text="Confirm", state="normal")
         return
     if genotype_class.get_parameter().get_cur_microhap_input_file() is None or not os.path.isfile(genotype_class.get_parameter().get_cur_microhap_input_file()):
-        modern_messagebox.showerror(parent_win, "Error", "Microhap input file is missing or corrupted.")
+        modern_messagebox.showerror(parent_win, "Error", "Microtype input file is missing or corrupted.")
         confirm_btn.configure(text="Confirm", state="normal")
         return
     if genotype_class.get_parameter().get_post_microhap_output_dir() is None or not os.path.isdir(genotype_class.get_parameter().get_post_microhap_output_dir()):

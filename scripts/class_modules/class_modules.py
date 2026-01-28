@@ -168,9 +168,10 @@ class GenotypeClass:
                     mar = futures[future]
                     try:
                         res=future.result()
-                        if res:
-                            print_time(f'Successfully processed marker: {mar}')
-                        else:
+                        if not res:
+                            # print_time(f'Successfully processed marker: {mar}')
+                        #     pass
+                        # else:
                             print_time(f'Failed to process marker: {mar}')
                     except Exception as e:
                             print_time(f'Error processing marker: {mar}: {e}')

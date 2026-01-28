@@ -1,5 +1,12 @@
 import customtkinter as ctk
 import tkinter as tk
+from tkinter import ttk
+def on_combobox_select(event, selected_option, genoclass, parent, body_frame):
+    value = selected_option.get()
+    genoclass.get_res_param().set_sample_or_marker(value)
+    print(f"Selected sample or marker: {value}")
+    update_genotype_tab(parent, body_frame.bottom_panel)
+
 from ..utils import modern_messagebox
 import threading
 import matplotlib
@@ -57,54 +64,6 @@ def create_body(parent, frame):
 
 def create_top_panel(parent, body_frame):
     genoclass = parent.master.genotype_class
-    # --- Highlight/dim logic for buttons ---
-    def highlight_buttons(clicked_btn_name, child_btn_name=None):
-        highlight_fg = COLORS['accent']
-        highlight_hover = COLORS['primary']
-        dim_fg = COLORS['card']
-        dim_hover = COLORS['secondary']
-        parent_map = {
-            'figure': 'Geno Fig & Tab',
-            'table': 'Geno Fig & Tab',
-            'quality': 'Sample Reads',
-            'distribution': 'Sample Reads',
-        }
-        if hasattr(top_panel, 'button_refs'):
-            all_btns = list(top_panel.button_refs.keys())
-        else:
-            all_btns = []
-        if child_btn_name:
-            parent_name = parent_map.get(child_btn_name, "")
-            # Define child groups for each parent
-            child_groups = {
-                'Geno Fig & Tab': ['figure', 'table'],
-                'Sample Reads': ['quality', 'distribution'],
-            }
-            for name, btn in top_panel.button_refs.items():
-                try:
-                    # Highlight parent if it's the parent
-                    if name == parent_name:
-                        btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
-                    # Highlight only the clicked child, dim siblings
-                    elif parent_name and name in child_groups.get(parent_name, []):
-                        if name == child_btn_name:
-                            btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
-                        else:
-                            btn.configure(fg_color=dim_fg, hover_color=dim_hover)
-                    else:
-                        btn.configure(fg_color=dim_fg, hover_color=dim_hover)
-                except Exception:
-                    pass
-        else:
-            for name, btn in top_panel.button_refs.items():
-                try:
-                    if name == clicked_btn_name:
-                        btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
-                    else:
-                        btn.configure(fg_color=dim_fg, hover_color=dim_hover)
-                except Exception:
-                    pass
-
     top_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
     top_panel.grid(row=0, column=0, sticky="ew", padx=body_frame.padx, pady=body_frame.pady)
     top_panel.grid_rowconfigure(0, weight=0)
@@ -131,20 +90,52 @@ def create_top_panel(parent, body_frame):
 
     top_panel.res_type.trace_add("write", lambda *args: genoclass.get_res_param().set_res_type(top_panel.res_type.get()))
 
-    # Initialize ComboBox with an empty list
+    # Modern styled ttk.Combobox
     top_panel.options = []
     selected_option = tk.StringVar(value="")
-    top_panel.combobox = ctk.CTkComboBox(top_panel, values=top_panel.options, variable=selected_option, font=brfont)
+    # --- Modern ttk.Combobox style ---
+    style = ttk.Style()
+    # Use a unique style name to avoid global changes
+    style_name = "Modern.TCombobox"
+    style.theme_use(style.theme_use())  # Ensure theme is set
+    style.configure(style_name,
+        fieldbackground=COLORS['card'],
+        background=COLORS['card'],
+        foreground=COLORS['primary'],
+        bordercolor=COLORS['primary'],
+        lightcolor=COLORS['primary'],
+        darkcolor=COLORS['primary'],
+        borderwidth=2,
+        relief="flat",
+        padding=6,
+        selectbackground=COLORS['primary'],
+        selectforeground="white",
+        font=brfont
+    )
+    style.map(style_name,
+        fieldbackground=[('readonly', COLORS['card']), ('!readonly', COLORS['card'])],
+        foreground=[('readonly', COLORS['primary']), ('!readonly', COLORS['primary'])],
+        background=[('readonly', COLORS['card']), ('!readonly', COLORS['card'])],
+        bordercolor=[('focus', COLORS['accent']), ('!focus', COLORS['primary'])],
+        selectbackground=[('readonly', COLORS['primary']), ('!readonly', COLORS['primary'])],
+        selectforeground=[('readonly', 'white'), ('!readonly', 'white')]
+    )
+    top_panel.combobox = ttk.Combobox(top_panel, textvariable=selected_option, values=top_panel.options, font=brfont, state="readonly", style=style_name)
     top_panel.combobox.grid(row=row, column=2, padx=(25, 10), pady=(3,3), sticky="w")
-    selected_option.trace_add("write", lambda *args: (genoclass.get_res_param().set_sample_or_marker(selected_option.get()),
-                                                      print(f"Selected sample or marker: {selected_option.get()}"),
-                                                      update_genotype_tab(parent, body_frame.bottom_panel)))
+    # Bind the external handler with lambda to pass required arguments
+    top_panel.combobox.bind(
+        "<<ComboboxSelected>>",
+        lambda event: on_combobox_select(event, selected_option, genoclass, parent, body_frame)
+    )
+    # Set default value if options available
+    if top_panel.options:
+        selected_option.set(top_panel.options[0])
+    else:
+        selected_option.set("")
     row += 1
 
     # Store button references for dynamic state management
     top_panel.button_refs = {}
-    def add_button_ref(name, btn):
-        top_panel.button_refs[name] = btn
 
     # Button color logic
     # Consistent color scheme
@@ -161,15 +152,15 @@ def create_top_panel(parent, body_frame):
         text_color=selected_text,
         command=lambda: [display_page(body_frame.bottom_panel, genoclass), top_panel.highlight_buttons("Geno Combo")])
     geno_combo_btn.grid(row=row, column=0, padx=(5,5), pady=(1,1), sticky='w')
-    add_button_ref("Geno Combo", geno_combo_btn)
+    add_button_ref("Geno Combo", geno_combo_btn, top_panel)
 
     geno_fig_tab_btn = ctk.CTkButton(top_panel, text="Geno Fig & Tab", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
         fg_color=dim_fg, hover_color=dim_hover, corner_radius=8,
         text_color=dim_text,
-        command=lambda: [create_geno_fig_tab_panel(parent,body_frame.bottom_panel), top_panel.highlight_buttons("Geno Fig & Tab"), select_child_button('figure')])
+        command=lambda: [create_geno_fig_tab_panel(parent,body_frame.bottom_panel), top_panel.highlight_buttons("Geno Fig & Tab"), top_panel.select_child_button('figure')])
     geno_fig_tab_btn.grid(row=row, column=1, padx=(5,5), pady=(1,1), sticky='w')
-    add_button_ref("Geno Fig & Tab", geno_fig_tab_btn)
+    add_button_ref("Geno Fig & Tab", geno_fig_tab_btn, top_panel)
 
     all_sample_geno_btn = ctk.CTkButton(top_panel, text="All Sample Geno", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
@@ -177,15 +168,15 @@ def create_top_panel(parent, body_frame):
         text_color=dim_text,
         command=lambda: [update_geno_tab_all(parent,body_frame.bottom_panel), top_panel.highlight_buttons("All Sample Geno")])
     all_sample_geno_btn.grid(row=row, column=2, padx=(5,5), pady=(1,1), sticky='w')
-    add_button_ref("All Sample Geno", all_sample_geno_btn)
+    add_button_ref("All Sample Geno", all_sample_geno_btn, top_panel)
 
     sample_reads_btn = ctk.CTkButton(top_panel, text="Sample Reads", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
         fg_color=dim_fg, hover_color=dim_hover, corner_radius=8,
         text_color=dim_text,
-        command=lambda: [create_reads_panel(parent,body_frame.bottom_panel,'single'), top_panel.highlight_buttons("Sample Reads"), select_child_button('quality')])
+        command=lambda: [create_reads_panel(parent,body_frame.bottom_panel,'single'), top_panel.highlight_buttons("Sample Reads"), top_panel.select_child_button('quality')])
     sample_reads_btn.grid(row=row, column=3, padx=(5,5), pady=(1,1), sticky='w')
-    add_button_ref("Sample Reads", sample_reads_btn)
+    add_button_ref("Sample Reads", sample_reads_btn, top_panel)
 
 
     all_sample_reads_btn = ctk.CTkButton(top_panel, text="All Sample Reads", font=bmbfont,
@@ -194,43 +185,104 @@ def create_top_panel(parent, body_frame):
         text_color=dim_text,
         command=lambda: [create_reads_panel(parent,body_frame.bottom_panel,'all'), top_panel.highlight_buttons("All Sample Reads"), select_child_button('quality')])
     all_sample_reads_btn.grid(row=row, column=4, padx=(5,5), pady=(1,1), sticky='w')
-    add_button_ref("All Sample Reads", all_sample_reads_btn)
+    add_button_ref("All Sample Reads", all_sample_reads_btn, top_panel)
 
-    # Helper to select child button after panel switch
-    def select_child_button(child_name):
-        # Try to highlight the child button if it exists
-        btn = top_panel.button_refs.get(child_name)
-        if btn and btn.winfo_exists():
-            btn.configure(fg_color=selected_fg, hover_color=selected_hover, text_color=selected_text)
-
-    # Attach highlight_buttons to top_panel for external use
-    def highlight_buttons(clicked_btn_name, child_btn_name=None):
-        # Safely update only existing buttons
-        to_remove = []
-        for name, btn in top_panel.button_refs.items():
-            try:
-                if not btn.winfo_exists():
-                    to_remove.append(name)
-                    continue
-                if name == clicked_btn_name:
-                    btn.configure(fg_color=selected_fg, hover_color=selected_hover, text_color=selected_text)
-                else:
-                    btn.configure(fg_color=dim_fg, hover_color=dim_hover, text_color=dim_text)
-            except Exception:
-                to_remove.append(name)
-        for name in to_remove:
-            del top_panel.button_refs[name]
-    top_panel.highlight_buttons = highlight_buttons
-
+    # Attach highlight_buttons and select_child_button after definition
+    top_panel.highlight_buttons = lambda clicked_btn_name, child_btn_name=None: highlight_buttons(top_panel, clicked_btn_name, child_btn_name)
+    top_panel.select_child_button = lambda child_name: select_child_button(top_panel, child_name)
     # Highlight Geno Combo by default on first load
     top_panel.highlight_buttons("Geno Combo")
     return top_panel
 
+def add_button_ref(name, btn, top_panel):
+    top_panel.button_refs[name] = btn
+# --- Button highlight logic moved outside create_top_panel ---
+def highlight_buttons(top_panel, clicked_btn_name, child_btn_name=None):
+    highlight_fg = COLORS['accent']
+    highlight_hover = COLORS['primary']
+    dim_fg = COLORS['card']
+    dim_hover = COLORS['secondary']
+    parent_map = {
+        'figure': 'Geno Fig & Tab',
+        'table': 'Geno Fig & Tab',
+        'quality': 'Sample Reads',
+        'distribution': 'Sample Reads',
+    }
+    if hasattr(top_panel, 'button_refs'):
+        all_btns = list(top_panel.button_refs.keys())
+    else:
+        all_btns = []
+    if child_btn_name:
+        parent_name = parent_map.get(child_btn_name, "")
+        # Define child groups for each parent
+        child_groups = {
+            'Geno Fig & Tab': ['figure', 'table'],
+            'Sample Reads': ['quality', 'distribution'],
+        }
+        for name, btn in top_panel.button_refs.items():
+            try:
+                # Highlight parent if it's the parent
+                if name == parent_name:
+                    btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+                # Highlight only the clicked child, dim siblings
+                elif parent_name and name in child_groups.get(parent_name, []):
+                    if name == child_btn_name:
+                        btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+                    else:
+                        btn.configure(fg_color=dim_fg, hover_color=dim_hover)
+                else:
+                    btn.configure(fg_color=dim_fg, hover_color=dim_hover)
+            except Exception:
+                pass
+    else:
+        for name, btn in top_panel.button_refs.items():
+            try:
+                if name == clicked_btn_name:
+                    btn.configure(fg_color=highlight_fg, hover_color=highlight_hover)
+                else:
+                    btn.configure(fg_color=dim_fg, hover_color=dim_hover)
+            except Exception:
+                pass
+
+def select_child_button(top_panel, child_name):
+    selected_fg = COLORS['primary']
+    selected_hover = COLORS['secondary']
+    selected_text = "white"
+    btn = top_panel.button_refs.get(child_name)
+    if btn and btn.winfo_exists():
+        btn.configure(fg_color=selected_fg, hover_color=selected_hover, text_color=selected_text)
+
+# Simpler highlight_buttons for dynamic updates (clean up dead refs)
+def highlight_buttons_simple(top_panel, clicked_btn_name, child_btn_name=None):
+    dim_fg = "transparent"
+    dim_hover = COLORS['secondary']
+    selected_fg = COLORS['primary']
+    selected_hover = COLORS['secondary']
+    selected_text = "white"
+    dim_text = "white"
+    to_remove = []
+    for name, btn in top_panel.button_refs.items():
+        try:
+            if not btn.winfo_exists():
+                to_remove.append(name)
+                continue
+            if name == clicked_btn_name:
+                btn.configure(fg_color=selected_fg, hover_color=selected_hover, text_color=selected_text)
+            else:
+                btn.configure(fg_color=dim_fg, hover_color=dim_hover, text_color=dim_text)
+        except Exception:
+            to_remove.append(name)
+    for name in to_remove:
+        del top_panel.button_refs[name]
+
 def update_combox(genoclass, top_panel, type):
     """Update the options in the ComboBox based on the type."""
     top_panel.options = genoclass.get_metadata().get_samples_list() if type == "sample" else genoclass.get_metadata().get_ref_markers_list()
-    top_panel.combobox.configure(values=top_panel.options)
-    top_panel.combobox.set(top_panel.options[0] if top_panel.options else "")  # Set the default value
+    top_panel.combobox["values"] = top_panel.options
+    if top_panel.options:
+        top_panel.combobox.current(0)
+    else:
+        top_panel.combobox.set("")
 
 def update_combox_from_others(parent):
     """Update the ComboBox options from other components."""
@@ -245,8 +297,11 @@ def update_combox_from_others(parent):
             print("Error: 'top_panel' is not initialized.")
             return
         top_panel.options = genoclass.get_metadata().get_samples_list() if genoclass.get_metadata().get_samples_list() != [] else []
-        top_panel.combobox.configure(values=top_panel.options)
-        top_panel.combobox.set(top_panel.options[0] if top_panel.options else "")
+        top_panel.combobox["values"] = top_panel.options
+        if top_panel.options:
+            top_panel.combobox.current(0)
+        else:
+            top_panel.combobox.set("")
     except AttributeError as e:
         print(f"Attribute error: {e}")
         # Handle the error, maybe log it or notify the user

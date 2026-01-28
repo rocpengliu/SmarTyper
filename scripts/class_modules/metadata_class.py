@@ -127,7 +127,7 @@ class MetaDataClass:
             if parameter_class.get_analtype() == "snp":
                 #pdb.set_trace()
                 for idx, row in locitable.iterrows():
-                    print_time(f'read_locifile for {row['locus']}')
+                    # print_time(f'read_locifile for {row['locus']}')
                     mar_ref = RefMicrotype()
                     mar_ref.set_locus(row['locus'].strip())
                     mar_ref.set_fprimer(row['fprimer'].strip())

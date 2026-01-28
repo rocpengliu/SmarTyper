@@ -132,7 +132,7 @@ def produce_fig_sam_mar_pdf(genoclass,selected_sample,anal_type)->bool:
                     fig.subplots_adjust(hspace=0.8)
                     fig.suptitle(f"Genotypes of sample {selected_sample}")
                     fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                    print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
+                    # print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
 
                 if fig is not None:
                     fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')

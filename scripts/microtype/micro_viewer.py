@@ -33,7 +33,7 @@ def create_header(frame):
     header_frame = ctk.CTkFrame(frame, fg_color=COLORS['card'], corner_radius=12)
     header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(15, 10), padx=(15, 15))
     header_frame.grid_columnconfigure(0, weight=1)
-    label = ctk.CTkLabel(header_frame, text="◇ Microhap Viewing", font=header_font,
+    label = ctk.CTkLabel(header_frame, text="◇ Microtype Viewing", font=header_font,
                          fg_color="transparent", text_color=COLORS['accent'])
     label.pack(side=tk.LEFT, pady=(15, 15), padx=(30, 10))
     return header_frame
