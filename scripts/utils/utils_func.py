@@ -15,6 +15,7 @@ import traceback
 import numpy as np
 import pdb
 import copy
+from ..utils import modern_messagebox
 
 def load_pdf(file_path, canvas):
     try:
@@ -34,40 +35,42 @@ def load_pdf(file_path, canvas):
     except Exception as e:
         modern_messagebox.showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
 
-def output_all_fig_tab(genoclass,selected_sample,anal_type)->bool:
-    print_time(f"starting to output_all_fig_tab for {selected_sample}")
-    if genoclass.get_parameter().is_pro_figure():
-        produce_fig_sam_mar_pdf(genoclass,selected_sample,anal_type)
-    output_geno_table(genoclass,selected_sample,anal_type)
-    prod_ml_tbl(genoclass, selected_sample, anal_type)
-    print_time(f"finished to output_all_fig_tab for {selected_sample}")
+def output_all_fig_tab(is_pro_fig,output_folder_path, markers,selected_sample,sam_microhap_dict_sam, sam_ml_dict_sam, anal_type)->bool:
+    print(f"starting to output_all_fig_tab for {selected_sample}")
+    if is_pro_fig:
+        produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, selected_sample, anal_type)
+    output_geno_table(output_folder_path,selected_sample, sam_microhap_dict_sam, anal_type)
+    ml_df_dict = prod_ml_tbl(sam_microhap_dict_sam,sam_ml_dict_sam, selected_sample, anal_type)
+    print(f"finished to output_all_fig_tab for {selected_sample}")
+    return ml_df_dict
+
+def output_geno_table(output_folder_path,selected_sample, sam_microhap_dict_sam, anal_type)->bool:
+    print(f"starting to output_geno_table for {selected_sample}")
+    tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_genotype.txt")
+    geno_df = pd.concat(sam_microhap_dict_sam.values(), ignore_index=True)
+    geno_df.to_csv(tab_file_path, sep="\t", index=False)
+    print(f"finished to output_geno_table for {selected_sample}")
     return True
 
-def output_geno_table(genoclass,selected_sample,anal_type)->bool:
-    tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_sample}_sample_final_genotype.txt")
-    geno_df_dict = genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample)
-    geno_df = pd.concat(geno_df_dict.values(), ignore_index=True)
-    geno_df.to_csv(tab_file_path, sep="\t", index=False)
-    return True
-def prod_ml_tbl(genoclass, selected_sample, anal_type):
-    #pdb.set_trace()
-    #tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_sample}_ml.txt")
-    geno_df_dict = genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample)
-    if genoclass.get_microhap().get_sam_mar_ml_dir().get(selected_sample) is None:
+def prod_ml_tbl(sam_microhap_dict_sam, sam_ml_dict_sam, selected_sample, anal_type):
+    # geno_df_dict = sam_microhap_dict.get(selected_sample)
+    print(f"starting to prod_ml_tbl for {selected_sample}")
+    if sam_microhap_dict_sam is None:
         print(f"sample {selected_sample} not found!")
-        return
+        return None
     else:
-        ml_df_dict = copy.deepcopy(genoclass.get_microhap().get_sam_mar_ml_dir().get(selected_sample))
+        ml_df_dict = copy.deepcopy(sam_ml_dict_sam)
     if ml_df_dict is not None:
-        for mar, microh_df in geno_df_dict.items():
+        for mar, microh_df in sam_microhap_dict_sam.items():
             if mar in ml_df_dict.keys():
                 zygo = microh_df.at[0, 'Zygosity']
                 if zygo == 'heter':
                     ml_df_dict[mar].at[0, 'Zygosity'] = 2
                 elif zygo == 'homo':
                     ml_df_dict[mar].at[0, 'Zygosity'] = 1
-    with thread_lock:
-        genoclass.get_microhap().get_sam_mar_ml_dir()[selected_sample] = ml_df_dict
+    print(f"finished to prod_ml_tbl for {selected_sample}")
+    return ml_df_dict
+
 def output_all_geno_table(genoclass, anal_type):
     tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"All_sample_final_genotype.txt")
     for idx, (sam, sam_dict) in enumerate(genoclass.get_microhap().get_sam_microhaps_dir().items()):
@@ -84,140 +87,229 @@ def output_all_geno_table(genoclass, anal_type):
     ml_df = ml_df.sort_values(by=['Locus']).reset_index(drop=True)
     ml_df.to_csv(tab_file_path2, sep = "\t", index = False)
 
-def produce_fig_sam_mar_pdf(genoclass,selected_sample,anal_type)->bool:
-    print(f"Thread {threading.current_thread().name}: Starting to process sample: {selected_sample}")
-    markers = genoclass.get_metadata().get_ref_markers_list()
-    pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_sample}_sample_genotype.pdf")
-    with matplotlib_lock:
-        try:
-            with PdfPages(pdf_file_path) as pdf:
-                nrows, ncols = 8, 5
-                fig, axes = None, None
-                tot_pages = 0
-                for i, loc in enumerate(markers):
-                    #print(f"Thread {threading.current_thread().name}: start to process sample: {selected_sample} in index: {i} for marker: {loc}")
-                    if i % (nrows * ncols) == 0:
-                        if fig is not None:
-                            fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                            pdf.savefig(fig)
-                            plt.close(fig)
-                            tot_pages += 1
-                        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
-                        axes = np.atleast_2d(axes)
-                    if (i // ncols % nrows) >= nrows or (i % ncols) >= ncols:
-                        continue
-                    ax = axes[i // ncols % nrows, i % ncols]
-                    colors = ['lightgray', 'lightgray']
-                    subset = genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample).get(loc)
-                    if len(subset) == 0:
-                        subset = pd.DataFrame({
-                            'id': [f'{loc}_0', f'{loc}_1'],
-                            'NumReads': [0, 0],
-                            'Allele': [1, 2],
-                            'Zygosity': ['nan', 'nan']
-                        })
-                    zygo = subset['Zygosity'].iloc[0]
-                    if zygo == "heter":
-                        colors[0:2] = ('darkgreen', 'orange')
-                    elif zygo == "homo":
-                        colors[0] = 'darkgreen'
-                    ax.bar(x=subset['id'],
-                        height=subset['NumReads'],
-                        color=colors)
-                    ax.set_xticks(range(len(subset)))
-                    ax.set_xticklabels(subset['Allele'].astype(str))
-                    ax.set_title(f'{loc} ({zygo})', fontsize=8)
-                    ax.tick_params(axis='x', labelsize=6)
-                    ax.tick_params(axis='y', labelsize=6)
-                    fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of sample {selected_sample}")
-                    fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                    # print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
+def produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, selected_sample, anal_type)->bool:
+    print(f"Starting to process sample: {selected_sample}")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_genotype.pdf")
+    # with matplotlib_lock:
+    try:
+        with PdfPages(pdf_file_path) as pdf:
+            nrows, ncols = 8, 5
+            fig, axes = None, None
+            tot_pages = 0
+            for i, loc in enumerate(markers):
+                # print(f"Thread {threading.current_thread().name}: start to process sample: {selected_sample} in index: {i} for marker: {loc}")
+                if i % (nrows * ncols) == 0:
+                    if fig is not None:
+                        fig.text(
+                            0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8
+                        )
+                        pdf.savefig(fig)
+                        plt.close(fig)
+                        tot_pages += 1
+                    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
+                    axes = np.atleast_2d(axes)
+                if (i // ncols % nrows) >= nrows or (i % ncols) >= ncols:
+                    continue
+                ax = axes[i // ncols % nrows, i % ncols]
+                colors = ["lightgray", "lightgray"]
+                subset = sam_microhap_dict_sam.get(loc)
+                if len(subset) == 0:
+                    subset = pd.DataFrame(
+                        {
+                            "id": [f"{loc}_0", f"{loc}_1"],
+                            "NumReads": [0, 0],
+                            "Allele": [1, 2],
+                            "Zygosity": ["nan", "nan"],
+                        }
+                    )
+                zygo = subset["Zygosity"].iloc[0]
+                if zygo == "heter":
+                    colors[0:2] = ("darkgreen", "orange")
+                elif zygo == "homo":
+                    colors[0] = "darkgreen"
+                ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                ax.set_xticks(range(len(subset)))
+                ax.set_xticklabels(subset["Allele"].astype(str))
+                ax.set_title(
+                    f"marker: {loc} ({zygo})",
+                    fontsize=8,
+                    color="red" if zygo == "inconclusive" else "black",
+                )
+                ax.tick_params(axis="x", labelsize=6)
+                ax.tick_params(axis="y", labelsize=6)
+                fig.subplots_adjust(hspace=0.8)
+                fig.suptitle(f"Genotypes of sample {selected_sample}")
+                fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
+                # print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
 
-                if fig is not None:
-                    fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                    fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                    pdf.savefig(fig)
-                    plt.close(fig)
-                print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample}")
-                return True
-        except Exception as e:
-            print(f"Thread {threading.current_thread().name}: Error for sample {selected_sample}: {e}")
-            traceback.print_exc()
-            return False
+            if fig is not None:
+                fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
+                fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
+                pdf.savefig(fig)
+                plt.close(fig)
+    except Exception as e:
+        print(f"Thread {threading.current_thread().name}: Error for sample {selected_sample}: {e}")
+        traceback.print_exc()
+        return False
+    print(f"finished to output genotype plots for {selected_sample}")
     return True
 
-def produce_fig_mar_sam_pdf(genoclass, selected_marker, anal_type) -> bool:
-    print(f"Thread {threading.current_thread().name}: Starting to process marker: {selected_marker}")
-    samples = genoclass.get_metadata().get_samples_list()
-    pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_marker_genotype.pdf")
+def produce_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict, selected_marker, anal_type) -> bool:
+    print(f"Starting to process marker: {selected_marker}")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_marker_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
-    with matplotlib_lock:
-        try:
-            with PdfPages(pdf_file_path) as pdf:
-                tot_pages = 0
-                num_samples = len(samples)
-                for page_start in range(0, num_samples, max_plots_per_page):
-                    fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
-                    # Normalize axes to always be 2D
-                    axes = np.atleast_2d(axes)
-                    # For a single subplot, axes is a scalar
-                    if axes.shape == ():
-                        axes = np.array([[axes]])
-                    page_samples = samples[page_start:page_start + max_plots_per_page]
-                    for j, sam in enumerate(page_samples):
-                        # Compute grid position
-                        row = j // ncols
-                        col = j % ncols
-                        ax = axes[row, col]
-                        colors = ['lightgray', 'lightgray']
-                        subset = genoclass.get_microhap().get_sam_microhaps_dir().get(sam, {}).get(selected_marker)
-                        if subset is None or len(subset) == 0:
-                            subset = pd.DataFrame({
-                                'id': [f'{selected_marker}_0', f'{selected_marker}_1'],
-                                'NumReads': [0, 0],
-                                'Allele': [1, 2],
-                                'Zygosity': ['nan', 'nan']
-                            })
-                        zygo = subset['Zygosity'].iloc[0]
-                        if zygo == "heter":
-                            colors[0:2] = ('darkgreen', 'orange')
-                        elif zygo == "homo":
-                            colors[0] = 'darkgreen'
-                        try:
-                            ax.bar(x=subset['id'], height=subset['NumReads'], color=colors)
-                            ax.set_xticks(range(len(subset)))
-                            ax.set_xticklabels(subset['Allele'].astype(str))
-                            ax.set_title(f'{sam} ({zygo})', fontsize=8)
-                            ax.tick_params(axis='x', labelsize=6)
-                            ax.tick_params(axis='y', labelsize=6)
-                        except Exception as plot_err:
-                            print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
-                            traceback.print_exc()
-                        fig.subplots_adjust(hspace=0.8)
-                        fig.suptitle(f"Genotypes of marker {selected_marker}")
-                        fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
-                    # Blank remaining axes (if any)
-                    total_plots = len(page_samples)
-                    for blank_j in range(total_plots, max_plots_per_page):
-                        row = blank_j // ncols
-                        col = blank_j % ncols
-                        axes[row, col].axis('off')
-                    fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
-                    pdf.savefig(fig)
-                    plt.close(fig)
-                    tot_pages += 1
-                print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
-                return True
-        except Exception as e:
-            print(f"Thread {threading.current_thread().name}: Error for marker {selected_marker}: {e}")
-            traceback.print_exc()
-            return False
+    # with matplotlib_lock:
+    try:
+        with PdfPages(pdf_file_path) as pdf:
+            tot_pages = 0
+            num_samples = len(samples)
+            for page_start in range(0, num_samples, max_plots_per_page):
+                fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
+                # Normalize axes to always be 2D
+                axes = np.atleast_2d(axes)
+                # For a single subplot, axes is a scalar
+                if axes.shape == ():
+                    axes = np.array([[axes]])
+                page_samples = samples[page_start : page_start + max_plots_per_page]
+                for j, sam in enumerate(page_samples):
+                    # Compute grid position
+                    row = j // ncols
+                    col = j % ncols
+                    ax = axes[row, col]
+                    colors = ["lightgray", "lightgray"]
+                    subset = sam_microhap_dict.get(sam, {})
+                    if subset is None or len(subset) == 0:
+                        subset = pd.DataFrame(
+                            {
+                                "id": [f"{selected_marker}_0", f"{selected_marker}_1"],
+                                "NumReads": [0, 0],
+                                "Allele": [1, 2],
+                                "Zygosity": ["nan", "nan"],
+                            }
+                        )
+                    zygo = subset["Zygosity"].iloc[0]
+                    if zygo == "heter":
+                        colors[0:2] = ("darkgreen", "orange")
+                    elif zygo == "homo":
+                        colors[0] = "darkgreen"
+                    try:
+                        ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                        ax.set_xticks(range(len(subset)))
+                        ax.set_xticklabels(subset["Allele"].astype(str))
+                        ax.set_title(
+                            f"sample: {sam} ({zygo})",
+                            fontsize=8,
+                            color="red" if zygo == "inconclusive" else "black",
+                        )
+                        ax.tick_params(axis="x", labelsize=6)
+                        ax.tick_params(axis="y", labelsize=6)
+                    except Exception as plot_err:
+                        print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
+                        traceback.print_exc()
+                    fig.subplots_adjust(hspace=0.8)
+                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.text(
+                        0.08, 0.5, "Number of reads", va="center", rotation="vertical"
+                    )
+                # Blank remaining axes (if any)
+                total_plots = len(page_samples)
+                for blank_j in range(total_plots, max_plots_per_page):
+                    row = blank_j // ncols
+                    col = blank_j % ncols
+                    axes[row, col].axis("off")
+                fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
+                pdf.savefig(fig)
+                plt.close(fig)
+                tot_pages += 1
+    except Exception as e:
+        print(
+            f"Thread {threading.current_thread().name}: Error for marker {selected_marker}: {e}"
+        )
+        traceback.print_exc()
+        return False
+    print(f"finished to output genotype plots for {selected_marker}")
+    return True
+
+def produce_fig_mar_sam_pdf(output_folder_path, samples, sam_microhap_dict, selected_marker, anal_type) -> bool:
+    print(f"Starting to process marker: {selected_marker}")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_marker_genotype.pdf")
+    nrows, ncols = 8, 5
+    max_plots_per_page = nrows * ncols
+    # with matplotlib_lock:
+    try:
+        with PdfPages(pdf_file_path) as pdf:
+            tot_pages = 0
+            num_samples = len(samples)
+            for page_start in range(0, num_samples, max_plots_per_page):
+                fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(16, 10))
+                # Normalize axes to always be 2D
+                axes = np.atleast_2d(axes)
+                # For a single subplot, axes is a scalar
+                if axes.shape == ():
+                    axes = np.array([[axes]])
+                page_samples = samples[page_start : page_start + max_plots_per_page]
+                for j, sam in enumerate(page_samples):
+                    # Compute grid position
+                    row = j // ncols
+                    col = j % ncols
+                    ax = axes[row, col]
+                    colors = ["lightgray", "lightgray"]
+                    subset = sam_microhap_dict.get(sam, {}).get(selected_marker)
+                    if subset is None or len(subset) == 0:
+                        subset = pd.DataFrame(
+                            {
+                                "id": [f"{selected_marker}_0", f"{selected_marker}_1"],
+                                "NumReads": [0, 0],
+                                "Allele": [1, 2],
+                                "Zygosity": ["nan", "nan"],
+                            }
+                        )
+                    zygo = subset["Zygosity"].iloc[0]
+                    if zygo == "heter":
+                        colors[0:2] = ("darkgreen", "orange")
+                    elif zygo == "homo":
+                        colors[0] = "darkgreen"
+                    try:
+                        ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                        ax.set_xticks(range(len(subset)))
+                        ax.set_xticklabels(subset["Allele"].astype(str))
+                        ax.set_title(
+                            f"sample: {sam} ({zygo})",
+                            fontsize=8,
+                            color="red" if zygo == "inconclusive" else "black",
+                        )
+                        ax.tick_params(axis="x", labelsize=6)
+                        ax.tick_params(axis="y", labelsize=6)
+                    except Exception as plot_err:
+                        print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
+                        traceback.print_exc()
+                    fig.subplots_adjust(hspace=0.8)
+                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.text(
+                        0.08, 0.5, "Number of reads", va="center", rotation="vertical"
+                    )
+                # Blank remaining axes (if any)
+                total_plots = len(page_samples)
+                for blank_j in range(total_plots, max_plots_per_page):
+                    row = blank_j // ncols
+                    col = blank_j % ncols
+                    axes[row, col].axis("off")
+                fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
+                pdf.savefig(fig)
+                plt.close(fig)
+                tot_pages += 1
+    except Exception as e:
+        print(
+            f"Thread {threading.current_thread().name}: Error for marker {selected_marker}: {e}"
+        )
+        traceback.print_exc()
+        return False
+    print(f"finished to genotype plots for {selected_marker}")
     return True
 
 def produce_fig_mar_sam_pdf1(genoclass,selected_marker, anal_type)->bool:
-    print(f"Thread {threading.current_thread().name}: Starting to process marker: {selected_marker}")
+    #print(f"Thread {threading.current_thread().name}: Starting to process marker: {selected_marker}")
     samples = genoclass.get_metadata().get_samples_list()
     pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_marker_genotype.pdf")
     nrows, ncols = 8, 5
@@ -271,13 +363,46 @@ def produce_fig_mar_sam_pdf1(genoclass,selected_marker, anal_type)->bool:
                     fig.text(0.5, 0.01, f'Page {tot_pages + 1}', ha='center', fontsize=8)
                     pdf.savefig(fig)
                     plt.close(fig)
-                print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
+                #print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker}")
                 return True
         except Exception as e:
             print(f"Thread {threading.current_thread().name}: Error for sample {selected_marker}: {e}")
             traceback.print_exc()
             return False
     return True
+
+def produce_reads_dis_fig(i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page):
+        if i == num_pages:
+            x_list=list(sorted_data.keys())[i*bars_per_page:len(sorted_data)]
+            y_list=list(sorted_data.values())[i*bars_per_page:len(sorted_data)]
+            num_subplots_per_page=len(x_list)/bars_per_subplot
+            if num_subplots_per_page % 1 ==0:
+                num_subplots_per_page=int(num_subplots_per_page)
+            else:
+                num_subplots_per_page=int(num_subplots_per_page)+1
+        else:
+            x_list=list(sorted_data.keys())[i*bars_per_page:(i+1)*bars_per_page]
+            y_list=list(sorted_data.values())[i*bars_per_page:(i+1)*bars_per_page]
+        fig,axs=plt.subplots(nrows=num_subplots_per_page,ncols=1,figsize=(16,9))
+        
+        for j in range(num_subplots_per_page):
+            x=x_list[j*bars_per_subplot:(j+1)*bars_per_subplot]
+            y=y_list[j*bars_per_subplot:(j+1)*bars_per_subplot]
+            if len(x)==0:
+                break
+            ax=axs[j]
+            ax.bar(x,y)
+            ax.tick_params(axis='x',labelsize=6)
+            ax.tick_params(axis='y',labelsize=6)
+        return fig,axs
+
+def generate_page(i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page):
+        fig, axs = produce_reads_dis_fig(i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page)
+        if fig is not None:
+            fig.suptitle(f"Reads distribution of all samples",fontsize=16,x=0.5,y=0.95,horizontalalignment='center')
+            fig.text(0.08,0.5,'n. of reads',va='center',rotation='vertical')
+            fig.text(0.5,0.01,f'page{i+1}',ha='center',fontsize=8)
+        return i, fig
 
 def trans_dna(dna:str, exon_pos_list:list)->list:
     if len(dna)==0 or dna is None or len(exon_pos_list)==0:
@@ -310,6 +435,7 @@ def split_codingpos(pos_str:str)->list:
         if all(isinstance(item, tuple) and all(isinstance(i, int) for i in item) for sublist in nested_list for item in sublist):
             return nested_list
         else:
+            modern_messagebox.showerror(None, "Invalid Input", f"Invalid coding positions string: {pos_str}")
             raise ValueError(f"Invalid coding positions string: {pos_str}")
     except ValueError as e:
         modern_messagebox.showerror(None, "Invalid Input", str(e))
@@ -348,6 +474,7 @@ def get_triml_pos(out_lst, trimlpos):
             else:
                 new_pos.append(in_lst)
     return new_pos
+
 def get_trimr_pos(out_lst, trimrpos):
     new_pos = []
     new_end = None
@@ -375,6 +502,7 @@ def get_trimr_pos(out_lst, trimrpos):
         else:
             new_pos.append((in_lst[0], new_end))
     return new_pos
+
 def get_new_codingpos(codingpos, triml, trimr, dnalen):
     new_codingpos = []
     if triml == 0 and trimr == 0:
@@ -445,3 +573,8 @@ def get_splicer_exon_list_map(nested_list):
                 exon_list.append(splicer_exon_list_dic[tup])
             splicer_exon_map[f'splicer_{idx}'] = exon_list
     return splicer_exon_map
+
+def process_sample_for_pool(args):
+    sam, vdic = args
+    # No output_queue here! Only return results.
+    return sam, pd.concat([df.dropna(axis=1, how='all') for df in vdic.values()], axis=0, ignore_index=True)

@@ -108,7 +108,7 @@ class RefMicrotype:
             else:
                 raise ValueError(f"{has_new_mh} is not a boolean")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
                 
     def get_locus(self):
         return self._locus
@@ -120,7 +120,7 @@ class RefMicrotype:
             else:
                 raise ValueError("locus must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_fprimer(self):
         return self._fprimer
@@ -132,7 +132,7 @@ class RefMicrotype:
             else:
                 raise ValueError("fprimer must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_rprimer(self):
         return self._rprimer
@@ -144,7 +144,7 @@ class RefMicrotype:
             else:
                 raise ValueError("rprimer must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_triml(self):
         return self._triml
@@ -156,7 +156,7 @@ class RefMicrotype:
             else:
                 raise ValueError("triml must be an integer")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_trimr(self):
         return self._trimr
@@ -168,7 +168,7 @@ class RefMicrotype:
             else:
                 raise ValueError("trimr must be an integer")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_snppos(self):
         return self._snppos
@@ -177,7 +177,7 @@ class RefMicrotype:
         try:
             self._snppos = sorted(snppos)
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_orisnppos(self):
         return self._orisnppos
@@ -186,7 +186,7 @@ class RefMicrotype:
         try:
             self._orisnppos = sorted(orisnppos)
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     def get_dnaref(self):
         return self._dnaref
     
@@ -197,7 +197,7 @@ class RefMicrotype:
             else:
                 raise ValueError("dnaref must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_codingpos(self):
         return self._codingpos
@@ -209,7 +209,7 @@ class RefMicrotype:
             else:
                 raise ValueError("codingpos must be a list")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_dna_ref(self):
         return self._dna_ref
@@ -221,7 +221,7 @@ class RefMicrotype:
             else:
                 raise ValueError("dna_ref must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     def get_ori_dna_ref(self):
         return self._ori_dna_ref
     def set_ori_dna_ref(self, ori_dna_ref):
@@ -231,7 +231,7 @@ class RefMicrotype:
             else:
                 raise ValueError("dna_ref must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     def get_aa_ref(self):
         return self._aa_ref
     
@@ -242,7 +242,7 @@ class RefMicrotype:
             else:
                 raise ValueError("aa_ref must be a string")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
             
     def get_has_splicer(self):
         return self._has_splicer
@@ -254,7 +254,7 @@ class RefMicrotype:
             else:
                 raise ValueError("go_aa must be a boolean")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_begin_with_splicer0(self):
         return self._begin_with_splicer0
@@ -266,7 +266,7 @@ class RefMicrotype:
             else:
                 raise ValueError("go_aa must be a boolean")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_children_microtype_dict(self):
         return self._children_microtype_dict
@@ -278,7 +278,7 @@ class RefMicrotype:
             else:
                 raise ValueError("children_microtype must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_mar_microhap_df(self):
         return self._mar_microhap_df
@@ -290,7 +290,7 @@ class RefMicrotype:
             else:
                 raise ValueError("mar_microhap_df must be a pandas DataFrame")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_pre_mar_microhap_df(self):
         return self._pre_mar_microhap_df
@@ -302,7 +302,7 @@ class RefMicrotype:
             else:
                 raise ValueError(f"{pre_mar_microhap_df} is not a dataframe")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_cur_mar_microhap_df(self):
         return self._cur_mar_microhap_df
@@ -314,7 +314,7 @@ class RefMicrotype:
             else:
                 raise ValueError(f"{cur_mar_microhap_df} is not a dataframe")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_final_mar_cur_microhap_nested_dict(self):
         return self._final_mar_cur_microhap_nested_dict
@@ -326,7 +326,7 @@ class RefMicrotype:
             else:
                 raise ValueError("final_mar_cur_microhap_nested_dict must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_final_mar_pre_microhap_nested_dict(self):
         return self._final_mar_pre_microhap_nested_dict
@@ -338,7 +338,7 @@ class RefMicrotype:
             else:
                 raise ValueError("final_mar_pre_microhap_nested_dict must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
             
     def get_final_mar_cur_sim_microhap_nested_dict(self):
         return self._final_mar_cur_sim_microhap_nested_dict
@@ -349,7 +349,7 @@ class RefMicrotype:
             else:
                 raise ValueError("final_mar_cur_sim_microhap_nested_dict must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     def get_final_mar_pre_sim_microhap_nested_dict(self):
         return self._final_mar_pre_sim_microhap_nested_dict
     def set_final_mar_pre_sim_microhap_nested_dict(self, final_mar_pre_sim_microhap_nested_dict):
@@ -359,7 +359,7 @@ class RefMicrotype:
             else:
                 raise ValueError("final_mar_pre_sim_microhap_nested_dict must be a dictionary")
         except ValueError as e:
-            messagebox.showerror("Invalid Input", str(e))
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def populate_ref_compre_mt(self):
         #pdb.set_trace()

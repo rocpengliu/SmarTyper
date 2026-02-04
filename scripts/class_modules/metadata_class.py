@@ -5,6 +5,7 @@ from ..utils.utils_func import split_codingpos, check_overlapping_gene, get_spli
 from ..utils.utils_common import print_time
 from .ref_microhap_class import RefMicrotype
 import pdb
+from ..utils import modern_messagebox
 
 class MetaDataClass:
     def __init__(self):
@@ -96,16 +97,19 @@ class MetaDataClass:
         if os.path.isfile(fpath):
             sampletable = pd.read_csv(fpath, delimiter="\t", header=None)
             if sampletable.shape[0] == 0:
+                modern_messagebox.showerror("Invalid Input", "sample table must not be empty!")
                 raise ValueError("sample table must not be empty!")
             if sampletable.shape[1] == 3 and parameter_class.get_seqtype() == "se":
                 sampletable.columns = ['sample', 'read1', 'grp']
             elif sampletable.shape[1] == 4 and parameter_class.get_seqtype() == "pe":
                 sampletable.columns = ['sample', 'read1', 'read2', 'grp']
             else:
+                modern_messagebox.showerror("Invalid Input", "sample table must has 3 or 4 columns")
                 raise ValueError("sample table must has 3 or 4 columns")
             sampletable['sample'] = sampletable['sample'].astype(str)
             self._sample_df=sampletable.astype({'sample':str})
             self._samples_list=sorted(sampletable['sample'].unique())
+            
     def read_locifile(self, parameter_class, post_microhap_class, mh=False):
         fpath=parameter_class.get_locifile()
         print(f"reading loci file: {fpath}")
@@ -113,6 +117,7 @@ class MetaDataClass:
         if os.path.isfile(fpath):
             locitable =  pd.read_csv(fpath, delimiter="\t", header =None)
             if locitable.shape[0] == 0:
+                modern_messagebox.showerror("Invalid Input", "loci table must not be empty!")
                 raise ValueError("loci table must not be empty!")
             ncol = locitable.shape[1]
             if  ncol == 8 and parameter_class.get_analtype() == "snp":
@@ -120,6 +125,7 @@ class MetaDataClass:
             elif ncol == 8 and parameter_class.get_analtype() == "sat":
                 locitable.columns=['locus', 'fprimer', 'rprimer', 'fflank', 'rflank', 'repeat', 'numrep', 'mra']
             else:
+                modern_messagebox.showerror("Invalid Input", "loci table must have 8 columns")
                 raise ValueError("loci table must have 8 columns")
             locitable['locus'] = locitable['locus'].astype(str)
             locitable = locitable.sort_values(by='locus')
@@ -137,15 +143,15 @@ class MetaDataClass:
                     mar_ref.set_ori_dna_ref(row['ref'].strip())
                     mar_ref.set_dna_ref(row['ref'].strip())
                     if mar_ref.get_trimr() >= len(mar_ref.get_dna_ref()):
-                        messagebox.showerror("Invalid Input", "tail trim length is too long")
+                        modern_messagebox.showerror("Invalid Input", "tail trim length is too long")
                     if mar_ref.get_trimr() != 0:
                         mar_ref.set_dna_ref(mar_ref.get_dna_ref()[:-mar_ref.get_trimr()])
                     if mar_ref.get_triml() >= len(mar_ref.get_dna_ref()):
-                        messagebox.showerror("Invalid Input", "head trim length is too long")
+                        modern_messagebox.showerror("Invalid Input", "head trim length is too long")
                     if mar_ref.get_triml() != 0:
                         mar_ref.set_dna_ref(mar_ref.get_dna_ref()[mar_ref.get_triml():])
                     if len(mar_ref.get_dna_ref()) == 0:
-                        messagebox.showerror("Invalid Input", "trim length is too long")
+                        modern_messagebox.showerror("Invalid Input", "trim length is too long")
                     if pd.notna(row['snppos']) and str(row['snppos']).replace(' ', '') not in ["0", "0.0", "na", "nan", ""]:
                         snpos = [int(pos.strip()) for pos in str(row['snppos']).replace(" ", "").split('|')]
                         snpos = sorted(snpos)
@@ -168,7 +174,7 @@ class MetaDataClass:
                             if mar_ref.get_triml() != 0 or mar_ref.get_trimr() != 0:
                                 newcodingpos = get_new_codingpos(codingpos, mar_ref.get_triml(), mar_ref.get_trimr(), len(mar_ref.get_ori_dna_ref()))
                                 if len(newcodingpos) == 0:
-                                    messagebox.showerror("Invalid Input", "trim lengths have sth wrong")
+                                    modern_messagebox.showerror("Invalid Input", "trim lengths have sth wrong")
                                     raise ValueError("triml or trimr has the problem with exon pos!")
                                 codingpos = newcodingpos
                             if codingpos is not None and len(codingpos) != 0:
@@ -183,16 +189,19 @@ class MetaDataClass:
             self._loc_df = locitable
             self.set_ref_markers_list(sorted(locitable['locus'].unique()))
             if len(self.get_ref_markers_list()) == 0:
+                modern_messagebox.showerror(None, "Invalid Input", f"loci file: {fpath} is not valid")
                 raise ValueError(f"please upload loci file first")
 
     def read_cur_microhap_file(self, parameter_class):
         #pdb.set_trace()
         fpath = parameter_class.get_cur_microhap_input_file()
         if not os.path.isfile(fpath):
+            modern_messagebox.showerror(None, "Invalid Input", f"{fpath} is not a file")
             raise ValueError(f"{fpath} is not a file")
         tmp_df = pd.read_csv(fpath, delimiter = '\t')
-        print_time(f'microhap file size is {tmp_df.shape}')
+        print(f'microhap file size is {tmp_df.shape}')
         if tmp_df.shape[0] == 0:
+            modern_messagebox.showerror(None, "Invalid Input", "microhap table is empty!")
             raise ValueError(f"microhap table is empty!")
         else:
             self.set_cur_microhap_df(tmp_df)
@@ -202,16 +211,20 @@ class MetaDataClass:
             self.set_cur_mh_markers_list(sorted(set((self.get_cur_mh_markers_list() or []) + mar_list)))
 
             if len(self.get_cur_mh_markers_list()) == 0:
+                modern_messagebox.showerror(None, "Invalid Input", f"microhap file: {fpath} is not valid")
                 raise ValueError(f"micorhpa file: {fpath} is not valid")
             if self.get_cur_mh_markers_list() > self.get_ref_markers_list():
-                    raise ValueError(f"microhap file: {fpath} contains new markers which are not in the ref loci table")
+                modern_messagebox.showerror(None, "Invalid Input", f"microhap file: {fpath} contains new markers which are not in the ref loci table")
+                raise ValueError(f"microhap file: {fpath} contains new markers which are not in the ref loci table")
     
     def read_pre_microhap_file(self, parameter_class):
         #pdb.set_trace()
         fpath = parameter_class.get_pre_microhap_input_file()
         if not os.path.isfile(fpath):
+            modern_messagebox.showerror(None, "Invalid Input", f"{fpath} is not a file")
             raise ValueError(f"{fpath} is not a file")
         if len(self.get_cur_microhap_df())==0:
+            modern_messagebox.showerror(None, "Invalid Input", f"please read microhap file first before reading pre microhap file") 
             raise ValueError(f"please read microhap file first before reading pre microhap file")
         tmp_df = pd.read_csv(fpath, delimiter = '\t', dtype={'id':'Int64'})
         print_time(f'microhap file size is {tmp_df.shape}')

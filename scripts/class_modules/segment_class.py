@@ -78,4 +78,4 @@ class SegmentClass:
                         f'self._start_pos_in_zon is {self.get_start_pos_in_zon()}\n'
                         f'self._end_pos_in_zon is {self.get_end_pos_in_zon()}\n')
         else:
-            print("Invalid segment type")
+            print_time(f"Invalid segment type")

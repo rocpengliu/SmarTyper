@@ -6,7 +6,7 @@ from ..utils.common import micro_microhap_df_columns
 from ..utils.utils_common import print_time
 
 def update_com_tab(genoclass, fig_tab_bottom_panel):
-    print_time("starting to update_com_tab")
+    print_time(f"starting to update_com_tab")
     for widget in fig_tab_bottom_panel.winfo_children():
         widget.destroy()
 
@@ -54,7 +54,7 @@ def update_com_tab(genoclass, fig_tab_bottom_panel):
             text_width = len(item_text) * 8
             max_width = max(max_width, text_width)
         tree.column(col, width=min(max_width + 20, 400))
-    print_time("finished to update_geno_tab")
+    print_time(f"finished to update_geno_tab")
 
 def populate_geno_com_tab(genoclass, tree):
     mar = genoclass.get_post_microhap().get_selected_marker()
@@ -81,7 +81,7 @@ def populate_geno_com_tab(genoclass, tree):
                     ))
 
 def update_sim_tab(genoclass, fig_tab_bottom_panel):
-    print_time("starting to update_geno_tab")
+    print_time(f"starting to update_geno_tab")
     for widget in fig_tab_bottom_panel.winfo_children():
         widget.destroy()
     
@@ -132,7 +132,7 @@ def update_sim_tab(genoclass, fig_tab_bottom_panel):
             max_width = max(max_width, text_width)
         tree.column(col, width=min(max_width + 20, 400))
 
-    print_time("finished to update_geno_tab")
+    print_time(f"finished to update_geno_tab")
 
 def populate_geno_sim_tab(genoclass, tree):
     mar = genoclass.get_post_microhap().get_selected_marker()

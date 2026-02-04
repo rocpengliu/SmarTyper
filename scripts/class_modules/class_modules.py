@@ -1,7 +1,8 @@
+from tkinter import messagebox
 from ..utils import modern_messagebox
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor, as_completed
 import dill
-from ..utils.utils_func import output_all_fig_tab, produce_fig_mar_sam_pdf, output_all_geno_table
+from ..utils.utils_func import output_all_fig_tab, produce_fig_mar_sam_pdf, output_all_geno_table, produce_fig_mar_sam_pdf_pool
 from ..utils.utils_common import print_time
 from .snp_class import SnpClass
 from .microhap_class import MicroHapClass
@@ -120,15 +121,19 @@ class GenotypeClass:
         except ValueError as e:
             messagebox.showerror("Invalid Input", str(e))
 
-    def read_sam_outputs(self,sample):
+    def read_sam_outputs(self,sample, run_frame):
         anal_type = self.get_parameter().get_analtype()
         markers = self.get_metadata().get_ref_markers_list()
         fpath = self.get_parameter().get_outputdir()
         print(f"starting to read output of sample: {sample}")
         self.get_microhap().read_sam_genotype(sample,markers, fpath,anal_type, self.get_post_microhap(), self.get_machine_learning(), self.get_parameter())
+        run_frame.output_queue.put(f'reading sample {sample} genotype done!\n')
         self.get_microhap().pro_sam_mar_reads_distri_fig(sample,fpath,anal_type)
+        run_frame.output_queue.put(f'reading sample {sample} reads done!\n')
         self.get_reads_res().process_json_file(sample,self.get_parameter().get_outputdir())
+        run_frame.output_queue.put(f'reading sample {sample} jason file done!\n')
         self.get_reads_res().produce_reads_qual_pdf(sample,self.get_parameter().get_outputdir())
+        run_frame.output_queue.put(f'ploting sample {sample} reads quality done!\n')
         print(f"finished to read output of sample: {sample}")
 
     def pro_all_sample_figs(self, output_queue):
@@ -141,48 +146,75 @@ class GenotypeClass:
         output_queue.put(f'finished to generate all reads distributions fig for all samples\n')
     
     def generate_all(self):
+        print_time('starting to process each the sample')
         samples=self.get_metadata().get_samples_list()
         anal_type = self.get_parameter().get_analtype()
-        print_time('starting to process each the sample')
-        with ThreadPoolExecutor(max_workers=self.get_parameter().get_thread()) as executor:
-                futures={executor.submit(output_all_fig_tab, self, sam, 'snp'): sam for sam in samples}
-                for future in as_completed(futures):
-                    sam = futures[future]
-                    try:
-                        res=future.result()
-                        if res:
-                            print_time(f'Successfully processed sample: {sam}')
-                        else:
-                            print_time(f'Failed to process sample: {sam}')
-                    except Exception as e:
-                                print_time(f'Error processing sample: {sam}: {e}')
-        print_time("finished each sample")
+        markers = self.get_metadata().get_ref_markers_list()
+        is_pro_fig = self.get_parameter().is_pro_figure()
+        output_folder_path = self.get_parameter().get_outputdir()
+        sam_microhap_dict = self.get_microhap().get_sam_microhaps_dir()
+        n_threads = self.get_parameter().get_thread() // 2 if self.get_parameter().get_thread() >= 2 else 1
+        #n_threads = self.get_parameter().get_thread()
+        with ProcessPoolExecutor(max_workers=n_threads) as executor:
+            sam_ml_dict = self.get_microhap().get_sam_mar_ml_dir()
+            futures = {executor.submit(output_all_fig_tab, 
+                                       is_pro_fig,
+                                       output_folder_path,
+                                       markers,
+                                       sam,
+                                       sam_microhap_dict.get(sam, {}), 
+                                       sam_ml_dict.get(sam, {}), 
+                                       'snp'): sam for sam in samples}
+            for future in as_completed(futures):
+                sam = futures[future]
+                try:
+                    res = future.result()
+                    if res:
+                        sam_ml_dict[sam] = res
+                        print(f'Finished processing sample: {sam}')
+                    else:
+                        if sam in sam_ml_dict:
+                            del sam_ml_dict[sam]
+                        print(f'Failed to process sample: {sam}')
+                except Exception as e:
+                    modern_messagebox.showerror(None, "Error", f"Error processing sample: {sam}: {e}")
+                    print_time(f'Error processing sample: {sam}: {e}')
+        print(f"finished each sample")
 
-        if self.get_parameter().is_pro_figure():
-            markers=self.get_metadata().get_ref_markers_list()
+        if is_pro_fig:
+            mar_sam_df_dict = {}
+            for mar in markers:
+                sam_df_dict = {}
+                for sam in samples:
+                    if sam in self.get_microhap().get_sam_microhaps_dir():
+                        sam_df_dict[sam] = self.get_microhap().get_sam_microhaps_dir()[sam].get(mar, None)
+                mar_sam_df_dict[mar] = sam_df_dict
             futures=list()
-            print_time(f'starting to process all the markers')
-            with ThreadPoolExecutor(max_workers=self.get_parameter().get_thread()) as executor:
-                futures = {executor.submit(produce_fig_mar_sam_pdf, self, mar, 'snp'):mar for mar in markers}
-                for future in futures:
+            print(f'starting to process all the markers')
+            with ProcessPoolExecutor(max_workers=n_threads) as executor:
+                futures = {executor.submit(produce_fig_mar_sam_pdf_pool, 
+                                           output_folder_path, 
+                                           samples,
+                                           mar_sam_df_dict.get(mar, {}),
+                                           mar, 'snp'):mar for mar in markers}
+                for future in as_completed(futures):
                     mar = futures[future]
                     try:
                         res=future.result()
                         if not res:
-                            # print_time(f'Successfully processed marker: {mar}')
-                        #     pass
-                        # else:
-                            print_time(f'Failed to process marker: {mar}')
+                            print(f'Failed to process marker: {mar}')
                     except Exception as e:
-                            print_time(f'Error processing marker: {mar}: {e}')
-            print_time(f'finished to process all the markers')
-
-        print_time("begin to process all_sample")
+                        modern_messagebox.showerror(None, "Error", f"Error processing marker: {mar}: {e}")
+                        print(f'Error processing marker: {mar}: {e}')
+            print(f'finished to process all the markers')
+            del mar_sam_df_dict
+        print(f"begin to process all_sample geno table")
         output_all_geno_table(self, anal_type)
-        print_time('finished to process all the samples')
+        print(f'finished to process all the sample geno table')
 
     def dump_session(self, project):
         try:
+            print_time(f"Starting to dump session for project: {project}")
             if project == "genotype":
                 output_path = self.get_parameter().get_outputgenotypeproject()
             elif project == "microtype":
@@ -192,13 +224,14 @@ class GenotypeClass:
                 return
             with open(output_path, 'wb') as f:
                 dill.dump(self, f)
-            print(f"Session successfully saved to: {output_path}")
+            print_time(f"Session successfully saved to: {output_path}")
         except Exception as e:
             modern_messagebox.showerror(None, "Error Saving Session", str(e))
 
     def load_session(self, project, parent=None):
         try:
             # Determine input path based on project type
+            print_time(f"Starting to load session from: {input_path}")
             if project == "genotype":
                 input_path = self.get_parameter().get_outputgenotypeproject()
             elif project == "microtype":
@@ -217,12 +250,13 @@ class GenotypeClass:
             self.__dict__.update(loaded_obj.__dict__)
             if project == "genotype":
                 self.get_parameter().set_project_genotype_model(True)
+                self.get_res_param().set_res_type("sample")
             elif project == "microtype":
                 self.get_parameter().set_project_microtype_model(True)
             else:
                 modern_messagebox.showerror(parent, "Invalid Project Input", f"Unknown project type: {project}")
                 return False
-            print(f"[INFO] Session successfully loaded from: {input_path}")
+            print_time(f"Session successfully loaded")
             return True
         except FileNotFoundError:
             modern_messagebox.showerror(parent, "File Not Found", f"No file found at: {input_path}")

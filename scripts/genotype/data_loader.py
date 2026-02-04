@@ -4,9 +4,7 @@ from tkinter import ttk
 import os
 import glob
 from ..utils.common import parent_button_size, child_button_size, bfont, bmfont, brfont, pnbuttonfont, header_font, confirm_button_font
-from ..utils.utils_common import (
-    indir_browser, infile_browser, outfile_browser, get_file_no_suffix
-)
+from ..utils.utils_common import indir_browser, infile_browser, outfile_browser, get_file_no_suffix
 from ..utils.colors import COLORS
 from ..utils import modern_messagebox
 from ..class_modules.fastq_class import FastqFile, FastqFileSimple
@@ -206,12 +204,12 @@ def list_files(dir_path, suffix1, suffix2, pe = True):
         pattern2 = os.path.join(dir_path, '*' + suffix2)
         files2 = glob.glob(pattern2)
         if len(files1)!= len(files2):
-            print("Unequal number of files for read1 and read2")
+            print(f"Unequal number of files for read1 and read2")
             modern_messagebox.showerror(None, "Error", f"Error running deplexer: pair end files are not paired, please check your files!")
             return []
         basesf2 = [get_file_no_suffix(file, suffix2) for file in files2]
         if basesf1 != basesf2:
-            print("base names of read1 and 2 are not identical!")
+            print(f"base names of read1 and 2 are not identical!")
             modern_messagebox.showerror(None, "Error", f"base names of read1 and 2 are not identical!!")
             return[]
         rawfiles =[FastqFile(dir_path, file, suffix1, suffix2, True) for i, file in enumerate(basesf1)]
@@ -312,11 +310,16 @@ def create_footer(parent, frame):
                                 state="disabled", command = lambda:on_click_next_button(parent, footer_frame))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
     return footer_frame
+
 def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
+        footer_frame.next_button.configure(text = "Processing...", state='disabled')
+        footer_frame.update_idletasks()
+        parent.master.genotype_class.get_microhap().init_sam_mar_dicts(parent.master.genotype_class)
+        footer_frame.next_button.configure(text = "Next →", state='normal')
         param_frame = parent.master.pages.get("parameters", None)
         if param_frame is not None:
             param_frame.footer_frame.next_button.configure(state='normal')
-    parent.master.genotype_class.get_microhap().init_sam_mar_dicts(parent.master.genotype_class)
-    parent.master.show_page("parameters")
+        parent.master.show_page("parameters")
+        
     

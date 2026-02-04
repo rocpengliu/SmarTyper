@@ -308,7 +308,7 @@ class ModernFileDialog(ctk.CTkToplevel):
             self.current_path = parent
             self.update_file_list()
         else:
-            print("Already at root")
+            print(f"Already at root")
     
     def navigate_to_path(self, event=None):
         try:

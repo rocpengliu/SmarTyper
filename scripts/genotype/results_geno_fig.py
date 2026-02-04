@@ -9,7 +9,7 @@ from ..utils.mouse import _on_mousewheel
 
 def update_geno_figs(parent, fig_tab_bottom_panel):
     """Update the genotype figures in the given panel."""
-    print("starting to update_geno_figs")
+    print(f"starting to update_geno_figs")
     genoclass = parent.master.genotype_class
     
     # Clear existing widgets
@@ -66,7 +66,7 @@ def update_geno_figs(parent, fig_tab_bottom_panel):
     # Load the PDF into the canvas
     load_pdf_from_here(genoclass, canvas)
 
-    print("finished to update_geno_figs")
+    print(f"finished to update_geno_figs")
 
 def load_pdf_from_here(genoclass,canvas):
     sam_mar = ""
@@ -88,10 +88,16 @@ def produce_fig_pdf(genoclass)->bool:
         selected_sample = genoclass.get_res_param().get_sample()
         if not selected_sample:
             return False
-        return produce_fig_sam_mar_pdf(genoclass, selected_sample, 'snp')
+        return produce_fig_sam_mar_pdf(genoclass.get_parameter().get_outputdir(),
+                                       genoclass.get_metadata().get_ref_markers_list(),
+                                       genoclass.get_microhap().get_sam_microhaps_dir().get(selected_sample, {}),
+                                       selected_sample, 'snp')
     elif genoclass.get_res_param().get_res_type() == "marker":
         selected_marker = genoclass.get_res_param().get_marker()
         if not selected_marker:
             return False
-        return produce_fig_mar_sam_pdf(genoclass,selected_marker, 'snp')
+        return produce_fig_mar_sam_pdf(genoclass.get_parameter().get_outputdir(),
+                                       genoclass.get_metadata().get_samples_list(),
+                                       genoclass.get_microhap().get_sam_microhaps_dir(),
+                                       selected_marker, 'snp')
     return False

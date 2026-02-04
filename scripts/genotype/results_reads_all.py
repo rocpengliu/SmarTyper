@@ -5,7 +5,7 @@ from ..utils.utils_func import load_pdf
 from ..utils.mouse import _on_mousewheel
 
 def update_all_reads_qual_distri(parent,show_panel,type):
-    print("starting to update_all_reads_qual_distri")
+    print(f"starting to update_all_reads_qual_distri")
     for widget in show_panel.winfo_children():
         widget.destroy()
     genoclass=parent.master.genotype_class
@@ -39,7 +39,7 @@ def update_all_reads_qual_distri(parent,show_panel,type):
     canvas.bind('<Down>', _on_arrow)
     canvas.bind('<Up>', _on_arrow)
     load_pdf_from_here(genoclass,canvas,type)
-    print("finished to update_all_reads_qual_distri")
+    print(f"finished to update_all_reads_qual_distri")
 
 def load_pdf_from_here(genoclass,canvas,fig_type):
     suffix=""

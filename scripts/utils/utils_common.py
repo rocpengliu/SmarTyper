@@ -6,7 +6,6 @@ from tkinter import filedialog
 import customtkinter as ctk
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
-import fitz  # PyMuPDF
 from PIL import Image, ImageTk
 import math
 import threading
@@ -33,9 +32,9 @@ def set_dpi_awareness():
         elif system == "Linux":
             os.environ['DISPLAY'] = 'localhost:0.0'
     except AttributeError as ae:
-        print("Could not set DPI awareness: module 'ctypes' has no attribute 'windll'", ae)
+        print(f"Could not set DPI awareness: module 'ctypes' has no attribute 'windll', {ae}")
     except Exception as e:
-        print("An error occurred while setting DPI awareness:", e)
+        print(f"An error occurred while setting DPI awareness: {e}")
 
 def universal_scroll(canvas, event):
         canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
@@ -103,7 +102,6 @@ def get_com_prefix(fl1, fl2):
 
 def infile_browser(entry_widget, filetype, button_widget=None):
     from .modern_file_dialog import modern_file_dialog
-    print(f"[DEBUG] infile_browser called for entry: {entry_widget}, filetype: {filetype}, button_widget: {button_widget}")
     cur_dir = entry_widget.get() or '.'
     if not os.path.exists(cur_dir):
         cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
@@ -115,7 +113,6 @@ def infile_browser(entry_widget, filetype, button_widget=None):
                                    initialdir=cur_dir,
                                    button_widget=button_widget)
     except Exception as e:
-        print(f"[DEBUG] modern_file_dialog failed, error: {e}. Retrying with button_widget=None.")
         filename = modern_file_dialog(entry_widget.winfo_toplevel(), 
                                    title="Select File", 
                                    mode="file", 
@@ -123,7 +120,6 @@ def infile_browser(entry_widget, filetype, button_widget=None):
                                    initialdir=cur_dir,
                                    button_widget=None)
     if filename:
-        print(f"[DEBUG] File selected: {filename}")
         entry_widget.delete(0, 'end')
         entry_widget.insert(0, filename)
     else:

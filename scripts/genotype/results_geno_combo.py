@@ -19,8 +19,10 @@ from ..utils.colors import COLORS
 matplotlib.use("Agg")
 
 def update_genotype_tab(parent, genotab):
+    print_time(f"Starting genotype tab update...")
     genoclass = parent.master.genotype_class
     if len(genoclass.get_microhap().get_assigned_reads_dict())==0:
+        print_time(f"No assigned reads found, skipping genotype tab update.")
         return
     genotab.n_rows=5
     figures = []
@@ -28,12 +30,14 @@ def update_genotype_tab(parent, genotab):
     hap_tables = []
     genotab.s_table_list = {}
     genotab.sam_mar_option=genoclass.get_res_param().get_res_type()
+    print_time(f'Result type: {genotab.sam_mar_option}')
     if genoclass.get_res_param().get_res_type() == "sample":
         markers = genoclass.get_metadata().get_ref_markers_list()
         selected_sample = genoclass.get_res_param().get_sample()
+        print_time(f"selected sample: {selected_sample}, markers: {len(markers)}")
         if not selected_sample or len(markers)==0:
             return
-        print(f'selected sample: {selected_sample}')
+        print_time(f'selected sample: {selected_sample}')
         for mar in markers:
             try:
                 amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{selected_sample}').get(f'{mar}')
@@ -53,7 +57,7 @@ def update_genotype_tab(parent, genotab):
         samples = genoclass.get_metadata().get_samples_list()
         if not selected_marker or len(samples)==0:
             return
-        print(f'selected marker: {selected_marker}')
+        print_time(f'selected marker: {selected_marker}')
         for sam in samples:
             try:
                 amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sam}').get(f'{selected_marker}')
@@ -70,7 +74,7 @@ def update_genotype_tab(parent, genotab):
                 modern_messagebox.showerror(None, "Invalid Input", str(e))
     else:
         return
-    print("Figures length:", len(figures))
+    print_time(f"Figures length: {len(figures)}")
     genotab.figures = figures
     genotab.current_page = 0
     genotab.fig_per_page = 10
@@ -78,81 +82,10 @@ def update_genotype_tab(parent, genotab):
     genotab.seq_tables = seq_tables
     genotab.hap_tables = hap_tables
     if len(genotab.seq_tables) != len(genotab.hap_tables):
+        print_time(f"Sequence tables and haplotype tables length mismatch, cannot update genotype tab.")
         return
+    print_time(f'Finished processing all figures and tables, displaying genotype tab page...')
     display_page(genotab, genoclass)   
-
-# def update_genotype_tab2(parent, genotab):
-#     genoclass = parent.master.genotype_class
-#     if len(genoclass.get_microhap().get_assigned_reads_dict())==0:
-#         return
-#     genotab.n_rows=5
-#     genotab.figures_lock = threading.Lock()
-#     genotab.tables_lock = threading.Lock() 
-#     genotab.figures = {}
-#     genotab.seq_tables = {}
-#     genotab.hap_tables = {}
-#     genotab.s_table_list = {}
-#     genotab.sam_mar_option=genoclass.get_res_param().get_res_type()
-#     #sam_mar_future=list()
-#     cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
-#     print(f"{cur_time}starting to generate fig table")
-#     sam_mar_future_dict={}
-#     if genoclass.get_res_param().get_res_type() == "sample":
-#         markers = genoclass.get_metadata().get_ref_markers_list()
-#         selected_sample = genoclass.get_res_param().get_sample()
-#         if not selected_sample or len(markers)==0:
-#             return
-#         print(f'selected sample: {selected_sample}')
-#         with ThreadPoolExecutor(max_workers=genoclass.get_parameter().get_thread()) as executor:
-#             for mar in markers:
-#                 future = executor.submit(process_fig_table, selected_sample, mar, genoclass, genotab)
-#                 sam_mar_future_dict[future]=mar
-#     elif genoclass.get_res_param().get_res_type() == "marker":
-#         selected_marker=genoclass.get_res_param().get_marker()
-#         samples = genoclass.get_metadata().get_samples_list()
-#         if not selected_marker or len(samples)==0:
-#             return
-#         print(f'selected marker: {selected_marker}')
-#         with ThreadPoolExecutor(max_workers=genoclass.get_parameter().get_thread()) as executor:
-#             for sam in samples:
-#                 future = executor.submit(process_fig_table, sam, selected_marker, genoclass, genotab)
-#                 sam_mar_future_dict[future]=sam
-#     else:
-#         return
-    
-#     for future in as_completed(sam_mar_future_dict):
-#         sam_mar = sam_mar_future_dict[future]
-#         try:
-#             res=future.result()
-#             with genotab.figures_lock:
-#                 print(f"starting to process {sam_mar}")
-#                 genotab.figures[sam_mar]=res[0]
-#                 genotab.seq_tables[sam_mar]=res[1]
-#                 genotab.hap_tables[sam_mar]=res[2]
-#                 print(f"finished to process {sam_mar}")
-#         except Exception as e:
-#                 print(f"Eror processing fig tab: {e}")
-    
-#     print("Figures length:", len(genotab.figures))
-#     print("33333333333333333333333333333333333")
-#     cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
-#     print(f"{cur_time}finished to generate fig table")
-#     genotab.figures={k:genotab.figures[k] for k in sorted(genotab.figures)}
-#     genotab.seq_tables={k:genotab.seq_tables[k] for k in sorted(genotab.seq_tables)}
-#     genotab.hap_tables={k : genotab.hap_tables[k] for k in sorted(genotab.hap_tables)}
-#     print("555555555555555555555555555555")
-#     if (not (set(genotab.figures.keys()) == set(genotab.seq_tables.keys()) == set(genotab.hap_tables.keys()))):
-#         return
-#     print("6666666666666666666666666666666666666")
-#     genotab.current_page = 0
-#     genotab.fig_per_page = 10
-#     genotab.tot_pages=int(len(genotab.figures) / genotab.fig_per_page) if (len(genotab.figures) % genotab.fig_per_page == 0) else (int(len(genotab.figures) / genotab.fig_per_page) + 1)
-#     genotab.figures=list(genotab.figures.values())
-#     genotab.seq_tables=list(genotab.seq_tables.values())
-#     genotab.hap_tables=list(genotab.hap_tables.values())
-#     print("77777777777777777777")
-#     display_page(genotab, genoclass) 
-#     print("88888888888888888888888")
     
 def display_page(genotab, genoclass):
     loci_table = genoclass.get_metadata().get_loc_df()
@@ -312,7 +245,7 @@ def display_page(genotab, genoclass):
 
 def process_fig_table(sample, marker, genoclass, genotab):
     try:
-        print(f"Thread {threading.current_thread().name}: 0 Starting to process fig table for {sample}_{marker}")
+        print(f"Starting to process fig table for {sample}_{marker}")
         amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
         hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
         sam_mar = f"{sample}_{marker}"
@@ -671,28 +604,28 @@ def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
         elif hap_df['Zygosity'].iloc[0] == "homo":
             colors[0]=color_bars['dgreen']
     else:
-        print("fig generation is none")
+        print(f"fig generation is none")
         return None
 
-    with matplotlib_lock:
+    #with matplotlib_lock:
         # Reduced figure size for better fit - was (4,1.5), now (3,1)
-        fig = Figure(figsize=(3, 1), dpi=200)  # Reduced dpi from 300 to 200
-        ax = fig.add_subplot(111)
-        #bars = ax.bar(df['id'], df['NumReads'], tick_label=[str(x) for x in df['id']], color=colors)
-        bars = ax.bar(df.index,
+    fig = Figure(figsize=(3, 1), dpi=200)  # Reduced dpi from 300 to 200
+    ax = fig.add_subplot(111)
+    #bars = ax.bar(df['id'], df['NumReads'], tick_label=[str(x) for x in df['id']], color=colors)
+    bars = ax.bar(df.index,
                     df['NumReads'],
                     tick_label=[str(x) for x in df.index],
                     color = colors)
-        ax.set_title(f"Sample: {sample}, Marker: {mar}", fontdict={'fontsize': 5, 'fontweight': 'bold'})
+    ax.set_title(f"Sample: {sample}, Marker: {mar}", fontdict={'fontsize': 5, 'fontweight': 'bold'})
         #ax.set_xticks(df['id'])
-        ax.set_xticks(df.index)
+    ax.set_xticks(df.index)
         #ax.set_xticklabels(df['id'], rotation=45, fontsize=8)
-        ax.set_xticklabels(df.index, fontsize=3)
-        ax.set_yticks(ax.get_yticks())
-        ax.set_yticklabels([str(int(i)) for i in ax.get_yticks()], fontsize=3)
-        fig.tight_layout(pad=1)  # Reduced padding from 2 to 1
-        fig.canvas.mpl_connect("button_press_event", lambda event: on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass))
-        return fig
+    ax.set_xticklabels(df.index, fontsize=3)
+    ax.set_yticks(ax.get_yticks())
+    ax.set_yticklabels([str(int(i)) for i in ax.get_yticks()], fontsize=3)
+    fig.tight_layout(pad=1)  # Reduced padding from 2 to 1
+    fig.canvas.mpl_connect("button_press_event", lambda event: on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass))
+    return fig
 def toggle_row_background(treeview, idx, tag_to_set=None, zygosity=None):
     #print(f"change the background of indx:{idx}, tag_to_set:{tag_to_set}, zygosity:{zygosity}")
     background_tags = {'bg_red', 'bg_white'}

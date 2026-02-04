@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from ..utils.utils_common import print_time, thread_lock
 from ..utils.utils_alignment import do_pairwise_alignment
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from ..utils.utils_func import produce_reads_dis_fig, generate_page
+from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor, as_completed
+from ..utils.modern_messagebox import showerror
 import pdb
 
 class MicroHapClass:
@@ -307,142 +309,39 @@ class MicroHapClass:
             self._sam_amplicons_dir[sample]=amplicon_dir
         print_time(f"finished to read geno output file for sample: {sample}")
 
-    # def update_sam_mar_reads_dict(self, sam, markers, sam_mar_reads_dict):
-    #     with thread_lock:
-    #         sam_mar_reads_dict.update({sam: {mar : 0 for mar in markers}})
-    def update_sam_mar_reads_dict(self, sam, markers):
-        return sam, {mar : 0 for mar in markers}
-    # def update_sam_microhaps_dir(self, sam, markers, sam_micro_dir):
-    #     with thread_lock:
-    #         print_time(f"begain to update sam_micro_dir for sample: {sam}")
-    #         sam_micro_dir.update({sam : {mar : pd.DataFrame(columns=micro_microhap_df_columns) for mar in markers}})
-    def update_sam_microhaps_dir(self, sam, markers):
-        return sam, {mar : pd.DataFrame(columns = micro_microhap_df_columns) for mar in markers}
-    # def update_sam_amplicons_dir(self, sam, markers, sam_amp_dir):
-    #     with thread_lock:
-    #         sam_amp_dir.update({sam : {mar : pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers}})
-    def update_sam_amplicons_dir(self, sam, markers):
-        return sam, {mar : pd.DataFrame(columns = micro_amplicon_df_columns) for mar in markers}
-    # def update_sam_ml_dir(self, sam, markers, sam_mar_ml_dir):
-    #     with thread_lock:
-    #         sam_mar_ml_dir.update({sam : {mar : pd.DataFrame(columns = micro_amplicon_df_columns) for mar in markers}})
-    def update_sam_ml_dir(self, sam, markers):
-        return sam, {mar : pd.DataFrame(columns = ml_mh_df_columns) for mar in markers}
     def init_sam_mar_dicts(self,genotype_class):
         anal_type = genotype_class.get_parameter().get_analtype()
         samples=genotype_class.get_metadata().get_samples_list()
         markers=genotype_class.get_metadata().get_ref_markers_list()
-        # n_threads=genotype_class.get_parameter().get_thread()
+        n_threads=genotype_class.get_parameter().get_thread() # this is not intiated yet, should the default one is set to maximum cpu number???
         print_time(f"begain to initiate sam_mar_dict")
         if anal_type == "snp":
             print_time(f"begain to initiate assigned_reads_dict")
             sam_mar_reads_dict=self.get_assigned_reads_dict()
             sam_mar_reads_dict={sam:{mar:0 for mar in markers} for sam in samples}
-            # with ThreadPoolExecutor(max_workers = n_threads) as executor:
-            #     futures = [executor.submit(self.update_sam_mar_reads_dict, sam, markers) for sam in samples]
-            #     for future in as_completed(futures):
-            #         try:
-            #             sam, mar_dict = future.result()
-            #             sam_mar_reads_dict[sam] = mar_dict
-            #         except Exception as exc:
-            #             print(f"Error while update sam mar reads dict for sample: {exc}")
             self.set_assigned_reads_dict(sam_mar_reads_dict)
-            
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures = [executor.submit(self.update_sam_mar_reads_dict, sam, markers, sam_mar_reads_dict) for sam in samples]
-            #     for future in futures:
-            #         try:
-            #             future.result()
-            #         except Exception as exc:
-            #             print(f"Error while update sam mar reads dict for sample: {exc}")
-            # self.set_assigned_reads_dict(sam_mar_reads_dict)
+            print_time(f'finished to initiate assigned_reads_dict')
             
             print_time(f"begain to initiate sam_microhaps_dir")
             sam_micro_dir=self.get_sam_microhaps_dir()
             sam_micro_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures=[executor.submit(self.update_sam_microhaps_dir, sam, markers) for sam in samples]
-            #     for future in as_completed(futures):
-            #         try:
-            #             sam, mar_dict = future.result()
-            #             sam_micro_dir[sam] = mar_dict
-            #         except Exception as exc:
-            #             print(f"Error while update sam micrhps dict for sample: {exc}")
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures=[executor.submit(self.update_sam_microhaps_dir, sam, markers, sam_micro_dir) for sam in samples]
-            #     for future in futures:
-            #         try:
-            #             future.result()
-            #         except Exception as exc:
-            #             print(f"Error while update sam micrhps dict for sample: {exc}")
             self.set_sam_microhaps_dir(sam_micro_dir)
+            print_time(f'finished to initiate sam_microhaps_dir')
             
             print_time(f"begain to initiate sam_amplicons_dir")
             sam_amp_dir=self.get_sam_amplicons_dir()
             sam_amp_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures=[executor.submit(self.update_sam_amplicons_dir, sam, markers) for sam in samples]
-            #     for future in as_completed(futures):
-            #         try:
-            #             sam, mar_dict = future.result()
-            #             sam_amp_dir[sam] = mar_dict
-            #         except Exception as exc:
-            #             print(f"Error while update sam amplicon dict for sample: {exc}")
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures=[executor.submit(self.update_sam_amplicons_dir, sam, markers, sam_amp_dir) for sam in samples]
-            #     for future in futures:
-            #         try:
-            #             future.result()
-            #         except Exception as exc:
-            #             print(f"Error while update sam amplicon dict for sample: {exc}")
             self.set_sam_amplicons_dir(sam_amp_dir)
+            print_time(f'finished to initiate sam_amplicons_dir')
             
             print_time(f"begain to initiate sam_ml_dir")
             sam_ml_dir=self.get_sam_mar_ml_dir()
             sam_ml_dir={sam:{mar:pd.DataFrame(columns=ml_mh_df_columns) for mar in markers} for sam in samples}
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures=[executor.submit(self.update_sam_ml_dir, sam, markers) for sam in samples]
-            #     for future in as_completed(futures):
-            #         try:
-            #             sam, mar_dict = future.result()
-            #             sam_ml_dir[sam] = mar_dict
-            #         except Exception as exc:
-            #             print(f"Error while update sam ml dict for sample: {exc}")
-            # with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            #     futures=[executor.submit(self.update_sam_ml_dir, sam, markers, sam_ml_dir) for sam in samples]
-            #     for future in futures:
-            #         try:
-            #             future.result()
-            #         except Exception as exc:
-            #             print(f"Error while update sam ml dict for sample: {exc}")
             self.set_sam_mar_ml_dir(sam_ml_dir)
+            print_time(f'finished to initiate sam_ml_dir')
         else:
             pass
         print_time(f"finished to initiate sam_mar_dict")
-    def produce_reads_dis_fig(self, i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page):
-        if i == num_pages:
-            x_list=list(sorted_data.keys())[i*bars_per_page:len(sorted_data)]
-            y_list=list(sorted_data.values())[i*bars_per_page:len(sorted_data)]
-            num_subplots_per_page=len(x_list)/bars_per_subplot
-            if num_subplots_per_page % 1 ==0:
-                num_subplots_per_page=int(num_subplots_per_page)
-            else:
-                num_subplots_per_page=int(num_subplots_per_page)+1
-        else:
-            x_list=list(sorted_data.keys())[i*bars_per_page:(i+1)*bars_per_page]
-            y_list=list(sorted_data.values())[i*bars_per_page:(i+1)*bars_per_page]
-        fig,axs=plt.subplots(nrows=num_subplots_per_page,ncols=1,figsize=(16,9))
-        
-        for j in range(num_subplots_per_page):
-            x=x_list[j*bars_per_subplot:(j+1)*bars_per_subplot]
-            y=y_list[j*bars_per_subplot:(j+1)*bars_per_subplot]
-            if len(x)==0:
-                break
-            ax=axs[j]
-            ax.bar(x,y)
-            ax.tick_params(axis='x',labelsize=6)
-            ax.tick_params(axis='y',labelsize=6)
-        return fig,axs
 
     def pro_mar_sam_reads_distri_fig(self,mar, samples, fpath,anal_type):
         data_dict = {}
@@ -465,7 +364,7 @@ class MicroHapClass:
             n_page=0
             fig, axs = None, None
             for i in range(num_pages):
-                fig,axs=self.produce_reads_dis_fig(i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page)
+                fig,axs=produce_reads_dis_fig(i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page)
                 if fig is not None:
                     fig.suptitle(f"Reads distribution of loci: {mar}",fontsize=16,x=0.5,y=0.95,horizontalalignment='center')
                     fig.text(0.08,0.5,'n. of reads',va='center',rotation='vertical')
@@ -492,7 +391,7 @@ class MicroHapClass:
             n_page=0
             fig, axs = None, None
             for i in range(num_pages):
-                fig,axs=self.produce_reads_dis_fig(i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page)
+                fig,axs=produce_reads_dis_fig(i,num_pages,sorted_data,bars_per_page,bars_per_subplot,num_subplots_per_page)
                 if fig is not None:
                     fig.suptitle(f"Reads distribution of sample: {sample}",fontsize=16,x=0.5,y=0.95,horizontalalignment='center')
                     fig.text(0.08,0.5,'n. of reads',va='center',rotation='vertical')
@@ -500,9 +399,9 @@ class MicroHapClass:
                     n_page+=1
                     pdf.savefig(fig)
                     plt.close(fig)
+
     def pro_all_sample_read_distri_fig_pdf(self, fpath, output_queue, n_threads=4):
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        print_time("starting to produce sample read distribution fig")
+        print_time(f"starting to produce sample read distribution fig")
         output_queue.put(f'starting to produce sample read distribution fig!\n')
         data_dict=self.get_assigned_sam_reads_dict()
         sorted_data={k:v for k,v in sorted(data_dict.items(),
@@ -519,19 +418,12 @@ class MicroHapClass:
         else:
             num_pages=int(num_pages)+1
         
-        def generate_page(i):
-            output_queue.put(f'starting to produce sample read distribution fig page {i}\n')
-            fig, axs = self.produce_reads_dis_fig(i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page)
-            if fig is not None:
-                fig.suptitle(f"Reads distribution of all samples",fontsize=16,x=0.5,y=0.95,horizontalalignment='center')
-                fig.text(0.08,0.5,'n. of reads',va='center',rotation='vertical')
-                fig.text(0.5,0.01,f'page{i+1}',ha='center',fontsize=8)
-            return i, fig
-        
         # Generate pages in parallel and collect results
         page_figures = {}
-        with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            futures = {executor.submit(generate_page, i): i for i in range(num_pages)}
+        with ProcessPoolExecutor(max_workers=n_threads) as executor:
+            futures = {executor.submit(
+                generate_page, i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page
+                ): i for i in range(num_pages)}
             for future in as_completed(futures):
                 try:
                     page_num, fig = future.result()
@@ -547,6 +439,6 @@ class MicroHapClass:
                     pdf.savefig(page_figures[i])
                     plt.close(page_figures[i])
         
-        print_time("finish to produce sample read distribution fig")
+        print_time(f"finish to produce sample read distribution fig")
         output_queue.put(f'finished to produce sample read distribution fig!\n')
   

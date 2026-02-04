@@ -5,7 +5,7 @@ from ..utils.utils_func import load_pdf
 from ..utils.mouse import _on_mousewheel
 
 def update_reads_qual_distri(parent,show_panel,type):
-    print("starting to update_reads_qual_distri")
+    print(f"starting to update_reads_qual_distri")
     for widget in show_panel.winfo_children():
         widget.destroy()
     genoclass = parent.master.genotype_class
@@ -42,7 +42,7 @@ def update_reads_qual_distri(parent,show_panel,type):
         genoclass.get_microhap().pro_mar_sam_reads_distri_fig(mar, samples, fpath,"snp")
 
     load_pdf_from_here(genoclass,canvas,type)
-    print("finished to update_reads_qual_distri")
+    print(f"finished to update_reads_qual_distri")
     
 def load_pdf_from_here(genoclass,canvas,fig_type):
     suffix=""

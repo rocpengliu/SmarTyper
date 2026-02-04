@@ -83,7 +83,9 @@ def create_body(parent, frame):
 
 def on_confirm(btn, frame, genotype_class):
     btn.configure(text="Processing...", state="disabled")
+    frame.update_idletasks()
     frame.after(100, lambda: confirm_inputfiles(frame, genotype_class, btn))
+    
 def confirm_inputfiles(frame, genotype_class, btn=None):
     try:
         go = genotype_class.load_session("genotype", parent=frame)

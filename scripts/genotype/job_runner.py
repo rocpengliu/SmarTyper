@@ -10,7 +10,7 @@ import os
 from .results_geno_combo import update_genotype_tab
 import pdb
 from ..utils.utils_common import print_time, run_update_lock
-from ..utils.common import parent_button_size, child_button_size, bfont,brfont,bmbfont,pnbuttonfont, header_font
+from ..utils.common import parent_button_size, child_button_size, bfont,bmfont,pnbuttonfont, header_font
 from ..utils.colors import COLORS
 from ..utils import modern_messagebox
 
@@ -52,12 +52,12 @@ def create_body(parent, frame):
     body_frame.progress_label = ctk.CTkLabel(progress_info_frame, text="0 / 0 samples (0%)", 
                                              font=bfont, 
                                              text_color=COLORS['text_primary'])
-    body_frame.progress_label.grid(row=0, column=0, padx=(10,20), pady=5, sticky="w")
+    body_frame.progress_label.grid(row=0, column=0, padx=(10,15), pady=5, sticky="w")
     
     body_frame.timer_label = ctk.CTkLabel(progress_info_frame, text="Elapsed time: 0s", 
                                           font=bfont, 
                                           text_color=COLORS['secondary'])
-    body_frame.timer_label.grid(row=0, column=1, padx=(0,20), pady=5, sticky="w")
+    body_frame.timer_label.grid(row=0, column=1, padx=(0,15), pady=5, sticky="w")
     
     # Modern progress bar with CustomTkinter
     body_frame.progress_bar = ctk.CTkProgressBar(body_frame, height=25, corner_radius=10,
@@ -66,7 +66,7 @@ def create_body(parent, frame):
     body_frame.progress_bar.grid(row=1, column=0, padx=(20,20), pady=(5,10), sticky="ew")
     body_frame.progress_bar.set(0)  # Set initial value to 0
     
-    body_frame.log_text = ctk.CTkTextbox(body_frame, wrap="word", font=bmbfont, state="normal", text_color="white", fg_color=COLORS['background'])
+    body_frame.log_text = ctk.CTkTextbox(body_frame, wrap="word", font=bmfont, state="normal", text_color="white", fg_color=COLORS['background'])
     body_frame.log_text.grid(row=2, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="nsew")
 
     return body_frame
@@ -95,15 +95,21 @@ def create_footer(parent, frame):
     footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next →", font=pnbuttonfont, state="disabled",
                                     fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                                     corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
-                                    command=lambda:on_click_res(parent))
+                                    command=lambda:on_click_res(parent, footer_frame))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
     return footer_frame
 
-def on_click_res(parent):
-    parent.after(100, lambda:parent.master.show_page("results"))
-    panel = parent.master.pages.get('results').body_frame.bottom_panel
-    if panel.winfo_exists():
-        update_genotype_tab(parent,panel)
+def on_click_res(parent, footer_frame):
+    footer_frame.next_button.configure(state='disabled', text="Loading...")
+    footer_frame.next_button.update_idletasks()
+    def after_show():
+        panel = parent.master.pages.get('results').body_frame.bottom_panel
+        if panel.winfo_exists():
+            print_time(f"updating genotype tab from job runner")
+            update_genotype_tab(parent,panel)
+        footer_frame.next_button.configure(state='normal', text="Next →")
+        parent.master.show_page("results")
+    parent.master.after(100, after_show)
 
 def update_log_text(run_frame):
         if not run_frame.run_finished.is_set() or not run_frame.output_queue.empty():  # Check if there's still work to do
@@ -154,15 +160,15 @@ def update_timer(run_frame):
 
 def update_progressbar(run_frame):
     if not run_frame.run_finished.is_set():
-        s3 = run_frame.cur_sam_idx * 100 / run_frame.tot_sams
+        s3 = (run_frame.cur_sam_idx - 1) * 100 / run_frame.tot_sams
         formatted_s3 = f"{s3:.2f}"
         formatted_s3=str(formatted_s3)
         run_frame.progress_bar.set(s3 / 100)  # CTkProgressBar uses 0.0 to 1.0
-        run_frame.progress_label.configure(text=f"{str(run_frame.cur_sam_idx)}/{str(run_frame.tot_sams)} samples ({formatted_s3}%)")
+        run_frame.progress_label.configure(text=f"processing {str(run_frame.cur_sam_idx)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} markers ({formatted_s3}% finished)")
         run_frame.update_idletasks()
     else:
         run_frame.progress_bar.set(1.0)  # CTkProgressBar uses 0.0 to 1.0 (1.0 = 100%)
-        run_frame.progress_label.configure(text=f"{str(run_frame.tot_sams)}/{str(run_frame.tot_sams)} samples (100%)")
+        run_frame.progress_label.configure(text=f"processing {str(run_frame.tot_sams)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} markers  (100%)")
 
 def capture_output(run_frame):
     while True:
@@ -185,11 +191,11 @@ def target(parent):
     genoclass = parent.master.genotype_class
     run_frame = parent.master.pages.get("run", None)
     if run_frame is None:
-        print("Error: 'run' page is not available.")
+        print(f"Error: 'run' page is not available.")
         return
     run_frame = run_frame.body_frame
     if run_frame is None:
-        print("Error: 'run_frame.body_frame' is not initialized.")
+        print(f"Error: 'run_frame.body_frame' is not initialized.")
         return
 
     subargs = {}
@@ -229,12 +235,13 @@ def target(parent):
                 args_list.append(str(value))
         run_frame.args_dir[row["sample"]]=args_list
 
-    print_time("starting to run seq2type")
+    print_time(f"starting to run seq2type")
     run_frame.output_queue = queue.Queue()
     run_frame.run_finished = threading.Event()
     run_frame.start_time = time.time()
     run_frame.cur_sam_idx = 0
     run_frame.tot_sams = len(run_frame.args_dir)
+    run_frame.tot_mars = len(genoclass.get_metadata().get_ref_markers_list())
     #capture_thread = threading.Thread(target=capture_output, args=(run_frame), daemon=True)
     run_thread = threading.Thread(target=run_wrapper, args=(parent, run_frame), daemon=True)
     #capture_thread.start()
@@ -252,7 +259,7 @@ def target(parent):
                     run_frame.master.footer_frame.next_button.configure(state='normal')
                     break
     else:
-        print("Error: 'run_frame' is not initialized.")
+        print(f"Error: 'run_frame' is not initialized.")
 
 def run_wrapper(parent, run_frame):
     try:
@@ -261,35 +268,34 @@ def run_wrapper(parent, run_frame):
         res_frame=parent.master.pages.get('results').footer_frame
         res_frame.next_button.configure(state='disabled')
         with run_update_lock:
-            run_frame.output_queue.put("\nStarting SeqTyper!\n")
+            run_frame.output_queue.put(f"Starting Seq2Type for genotyping!\n\n")
         #update_progressbar(run_frame)
         for index, (sample, arg_lst) in enumerate(run_frame.args_dir.items()):
             with run_update_lock:
                 run_frame.cur_sam_idx = index + 1
+                run_frame.output_queue.put(f'---------------------------------------------------------start--------------------------------------------------' + '\n')
                 run_frame.output_queue.put(f'Start to process sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
+                run_frame.output_queue.put(f'Running Seq2Type for sample: {sample}, this is slow and please be patient!\n')
             seqtyper_core.run_seqtyper_wrapper(arg_lst)
             with run_update_lock:
                 run_frame.output_queue.put(f'reading sample {sample} outputs\n')
-                genoclass.read_sam_outputs(sample)
+                genoclass.read_sam_outputs(sample, run_frame)
                 run_frame.output_queue.put(f'Finish the processing sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
-            #run_frame.after(0, lambda : update_progressbar(run_frame))
-            #update_progressbar(run_frame, (index+1), tot_sams, run_finished)
-        # unfreeze_ui(par_frame)
+                run_frame.output_queue.put(f'---------------------------------------------------------end----------------------------------------------------' + '\n\n\n')
         with run_update_lock:
             run_frame.output_queue.put(f'starting to generate all sample figures\n')
         if genoclass.get_parameter().is_pro_figure():
             genoclass.pro_all_sample_figs(run_frame.output_queue)
         with run_update_lock:
-            run_frame.output_queue.put("\nCongrats! Seq2Typer run completed successfully.\n")
-            parent.master.after(0, lambda: modern_messagebox.showsuccess(parent.master, "Success", "Seq2Typer ran successfully"))
+            run_frame.output_queue.put("\nCongrats! Seq2Type ran successfully.\n")
+            parent.master.after(0, lambda: modern_messagebox.showsuccess(run_frame, "Success", "Seq2Type ran successfully"))
             parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
             run_frame.run_finished.set()
     except Exception as e:
-        emsg = f"Error running Seq2Typer: {str(e)}"
+        emsg = f"Error running Seq2Type: {str(e)}"
         with run_update_lock:
             run_frame.output_queue.put(emsg)
-        parent.master.after(0, lambda msg=emsg: modern_messagebox.showerror(parent.master, "Error", msg))
+        parent.master.after(0, lambda msg=emsg: modern_messagebox.showerror(run_frame, "Error", msg))
     finally:
         with run_update_lock:
             run_frame.run_finished.set()
-        #parent.master.after(0, lambda:update_progressbar(run_frame))

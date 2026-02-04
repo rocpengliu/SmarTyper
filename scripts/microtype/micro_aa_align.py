@@ -12,6 +12,7 @@ import pdb
 import copy
 import os
 import pandas as pd
+from ..utils import modern_messagebox
 
 matplotlib.use("TkAgg")
 
@@ -232,6 +233,7 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
     if not ref_mar_refmt.is_overlapped_gene():
         exon_list = ref_mar_refmt.get_splicer_exon_list_dict().get(ref_compre_mt.get_splicer())
         if (exon_list is None) or (not exon_list):
+            modern_messagebox.showerror(None, "Error", f'No exon list for splicer {ref_compre_mt.get_splicer()}')
             raise ValueError(f'No exon list for splicer {ref_compre_mt.get_splicer()}')
     print_time(f'exon_list is {exon_list}')
     refseq = working_splicer_cur_compre.get_ref_aa_seq() if ref_mar_refmt.is_overlapped_gene() else ref_mar_refmt.get_aa_ref()

@@ -6,7 +6,7 @@ from ..utils.common import micro_microhap_df_columns
 from ..utils.utils_common import print_time
 
 def update_geno_tab(parent, fig_tab_bottom_panel):
-    print_time("starting to update_geno_tab")
+    print_time(f"starting to update_geno_tab")
     for widget in fig_tab_bottom_panel.winfo_children():
         widget.destroy()
     
@@ -46,7 +46,7 @@ def update_geno_tab(parent, fig_tab_bottom_panel):
         tree.heading(col, text=col)
 
     populate_geno_tab(parent, tree)
-    print_time("finished to update_geno_tab")
+    print_time(f"finished to update_geno_tab")
 
 def populate_geno_tab(parent, tree):
     # Clear existing items first

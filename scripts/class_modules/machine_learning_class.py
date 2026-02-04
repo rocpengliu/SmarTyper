@@ -9,6 +9,7 @@ from sklearn.metrics import accuracy_score
 import joblib
 import numpy as np
 from ..utils.utils_common import print_time
+from ..utils import modern_messagebox
 import pdb
 
 
@@ -57,6 +58,7 @@ class MachineLearningClass:
         if os.path.isfile(fpath):
             t_df = pd.read_csv(fpath, sep='\t', header = 0)
             if t_df.shape[0] == 0:
+                mordern_messagebox.showerror("Invalid Input", "training file must not be empty!")
                 raise ValueError("training file must not be empty")
             if parameter_class.get_analtype() == "snp" and t_df.shape[1] == 14:
                 for locus, locus_df in t_df.groupby('Locus'):
@@ -80,6 +82,7 @@ class MachineLearningClass:
         if micro_type == "snp":
             X_tot = df.drop(['Locus', 'Zygosity'], axis = 1)
             if 'Zygosity' not in df.columns:
+                modern_messagebox.showerror("Invalid Input", "DataFrame missing 'Zygosity' column, cannot train!")
                 raise ValueError("DataFrame missing 'Zygosity' column, cannot train!")
             y = df['Zygosity']
             X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = 0.2, random_state = 42, stratify=y)

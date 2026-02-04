@@ -2,7 +2,7 @@ import argparse
 from seqtyper_core import run_seqtyper_wrapper
 
 def main():
-    print("let's go")
+    print(f"let's go")
     parser = argparse.ArgumentParser(description='seqtyper for genotyping')
 
     parser.add_argument('-f', '--prefix', required=True, help='output sample prefix')
@@ -30,13 +30,13 @@ def main():
     args_list.insert(0, 'seqtyper')
 
     # Print the argument list for debugging
-    print("Arguments passed to C++ function:", args_list)
+    print(f"Arguments passed to C++ function: {args_list}")
 
     try:
         # Call the Cython-wrapped function
         run_seqtyper_wrapper(args_list)
     except Exception as e:
-        print("Error running seq2type:", e)
+        print(f"Error running seq2type: {e}")
 
 if __name__ == '__main__':
     main()

@@ -5,8 +5,8 @@ import json
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
-
-   
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from ..utils.utils_func import process_sample_for_pool
 class ReadsClass:
     def __init__(self):
         self._sam_reads_dict={}#nested dictionary with sam as the key, and each marker as the key
@@ -80,18 +80,15 @@ class ReadsClass:
                 })).pipe(pd.melt, id_vars=['cycle','read','filtering', 'sample'],var_name='base',value_name='quality')
         return qual_df
     def pro_all_sample_qual_fig(self, dir_path, output_queue, n_threads=4):
-        from concurrent.futures import ThreadPoolExecutor, as_completed
-        print_time("starting to produce sample quality fig")
+        print_time(f"starting to produce sample quality fig")
         output_queue.put(f'starting to produce sample quality fig!\n')
-        combined_dic={}
-        
-        def process_sample(sam, vdic):
-            output_queue.put(f'starting to produce sample quality fig for {sam}!\n')
-            return sam, pd.concat([df.dropna(axis=1, how='all') for df in vdic.values()], axis=0, ignore_index=True)
-        
-        # Process samples in parallel using ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=n_threads) as executor:
-            futures = {executor.submit(process_sample, sam, vdic): sam for sam, vdic in self._sam_reads_qual_dict.items()}
+        combined_dic = {}
+
+        # Prepare arguments as a list of tuples
+        sample_args = list(self._sam_reads_qual_dict.items())
+        # Use ProcessPoolExecutor for parallel processing
+        with ProcessPoolExecutor(max_workers=n_threads) as executor:
+            futures = {executor.submit(process_sample_for_pool, arg): arg[0] for arg in sample_args}
             for future in as_completed(futures):
                 try:
                     sam, result_df = future.result()
@@ -100,8 +97,8 @@ class ReadsClass:
                     print(f"Error processing sample {futures[future]}: {exc}")
 
         output_queue.put(f'finished to combined_dic for quality fig!\n')
-        combined_dfs=[df.dropna(axis=1,how='all') for df in combined_dic.values()]
-        combined_df=pd.concat(combined_dfs,axis=0,ignore_index=True)
+        combined_dfs = [df.dropna(axis=1, how='all') for df in combined_dic.values()]
+        combined_df = pd.concat(combined_dfs, axis=0, ignore_index=True)
         output_queue.put(f'starting to facetgrid for quality fig!\n')
         # gra=sns.FacetGrid(combined_df,col='filtering',row='read',hue='sample',margin_titles=True)
         # output_queue.put(f'map line for quality fig, it is slow, please be patient!\n')
@@ -146,5 +143,5 @@ class ReadsClass:
         # Close the plot to release memory
         plt.close()
             
-        print_time("finished to produce sample quality fig")
+        print_time(f"finished to produce sample quality fig")
         output_queue.put(f'finished to produce sample quality fig!\n')
