@@ -1,3 +1,4 @@
+from scripts.microtype.micro_viewer import update_combox_from_others_micro
 from ..utils.common import parent_button_size, child_button_size
 import customtkinter as ctk
 import tkinter as tk
@@ -55,14 +56,16 @@ def create_body(parent, frame):
 
     row = 0
 
-    n_thread_var = tk.IntVar(value=genotype_class.get_parameter().get_thread())
+    n_thread_var = tk.StringVar(value=str(genotype_class.get_parameter().get_thread()))
     ctk.CTkLabel(body_frame.top_panel, text="Num. thread:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.n_thread = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=n_thread_var, height=26)
     body_frame.top_panel.n_thread.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
-    n_thread_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_thread(n_thread_var.get()))
+    n_thread_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_thread(
+        int(n_thread_var.get()) if n_thread_var.get().isdigit() else genotype_class.get_parameter().get_thread()
+    ))
     row += 1
 
-    input_var = ctk.StringVar(value=genotype_class.get_parameter().get_outputdir())
+    input_var = ctk.StringVar(value=genotype_class.get_parameter().get_projectdir())
     ctk.CTkLabel(body_frame.top_panel, text="Input folder:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.out_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=input_var,
                                       height=26, corner_radius=8, border_width=2)
@@ -71,7 +74,7 @@ def create_body(parent, frame):
                   corner_radius=8, fg_color=COLORS['workflow_gold'], hover_color=COLORS['secondary'])
     project_browse_btn.configure(command=lambda btn=project_browse_btn: outfile_browser(body_frame.top_panel.out_entry, False, btn))
     project_browse_btn.grid(row=row, column=1, pady=(1,1), sticky="w")
-    input_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_outputdir(input_var.get()))
+    input_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_projectdir(input_var.get()))
     row += 1
 
     # Confirm button with feedback
@@ -88,9 +91,11 @@ def on_confirm(btn, frame, genotype_class):
     
 def confirm_inputfiles(frame, genotype_class, btn=None):
     try:
-        go = genotype_class.load_session("genotype", parent=frame)
-        if go:
+        go0 = genotype_class.check_project_files(parent = frame)
+        go1 = genotype_class.load_session(parent=frame)
+        if go0 and go1:
             update_widget_state(frame, 'normal')
+            modern_messagebox.showsuccess(frame, "Success", "Project loaded successfully. You can click 'Next' to proceed.")
         else:
             update_widget_state(frame, 'disabled')
             modern_messagebox.showerror(frame, "Error", "One or more input files are missing or corrupted.")
@@ -129,8 +134,18 @@ def create_footer(parent, frame):
     return footer_frame
 def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
-        parent.after(100, lambda:parent.master.show_page("results"))
-        panel = parent.master.pages.get('results').body_frame.bottom_panel
-        if panel.winfo_exists():
-            update_combox_from_others(parent)
-            update_genotype_tab(parent,panel)
+        genotype_class = parent.master.genotype_class
+        if genotype_class.get_parameter().is_project_genotype_model() and not genotype_class.get_parameter().is_project_microtype_model():
+            parent.after(100, lambda:parent.master.show_page("results"))
+            panel = parent.master.pages.get('results').body_frame.bottom_panel
+            if panel.winfo_exists():
+                update_combox_from_others(parent)
+                update_genotype_tab(parent,panel)
+            parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
+        elif genotype_class.get_parameter().is_project_microtype_model() and not genotype_class.get_parameter().is_project_genotype_model():
+            parent.after(100, lambda:parent.master.show_page("microtype_results"))
+            update_combox_from_others_micro(parent)
+            parent.master.pages.get('microtype_results').footer_frame.next_button.configure(state='normal')
+        else:
+            modern_messagebox.showerror(parent, "Error", "Invalid project state: both genotype and microtype models are either loaded or not loaded. Please check your project files.")
+            return

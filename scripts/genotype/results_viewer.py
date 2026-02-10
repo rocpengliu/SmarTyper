@@ -13,6 +13,7 @@ from .results_reads_all import update_all_reads_qual_distri
 from ..utils.common import parent_button_size, child_button_size, bfont, bmbfont,bmfont, brfont, header_font, confirm_button_font, pnbuttonfont, fig_font
 from ..utils.colors import COLORS
 from ..utils.utils_common import print_time
+from .results_summary import run_thread
 
 matplotlib.use("Agg")
 
@@ -227,23 +228,30 @@ def on_previous_button_click(parent):
     else:
         parent.master.show_page("run")
 
+# def on_next_button_click(parent, footer_frame):
+#     genoclass = parent.master.genotype_class
+#     # Disable the button to prevent multiple clicks
+#     footer_frame.next_button.configure(state='disabled', text="Processing...")
+#     footer_frame.next_button.update_idletasks()
+#     try:
+#         genoclass.dump_session("genotype") #must dump session first because generate_all may crash due to high memory usage
+#         genoclass.generate_all()
+#             # Schedule GUI update on main thread
+#         footer_frame.next_button.configure(state='normal', text="Next →")
+#         footer_frame.next_button.update_idletasks()
+#         parent.master.after(0, lambda: parent.master.show_page("summary"))
+#         #parent.master.after(0, lambda: footer_frame.next_button.configure(state='normal', text="Next →"))
+#     except Exception as e:
+#         error_msg = f"Error generating summary: {str(e)}"
+#         modern_messagebox.showerror(parent.master, "Error", error_msg)
+#         footer_frame.next_button.configure(state='normal', text="Next →")
+
 def on_next_button_click(parent, footer_frame):
-    genoclass = parent.master.genotype_class
-    # Disable the button to prevent multiple clicks
-    footer_frame.next_button.configure(state='disabled', text="Processing...")
-    footer_frame.next_button.update_idletasks()
-    try:
-        genoclass.dump_session("genotype") #must dump session first because generate_all may crash due to high memory usage
-        genoclass.generate_all()
-            # Schedule GUI update on main thread
-        footer_frame.next_button.configure(state='normal', text="Next →")
-        footer_frame.next_button.update_idletasks()
-        parent.master.after(0, lambda: parent.master.show_page("summary"))
-        #parent.master.after(0, lambda: footer_frame.next_button.configure(state='normal', text="Next →"))
-    except Exception as e:
-        error_msg = f"Error generating summary: {str(e)}"
-        modern_messagebox.showerror(parent.master, "Error", error_msg)
-        footer_frame.next_button.configure(state='normal', text="Next →")
+    foot_frame = parent.master.pages.get('results', None).footer_frame
+    if foot_frame is not None:
+        foot_frame.next_button.configure(state = 'disabled')
+    parent.master.show_page("summary")
+    parent.after(100, lambda:run_thread(parent))
         
 def create_bottom_panel(parent, body_frame):
     bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")

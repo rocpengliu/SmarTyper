@@ -8,6 +8,7 @@ class ParameterClass:
         self._locifile = ""
         self._inputdir = ""
         self._outputdir = ""
+        self._projectdir = ""
         self._samplefile = ""
         self._mlinputfile = ""
         self._mloutputdir = ""
@@ -45,6 +46,12 @@ class ParameterClass:
         self._include_pre_mh = True
         self._has_pre_mh = False
         self._pro_figure = True
+    
+    def set_projectdir(self, projectdir):
+        self._projectdir = projectdir
+        
+    def get_projectdir(self):
+        return self._projectdir
     
     def is_mlmodel(self):
         return self._mlmodel
@@ -251,7 +258,7 @@ class ParameterClass:
         return os.path.join(self._outputdir, self._outputgenotypeproject)
     
     def get_outputmicrotypeproject(self):
-        return os.path.join(self._outputdir, self._outputmicrotypeproject)
+        return os.path.join(self._post_microhap_output_dir, self._outputmicrotypeproject)
     
     def get_samplefile(self):
         return self._samplefile

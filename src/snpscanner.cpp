@@ -864,7 +864,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
 
         locSnpIt->snpPosSet.insert(locSnpIt->snpPosSetHaplo.begin(), locSnpIt->snpPosSetHaplo.end());
         //"#Locus\tNumReads\tTotalReads\tReadRatio\tBaseChange\tLength\tSequence\n";
-        if (mOptions->verbose) loginfo("Starting to write amplicon table for " + locSnpIt->name + "!");
+        //if (mOptions->verbose) loginfo("Starting to write amplicon table for " + locSnpIt->name + "!");
         for (int i = 0; i < locSnpIt->seqVarVec.size(); i++) {
             *fout3 << locSnpIt->name << "\t" << locSnpIt->getVarReads(i) << "\t" << locSnpIt->totReads << "\t" <<
                     getPer(locSnpIt->getVarReads(i), locSnpIt->totReads) << "\t" << locSnpIt->getSnpStr(i) << "\t" << locSnpIt->seqVarVec.at(i).seq.length() << "\t" << locSnpIt->seqVarVec.at(i).seq << "\n";
@@ -875,12 +875,12 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         }
         locSnpIt->seqVarVec.shrink_to_fit();
 
-        if (mOptions->verbose) loginfo("will keep " + std::to_string(mOptions->mLocSnps.mLocSnpOptions.maxRows4Align) + " read variants and vector size is " + std::to_string(locSnpIt->seqVarVec.size()) + "!");
+        //if (mOptions->verbose) loginfo("will keep " + std::to_string(mOptions->mLocSnps.mLocSnpOptions.maxRows4Align) + " read variants and vector size is " + std::to_string(locSnpIt->seqVarVec.size()) + "!");
 
         if (locSnpIt->seqVarVec.empty()) continue;
 
         //"#Locus\tPosition\tGenotype\tNumReads\tRatio\tTotHaploReads\tNew\tConclusive\n";
-        if (mOptions->verbose) loginfo("Starting to write SNV table for " + locSnpIt->name + "!");
+        //if (mOptions->verbose) loginfo("Starting to write SNV table for " + locSnpIt->name + "!");
         if (!locSnpIt->ssnpsMap.empty()) {
             for (const auto & itss : locSnpIt->ssnpsMap) {
                 *fout << locSnpIt->name << "\t" << (itss.first + locSnpIt->trimPos.first) << "\t" << itss.second.snp1 << "|" << itss.second.snp2 << "\t";
@@ -895,7 +895,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         }
 
         //"#Locus\tAllele\tBaseChange\tNumReads\tAlleleReadsPer\tTotalReads\tReadsPer\tConclusive\tZygosity\tIndel\tSequence\n";
-        if (mOptions->verbose) loginfo("Starting to write MH table for " + locSnpIt->name + "!");
+        //if (mOptions->verbose) loginfo("Starting to write MH table for " + locSnpIt->name + "!");
         if (locSnpIt->genoStr3 == "homo") {
             *fout2 << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->getHaploStr() << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getHaploReadsRatio(0) << "\t" <<
                     locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(0), locSnpIt->totReads) << "\t" << 
@@ -915,7 +915,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
                      (locSnpIt->genoStr3 == "heter" ? "Y" : "N" ) << "\t" << locSnpIt->genoStr3 << "\t" << (locSnpIt->status.first.second ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(1).seq << "\n";
         }
 
-        if (mOptions->verbose) loginfo("Starting to write ERROR table for " + locSnpIt->name + "!");
+        //if (mOptions->verbose) loginfo("Starting to write ERROR table for " + locSnpIt->name + "!");
         if (!baseFreqMap.empty()) {
             *fout4 << locSnpIt->name << "\t";
             double stot = 0.0;

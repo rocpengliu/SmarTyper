@@ -1,5 +1,4 @@
 import platform
-
 if platform.system() == "Windows":
     import ctypes
     try:
@@ -11,6 +10,7 @@ import customtkinter as ctk
 from customtkinter import CTkImage
 import tkinter as tk
 import os
+import multiprocessing as mp
 
 from scripts.home_page import create_home
 from scripts.genotype.genotype_module import create_genotype_module
@@ -248,6 +248,8 @@ class SmarTyperApp(ctk.CTk):
                         display_name = "Microtype data"
                     elif child_name == "microtype_results":
                         display_name = "Microtype results"
+                    elif child_name == 'summary':
+                        display_name = "Results Output"
                     else:
                         display_name = child_name.capitalize()
                     child_button = ctk.CTkButton(
@@ -340,5 +342,6 @@ class SmarTyperApp(ctk.CTk):
         ctk.set_appearance_mode(new_mode)
     
 if __name__ == '__main__':
+    mp.set_start_method('spawn', force=True)
     app = SmarTyperApp()
     app.mainloop()

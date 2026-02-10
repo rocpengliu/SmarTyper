@@ -1,11 +1,13 @@
-
+import traceback
 import customtkinter as ctk
 import tkinter as tk
+import threading, queue, datetime
 from ..utils.utils_common import *
-from .micro_viewer import update_combox_from_others
+from .micro_viewer import update_combox_from_others_micro
 from ..utils import modern_messagebox
 from ..utils.colors import COLORS
 from ..utils.common import parent_button_size, child_button_size, bfont, bmfont, brfont, header_font, pnbuttonfont, module_font
+
 
 def micro_loader(parent):
     frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
@@ -42,6 +44,7 @@ def create_body(parent, frame):
     
     body_frame.grid_rowconfigure(0, weight=1) #top panel
     body_frame.grid_rowconfigure(1, weight=1) # bottom panel
+    body_frame.grid_rowconfigure(2, weight=1) # 
     body_frame.grid_columnconfigure(0, weight=1) # top and bottom panels
     body_frame.grid_columnconfigure(1, weight=1) # top and bottom panels
     
@@ -50,13 +53,21 @@ def create_body(parent, frame):
     body_frame.top_panel.grid_columnconfigure(0, weight=1) #right panel
     body_frame.top_panel.grid_rowconfigure('all', weight=1)
     
+    body_frame.result_queue = queue.Queue()
+    body_frame.log_queue = queue.Queue()
+    poll_log_text(body_frame)
+    
     row = 0
     
-    n_thread_var = tk.IntVar(value=genotype_class.get_parameter().get_thread())
+    n_thread_var = tk.StringVar(value=str(genotype_class.get_parameter().get_thread()))
     ctk.CTkLabel(body_frame.top_panel, text="Num. thread:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.n_thread = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=n_thread_var, height=26)
     body_frame.top_panel.n_thread.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
-    n_thread_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_thread(n_thread_var.get()))
+    n_thread_var.trace_add("write", lambda *args: (
+        genotype_class.get_parameter().set_thread(
+            int(n_thread_var.get()) if n_thread_var.get().isdigit() else genotype_class.get_parameter().get_thread()
+        )
+    ))
     row += 1
     
     loci_var = ctk.StringVar(value=genotype_class.get_parameter().get_locifile())
@@ -68,33 +79,29 @@ def create_body(parent, frame):
                   corner_radius=8, fg_color=COLORS['accent'], hover_color=COLORS['secondary'])
     loci_browse_btn.configure(command=lambda btn=loci_browse_btn: infile_browser(body_frame.top_panel.loci_entry, "index", btn))
     loci_browse_btn.grid(row=row, column=1, pady=(1,1), sticky="w")
-    def on_loci_change(*args):
-        fpath = loci_var.get()
-        genotype_class.get_parameter().set_locifile(fpath)
-        if fpath and os.path.isfile(fpath):
-            genotype_class.get_parameter().set_analtype('snp')
-            genotype_class.get_metadata().read_locifile(genotype_class.get_parameter(), genotype_class.get_post_microhap(), True)
-    loci_var.trace_add("write", on_loci_change)
+    loci_var.trace_add("write", lambda *args: (
+        genotype_class.get_parameter().set_locifile(loci_var.get()),
+        genotype_class.get_parameter().set_analtype('snp'),
+        genotype_class.get_metadata().read_locifile(genotype_class.get_parameter(), genotype_class.get_post_microhap(), True)
+    ))
     loci_rev_var = ctk.BooleanVar(value=genotype_class.get_parameter().get_revcomloci())
     ctk.CTkCheckBox(body_frame.top_panel, text="reverse complement", variable = loci_rev_var, font =brfont, text_color="white").grid(row=row, column=3, padx=(0, 0),sticky="w")
     loci_rev_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_revcom(loci_rev_var.get()))
     row += 1
     
-    body_frame.top_panel.inputdir_var = ctk.StringVar(value=genotype_class.get_parameter().get_cur_microhap_input_file())
+    inputdir_var = ctk.StringVar(value=genotype_class.get_parameter().get_cur_microhap_input_file())
     ctk.CTkLabel(body_frame.top_panel, text="Microtype input file:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
-    body_frame.top_panel.in_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=body_frame.top_panel.inputdir_var,
+    body_frame.top_panel.in_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=inputdir_var,
                                          height=26, corner_radius=8, border_width=2)
     body_frame.top_panel.in_entry.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
     input_browse_btn = ctk.CTkButton(body_frame.top_panel, text="Browse", font=brfont, height=child_button_size['height'], width=child_button_size['width'],
                   corner_radius=8, fg_color=COLORS['accent'], hover_color=COLORS['secondary'])
     input_browse_btn.configure(command=lambda btn=input_browse_btn: infile_browser(body_frame.top_panel.in_entry, "index", btn))
     input_browse_btn.grid(row=row, column=1, pady=(1,1), sticky="w")
-    def on_input_change(*args):
-        fpath = body_frame.top_panel.inputdir_var.get()
-        genotype_class.get_parameter().set_cur_microhap_input_file(fpath)
-        if fpath and os.path.isfile(fpath):
-            genotype_class.get_metadata().read_cur_microhap_file(genotype_class.get_parameter())
-    body_frame.top_panel.inputdir_var.trace_add("write", on_input_change)
+    inputdir_var.trace_add("write", lambda *args: (
+        genotype_class.get_parameter().set_cur_microhap_input_file(inputdir_var.get()),
+        genotype_class.get_metadata().read_cur_microhap_file(genotype_class.get_parameter())
+    ))
     row+=1
     
     micro_var = ctk.StringVar(value=genotype_class.get_parameter().get_pre_microhap_input_file())
@@ -106,13 +113,11 @@ def create_body(parent, frame):
                   corner_radius=8, fg_color=COLORS['accent'], hover_color=COLORS['secondary'])
     micro_browse_btn.configure(command=lambda btn=micro_browse_btn: infile_browser(body_frame.top_panel.microhap_entry, "index", btn))
     micro_browse_btn.grid(row=row, column=1, pady=(1,1), sticky="w")
-    def on_micro_change(*args):
-        fpath = micro_var.get()
-        genotype_class.get_parameter().set_pre_microhap_input_file(fpath)
-        genotype_class.get_parameter().set_has_pre_mh(True)
-        if fpath and os.path.isfile(fpath):
-            genotype_class.get_metadata().read_pre_microhap_file(genotype_class.get_parameter())
-    micro_var.trace_add("write", on_micro_change)
+    micro_var.trace_add("write", lambda *args: (
+        genotype_class.get_parameter().set_pre_microhap_input_file(micro_var.get()),
+        genotype_class.get_parameter().set_has_pre_mh(True),
+        genotype_class.get_metadata().read_pre_microhap_file(genotype_class.get_parameter())
+    ))
     row+=1
     
     output_var = ctk.StringVar(value=genotype_class.get_parameter().get_post_microhap_output_dir())
@@ -131,45 +136,103 @@ def create_body(parent, frame):
                   fg_color=COLORS['accent'], hover_color=COLORS['secondary'], corner_radius=10,
                   state="normal")
     body_frame.top_panel.confirm_btn.grid(row=row, column=3, pady=(5,5), padx=(10,10), sticky="w")
-    def on_confirm():
-        btn = body_frame.top_panel.confirm_btn
-        btn.configure(text="Processing...", state="disabled")
-        frame.after(100, lambda: confirm_inputfiles(frame, genotype_class, btn))
-    body_frame.top_panel.confirm_btn.configure(command=on_confirm)
+    body_frame.top_panel.confirm_btn.configure(
+        command=lambda: [
+            body_frame.top_panel.confirm_btn.configure(state="disabled"),
+            frame.after(100, lambda: confirm_inputfiles(frame, body_frame, genotype_class, body_frame.top_panel.confirm_btn))
+        ]
+    )
+        # Create bottom panel for log_text
+    body_frame.bottom_panel = ctk.CTkFrame(body_frame, fg_color=COLORS['border'], border_color="white", border_width=3, corner_radius=8)
+    body_frame.bottom_panel.grid(row=1, column=0, columnspan=2, sticky="nsew", padx=(50,10), pady=(10,10))
+    body_frame.bottom_panel.grid_rowconfigure(0, weight=1)
+    body_frame.bottom_panel.grid_columnconfigure(0, weight=1)
 
+    body_frame.log_text = ctk.CTkTextbox(
+        body_frame.bottom_panel,
+        wrap="word",
+        font=bmfont,
+        state="disabled",
+        text_color="white",
+        fg_color=COLORS['background']
+    )
+    body_frame.log_text.grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
+    
     return body_frame
 
-def confirm_inputfiles(frame, genotype_class, confirm_btn):
-    parent_win = frame.winfo_toplevel()
-    if genotype_class.get_parameter().get_locifile() is None or not os.path.isfile(genotype_class.get_parameter().get_locifile()):
-        modern_messagebox.showerror(parent_win, "Error", "Loci file is missing or corrupted.")
-        confirm_btn.configure(text="Confirm", state="normal")
-        return
-    if genotype_class.get_parameter().get_cur_microhap_input_file() is None or not os.path.isfile(genotype_class.get_parameter().get_cur_microhap_input_file()):
-        modern_messagebox.showerror(parent_win, "Error", "Microtype input file is missing or corrupted.")
-        confirm_btn.configure(text="Confirm", state="normal")
-        return
-    if genotype_class.get_parameter().get_post_microhap_output_dir() is None or not os.path.isdir(genotype_class.get_parameter().get_post_microhap_output_dir()):
-        modern_messagebox.showerror(parent_win, "Error", "Output folder is missing or corrupted.")
-        confirm_btn.configure(text="Confirm", state="normal")
-        return
-    go = False
+def confirm_inputfiles(frame, body_frame, genotype_class, confirm_btn):
+    threading.Thread(
+        target = run_pool,
+        args=(genotype_class, body_frame),
+        daemon=True
+    ).start()
+    frame.after(200, lambda: check_populate_result(frame, body_frame, genotype_class, confirm_btn))
+
+def run_pool(genotype_class, body_frame):
     try:
-        genotype_class.get_post_microhap().populate_pre_post_microhap_dict(genotype_class.get_parameter(), genotype_class.get_metadata())
-        genotype_class.get_post_microhap().populate_microhap_dict(genotype_class.get_parameter(), genotype_class.get_metadata())
-        go =  genotype_class.get_post_microhap().populate_final_mar_mh_df_dict(genotype_class.get_parameter(), genotype_class.get_metadata())
-        genotype_class.get_post_microhap().perform_seq_alignment(genotype_class.get_parameter())
-        #genotype_class.get_post_microhap().extract_variants(genotype_class.get_parameter())
-        #genotype_class.get_post_microhap().print()
-    finally:
-        confirm_btn.configure(text="Confirm", state="normal")
-    if go:
+        def log_msg(msg):
+            body_frame.log_queue.put(msg)
+        log_msg("Starting microhap processing. This could be slow and please be patient.....\n\n")
+        log_msg("----------------------------------start step 1---------------------------------------")
+        go0 = genotype_class.get_post_microhap().populate_pre_post_microhap_dict(genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
+        log_msg("-----------------------------------end  step 1----------------------------------------\n\n")
+        log_msg("----------------------------------start step 2---------------------------------------")
+        go1 = genotype_class.get_post_microhap().populate_microhap_dict(genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
+        log_msg("-----------------------------------end step 2----------------------------------------\n\n")
+        log_msg("----------------------------------start step 3---------------------------------------")
+        go2 = genotype_class.get_post_microhap().populate_final_mar_mh_df_dict( genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
+        log_msg("-----------------------------------end step 3----------------------------------------\n\n")
+        log_msg("----------------------------------start step 4---------------------------------------")
+        go3 = genotype_class.generate_all_mar_microhaps_fig(log_func = log_msg)
+        log_msg("-----------------------------------end step 4----------------------------------------\n\n")
+        log_msg("----------------------------------start step 5---------------------------------------")
+        go4 = genotype_class.generate_all_sam_microhaps_fig(log_func = log_msg)
+        log_msg("-----------------------------------end step 5----------------------------------------\n\n")
+        log_msg("----------------------------------start step 6---------------------------------------")
+        go5 = genotype_class.get_post_microhap().perform_seq_alignment(genotype_class.get_parameter(), log_func = log_msg)
+        log_msg("-----------------------------------end step 6----------------------------------------\n\n")
+        log_msg("----------------------------------start step 7---------------------------------------")
+        go6 = genotype_class.dump_session("microtype", log_func = log_msg)
+        log_msg("-----------------------------------end step 7----------------------------------------\n\n")
+        go7 = go0 and go1 and go2 and go3 and go4 and go5 and go6
+        body_frame.result_queue.put(('success', go7))
+        if go7:
+            log_msg("Microhap processing completed successfully. Please click 'Next' to proceed.")
+            modern_messagebox.showinfo(body_frame.winfo_toplevel(), "Success", "Microhap processing completed successfully. Please click 'Next' to proceed.")
+        else:
+            log_msg("Microhap processing failed. Please check the input files and try again.")
+            modern_messagebox.showerror(body_frame.winfo_toplevel(), "Error", "Microhap processing failed. Please check the input files and try again.")
+    except Exception as e:
+        traceback.print_exc()
+        log_msg(f"Error during microhap processing: {e}")
+        body_frame.result_queue.put(('error', str(e)))
+
+def check_populate_result(frame, body_frame, genotype_class, confirm_btn):
+    try:
+        status, result = body_frame.result_queue.get_nowait()
+    except queue.Empty:
+        frame.after(200, lambda: check_populate_result(frame, body_frame, genotype_class, confirm_btn))
+        return
+    if status == 'success' and result:
         update_widget_state(frame, 'normal')
     else:
         update_widget_state(frame, 'disabled')
-        modern_messagebox.showerror(parent_win, "Error", "One or more input files are missing or corrupted.")
-        return
+        modern_messagebox.showerror(frame.winfo_toplevel(), "Error", f"Microhap processing failed: {result}")
+    confirm_btn.configure(text="Confirm", state="normal")
 
+def poll_log_text(body_frame):
+    try:
+        while True:
+            log_message = body_frame.log_queue.get_nowait()
+            body_frame.log_text.configure(state="normal")
+            cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
+            body_frame.log_text.insert(tk.END, cur_time + log_message + "\n\n")
+            body_frame.log_text.see(tk.END)
+            body_frame.log_text.configure(state="disabled")
+    except queue.Empty:
+        pass
+    body_frame.after(200, lambda: poll_log_text(body_frame))
+    
 def update_widget_state(frame, stat):
     frame.footer_frame.next_button.configure(state=stat)
 
@@ -198,8 +261,5 @@ def create_footer(parent, frame):
     return footer_frame
 def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
-        # param_frame = parent.master.pages.get("parameters", None)
-        # if param_frame is not None:
-        #     param_frame.footer_frame.next_button.configure(state='normal')
-        update_combox_from_others(parent)
+        update_combox_from_others_micro(parent)
         parent.master.show_page("microtype_results")

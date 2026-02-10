@@ -81,21 +81,21 @@ def create_top_panel(parent, body_frame):
 
     # Store button references
     top_panel.button_refs = {}
-    align_btn = ctk.CTkButton(top_panel, text="microtype alignment", font=bmbfont,
+    align_btn = ctk.CTkButton(top_panel, text="microtype sequence", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
         command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micro_align", "dna"),
                          create_microhap_align_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
-    align_btn.grid(row=row, column=0, padx=(20,5), pady=(15,1), sticky='w')
+    align_btn.grid(row=row, column=0, padx=20, pady=(15,1), sticky='w')
     top_panel.button_refs["micro_align"] = align_btn
 
     # microtype table (parent/child)
-    table_btn = ctk.CTkButton(top_panel, text="microtype table", font=bmbfont,
+    table_btn = ctk.CTkButton(top_panel, text="microtype table (single)", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
         command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micro_table", "sing_compre"),
                          create_microhap_fig_tbl_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
-    table_btn.grid(row=row, column=1, padx=(20,5), pady=(15,1), sticky='w')
+    table_btn.grid(row=row, column=1, padx=20, pady=(15,1), sticky='w')
     top_panel.button_refs["micro_table"] = table_btn
 
     # microtype table (all) (parent/child)
@@ -104,7 +104,7 @@ def create_top_panel(parent, body_frame):
         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
         command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micro_table_all", "all_compre"),
                          create_all_microhap_fig_tbl_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
-    table_all_btn.grid(row=row, column=2, padx=(20,5), pady=(15,1), sticky='w')
+    table_all_btn.grid(row=row, column=2, padx=20, pady=(15,1), sticky='w')
     top_panel.button_refs["micro_table_all"] = table_all_btn
 
     # Highlight the first parent and its child by default
@@ -147,7 +147,7 @@ def update_combox(genoclass, top_panel, type):
     top_panel.combobox.configure(values=top_panel.options)
     top_panel.combobox.set(top_panel.options[0] if top_panel.options else "")  # Set the default value
 
-def update_combox_from_others(parent):
+def update_combox_from_others_micro(parent):
     """Update the ComboBox options from other components."""
     try:
         genoclass = parent.master.genotype_class
@@ -297,6 +297,7 @@ def create_all_microhap_fig_tbl_panel(top_panel,bottom_panel, genoclass):
     fig_tab_bottom_panel.grid(row=1, column=0, sticky="news")
     fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)
     fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)
+    fig_tab_bottom_panel.PAGE_SIZE = 100
 
     compre_all_btn = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
                 fg_color=COLORS['accent'], hover_color=COLORS['secondary'],

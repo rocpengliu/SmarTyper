@@ -95,6 +95,9 @@ def display_page(genotab, genoclass):
     for widget in genotab.winfo_children():
         widget.destroy()
     
+    # top_panel.button_refs.clear()
+    # top_panel.button_child_refs.clear()
+    
     for rid in range(genotab.grid_size()[1]):
         genotab.grid_rowconfigure(rid,weight=0)
     for cid in range(genotab.grid_size()[0]):

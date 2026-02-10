@@ -66,7 +66,9 @@ def create_body(parent, frame):
     body_frame.progress_bar.grid(row=1, column=0, padx=(20,20), pady=(5,10), sticky="ew")
     body_frame.progress_bar.set(0)  # Set initial value to 0
     
-    body_frame.log_text = ctk.CTkTextbox(body_frame, wrap="word", font=bmfont, state="normal", text_color="white", fg_color=COLORS['background'])
+    body_frame.log_text = ctk.CTkTextbox(body_frame, wrap="word", font=bmfont, state="disabled", 
+                                         text_color="white", fg_color=COLORS['background'],
+                                        border_color="white", border_width=3, corner_radius=8)
     body_frame.log_text.grid(row=2, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="nsew")
 
     return body_frame
@@ -106,7 +108,7 @@ def on_click_res(parent, footer_frame):
         panel = parent.master.pages.get('results').body_frame.bottom_panel
         if panel.winfo_exists():
             print_time(f"updating genotype tab from job runner")
-            update_genotype_tab(parent,panel)
+            update_genotype_tab(parent, panel)
         footer_frame.next_button.configure(state='normal', text="Next →")
         parent.master.show_page("results")
     parent.master.after(100, after_show)
@@ -145,7 +147,9 @@ def update_log_text(run_frame):
                 del run_frame.output_queue
 
 def insert_to_log_text(frame, msg):
+    frame.log_text.configure(state="normal")
     frame.log_text.insert("end", str(msg) + "\n")
+    frame.log_text.configure(state="disabled")
     frame.log_text.yview("end")
     frame.update_idletasks()  # Process internal Tkinter event queue
     
@@ -170,18 +174,15 @@ def update_progressbar(run_frame):
         run_frame.progress_bar.set(1.0)  # CTkProgressBar uses 0.0 to 1.0 (1.0 = 100%)
         run_frame.progress_label.configure(text=f"processing {str(run_frame.tot_sams)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} markers  (100%)")
 
-def capture_output(run_frame):
-    while True:
+def capture_output(run_frame, sample_event):
+    while not sample_event.is_set():
         output = str(seqtyper_core.get_seqtyper_output())
         if output:
             time.sleep(0.05)
             with run_update_lock:
                 run_frame.output_queue.put(output)
-                if run_frame.run_finished.is_set():
-                    break
         else:
-            if run_frame.run_finished.is_set():
-                break
+            time.sleep(0.05)
 
 def run_seqtyper(parent):
     threading.Thread(target=lambda: target(parent), daemon=True).start()
@@ -242,9 +243,7 @@ def target(parent):
     run_frame.cur_sam_idx = 0
     run_frame.tot_sams = len(run_frame.args_dir)
     run_frame.tot_mars = len(genoclass.get_metadata().get_ref_markers_list())
-    #capture_thread = threading.Thread(target=capture_output, args=(run_frame), daemon=True)
     run_thread = threading.Thread(target=run_wrapper, args=(parent, run_frame), daemon=True)
-    #capture_thread.start()
     run_thread.start()
 
     # Ensure that run_frame is set correctly
@@ -263,31 +262,40 @@ def target(parent):
 
 def run_wrapper(parent, run_frame):
     try:
-        # freeze_ui(par_frame)
         genoclass = parent.master.genotype_class
-        res_frame=parent.master.pages.get('results').footer_frame
+        res_frame = parent.master.pages.get('results').footer_frame
         res_frame.next_button.configure(state='disabled')
         with run_update_lock:
             run_frame.output_queue.put(f"Starting Seq2Type for genotyping!\n\n")
-        #update_progressbar(run_frame)
         for index, (sample, arg_lst) in enumerate(run_frame.args_dir.items()):
             with run_update_lock:
                 run_frame.cur_sam_idx = index + 1
-                run_frame.output_queue.put(f'---------------------------------------------------------start--------------------------------------------------' + '\n')
+                run_frame.output_queue.put(f'---------------------------------------------------------start index: {index+1}--------------------------------------------------' + '\n')
                 run_frame.output_queue.put(f'Start to process sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
                 run_frame.output_queue.put(f'Running Seq2Type for sample: {sample}, this is slow and please be patient!\n')
+
+            # Per-sample event for capture thread
+            sample_event = threading.Event()
+            capture_thread = threading.Thread(target=capture_output, args=(run_frame, sample_event), daemon=True)
+            capture_thread.start()
+
             seqtyper_core.run_seqtyper_wrapper(arg_lst)
+
+            # Signal capture thread to stop and wait for it
+            sample_event.set()
+            capture_thread.join()
+
             with run_update_lock:
                 run_frame.output_queue.put(f'reading sample {sample} outputs\n')
                 genoclass.read_sam_outputs(sample, run_frame)
                 run_frame.output_queue.put(f'Finish the processing sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
-                run_frame.output_queue.put(f'---------------------------------------------------------end----------------------------------------------------' + '\n\n\n')
+                run_frame.output_queue.put(f'---------------------------------------------------------end index: {index+1}----------------------------------------------------' + '\n\n\n')
         with run_update_lock:
             run_frame.output_queue.put(f'starting to generate all sample figures\n')
         if genoclass.get_parameter().is_pro_figure():
             genoclass.pro_all_sample_figs(run_frame.output_queue)
         with run_update_lock:
-            run_frame.output_queue.put("\nCongrats! Seq2Type ran successfully.\n")
+            run_frame.output_queue.put("Congrats! Seq2Type ran successfully! Please click 'Next' to proceed.\n")
             parent.master.after(0, lambda: modern_messagebox.showsuccess(run_frame, "Success", "Seq2Type ran successfully"))
             parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
             run_frame.run_finished.set()

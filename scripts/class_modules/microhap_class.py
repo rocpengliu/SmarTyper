@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from ..utils.utils_common import print_time, thread_lock
 from ..utils.utils_alignment import do_pairwise_alignment
-from ..utils.utils_func import produce_reads_dis_fig, generate_page
+from ..utils.utils_func import produce_reads_dis_fig, generate_page, init_sam_mar_ml, init_sam_microhaps, init_sam_amplicons, init_assigned_reads
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor, as_completed
 from ..utils.modern_messagebox import showerror
 import pdb
@@ -316,29 +316,53 @@ class MicroHapClass:
         n_threads=genotype_class.get_parameter().get_thread() # this is not intiated yet, should the default one is set to maximum cpu number???
         print_time(f"begain to initiate sam_mar_dict")
         if anal_type == "snp":
-            print_time(f"begain to initiate assigned_reads_dict")
-            sam_mar_reads_dict=self.get_assigned_reads_dict()
-            sam_mar_reads_dict={sam:{mar:0 for mar in markers} for sam in samples}
-            self.set_assigned_reads_dict(sam_mar_reads_dict)
-            print_time(f'finished to initiate assigned_reads_dict')
+            print_time(f"begain to initiate dicts")
+            with ThreadPoolExecutor(max_workers=4) as executor:
+                futures = {executor.submit(init_assigned_reads, markers, samples) : "assigned_reads_dict"}
+                futures.update({executor.submit(init_sam_microhaps, markers, samples) : "sam_micro_dir"})
+                futures.update({executor.submit(init_sam_amplicons, markers, samples) : "sam_amp_dir"})
+                futures.update({executor.submit(init_sam_mar_ml, markers, samples) : "sam_mar_ml_dir"})
+                for future in as_completed(futures):
+                    try:
+                        result = future.result()
+                        if futures[future] == "assigned_reads_dict":
+                            self.set_assigned_reads_dict(result)
+                            print_time(f"finished to initiate assigned_reads_dict")
+                        elif futures[future] == "sam_micro_dir":
+                            self.set_sam_microhaps_dir(result)
+                            print_time(f"finished to initiate sam_micro_dir")
+                        elif futures[future] == "sam_amp_dir":
+                            self.set_sam_amplicons_dir(result)
+                            print_time(f"finished to initiate sam_amp_dir")
+                        elif futures[future] == "sam_mar_ml_dir":
+                            self.set_sam_mar_ml_dir(result)
+                            print_time(f"finished to initiate sam_mar_ml_dir")
+                    except Exception as exc:
+                        print(f"Error initializing {futures[future]}: {exc}")
+            print_time(f"finished to initiate dicts")
+            # print_time(f"begain to initiate assigned_reads_dict")
+            # sam_mar_reads_dict=self.get_assigned_reads_dict()
+            # sam_mar_reads_dict={sam:{mar:0 for mar in markers} for sam in samples}
+            # self.set_assigned_reads_dict(sam_mar_reads_dict)
+            # print_time(f'finished to initiate assigned_reads_dict')
             
-            print_time(f"begain to initiate sam_microhaps_dir")
-            sam_micro_dir=self.get_sam_microhaps_dir()
-            sam_micro_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
-            self.set_sam_microhaps_dir(sam_micro_dir)
-            print_time(f'finished to initiate sam_microhaps_dir')
+            # print_time(f"begain to initiate sam_microhaps_dir")
+            # sam_micro_dir=self.get_sam_microhaps_dir()
+            # sam_micro_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
+            # self.set_sam_microhaps_dir(sam_micro_dir)
+            # print_time(f'finished to initiate sam_microhaps_dir')
             
-            print_time(f"begain to initiate sam_amplicons_dir")
-            sam_amp_dir=self.get_sam_amplicons_dir()
-            sam_amp_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
-            self.set_sam_amplicons_dir(sam_amp_dir)
-            print_time(f'finished to initiate sam_amplicons_dir')
+            # print_time(f"begain to initiate sam_amplicons_dir")
+            # sam_amp_dir=self.get_sam_amplicons_dir()
+            # sam_amp_dir={sam:{mar:pd.DataFrame(columns=micro_amplicon_df_columns) for mar in markers} for sam in samples}
+            # self.set_sam_amplicons_dir(sam_amp_dir)
+            # print_time(f'finished to initiate sam_amplicons_dir')
             
-            print_time(f"begain to initiate sam_ml_dir")
-            sam_ml_dir=self.get_sam_mar_ml_dir()
-            sam_ml_dir={sam:{mar:pd.DataFrame(columns=ml_mh_df_columns) for mar in markers} for sam in samples}
-            self.set_sam_mar_ml_dir(sam_ml_dir)
-            print_time(f'finished to initiate sam_ml_dir')
+            # print_time(f"begain to initiate sam_ml_dir")
+            # sam_ml_dir=self.get_sam_mar_ml_dir()
+            # sam_ml_dir={sam:{mar:pd.DataFrame(columns=ml_mh_df_columns) for mar in markers} for sam in samples}
+            # self.set_sam_mar_ml_dir(sam_ml_dir)
+            #print_time(f'finished to initiate sam_ml_dir')
         else:
             pass
         print_time(f"finished to initiate sam_mar_dict")

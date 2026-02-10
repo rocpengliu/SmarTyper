@@ -112,7 +112,7 @@ class MetaDataClass:
             
     def read_locifile(self, parameter_class, post_microhap_class, mh=False):
         fpath=parameter_class.get_locifile()
-        print(f"reading loci file: {fpath}")
+        print_time(f"reading loci file: {fpath}")
         #pdb.set_trace()
         if os.path.isfile(fpath):
             locitable =  pd.read_csv(fpath, delimiter="\t", header =None)
@@ -133,7 +133,6 @@ class MetaDataClass:
             if parameter_class.get_analtype() == "snp":
                 #pdb.set_trace()
                 for idx, row in locitable.iterrows():
-                    # print_time(f'read_locifile for {row['locus']}')
                     mar_ref = RefMicrotype()
                     mar_ref.set_locus(row['locus'].strip())
                     mar_ref.set_fprimer(row['fprimer'].strip())
@@ -143,15 +142,18 @@ class MetaDataClass:
                     mar_ref.set_ori_dna_ref(row['ref'].strip())
                     mar_ref.set_dna_ref(row['ref'].strip())
                     if mar_ref.get_trimr() >= len(mar_ref.get_dna_ref()):
-                        modern_messagebox.showerror("Invalid Input", "tail trim length is too long")
+                        modern_messagebox.showerror(None, "Invalid Input", f"{row['locus']} tail trim length is too long")
+                        raise ValueError(f"{row['locus']} tail trim length is too long")
                     if mar_ref.get_trimr() != 0:
                         mar_ref.set_dna_ref(mar_ref.get_dna_ref()[:-mar_ref.get_trimr()])
                     if mar_ref.get_triml() >= len(mar_ref.get_dna_ref()):
-                        modern_messagebox.showerror("Invalid Input", "head trim length is too long")
+                        modern_messagebox.showerror(None, "Invalid Input", f"{row['locus']} head trim length is too long")
+                        raise ValueError(f"{row['locus']} head trim length is too long")
                     if mar_ref.get_triml() != 0:
                         mar_ref.set_dna_ref(mar_ref.get_dna_ref()[mar_ref.get_triml():])
                     if len(mar_ref.get_dna_ref()) == 0:
-                        modern_messagebox.showerror("Invalid Input", "trim length is too long")
+                        modern_messagebox.showerror(None, "Invalid Input", f"{row['locus']} trim length is too long")
+                        raise ValueError(f"{row['locus']} trim length is too long")
                     if pd.notna(row['snppos']) and str(row['snppos']).replace(' ', '') not in ["0", "0.0", "na", "nan", ""]:
                         snpos = [int(pos.strip()) for pos in str(row['snppos']).replace(" ", "").split('|')]
                         snpos = sorted(snpos)
@@ -174,8 +176,8 @@ class MetaDataClass:
                             if mar_ref.get_triml() != 0 or mar_ref.get_trimr() != 0:
                                 newcodingpos = get_new_codingpos(codingpos, mar_ref.get_triml(), mar_ref.get_trimr(), len(mar_ref.get_ori_dna_ref()))
                                 if len(newcodingpos) == 0:
-                                    modern_messagebox.showerror("Invalid Input", "trim lengths have sth wrong")
-                                    raise ValueError("triml or trimr has the problem with exon pos!")
+                                    modern_messagebox.showerror(None, "Invalid Input", f"{row['locus']} trim lengths have sth wrong")
+                                    raise ValueError(f"{row['locus']} triml or trimr has the problem with exon pos!")
                                 codingpos = newcodingpos
                             if codingpos is not None and len(codingpos) != 0:
                                 mar_ref.set_has_splicer(True)
@@ -188,6 +190,7 @@ class MetaDataClass:
                 post_microhap_class.set_loc_ref_dict(dict(sorted(post_microhap_class.get_loc_ref_dict().items())))
             self._loc_df = locitable
             self.set_ref_markers_list(sorted(locitable['locus'].unique()))
+            print_time(f'total {len(self.get_ref_markers_list())} markers read from loci file')
             if len(self.get_ref_markers_list()) == 0:
                 modern_messagebox.showerror(None, "Invalid Input", f"loci file: {fpath} is not valid")
                 raise ValueError(f"please upload loci file first")
@@ -230,10 +233,12 @@ class MetaDataClass:
         print_time(f'microhap file size is {tmp_df.shape}')
         if tmp_df.shape[0] == 0:
             parameter_class.set_has_pre_mh(False)
+            modern_messagebox.showerror(None, "Invalid Input", "pre-microhap table is empty!")
             raise ValueError(f"pre-microhap table is empty")
         else:
             self.set_pre_microhap_df(tmp_df)
             mar_list = sorted(tmp_df['Locus'].unique())
             self.set_pre_mh_markers_list(mar_list)
             if self.get_pre_mh_markers_list() < self.get_ref_markers_list():
+                modern_messagebox.showerror(None, "Invalid Input", f"pre microhap file: {fpath} contains new markers which are not in the ref loci table")
                 raise ValueError(f"pre microhap file: {fpath} contains new markers which are not in the ref loci table")

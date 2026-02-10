@@ -8,6 +8,8 @@ def update_geno_tab_all(parent, bottom_panel):
     for widget in bottom_panel.winfo_children():
         widget.destroy()
     
+    top_panel = parent.master.pages['results'].body_frame.top_panel
+    top_panel.button_child_refs.clear()
     # Configure bottom_panel to expand
     for rid in range(bottom_panel.grid_size()[1]):
         bottom_panel.grid_rowconfigure(rid,weight=0)

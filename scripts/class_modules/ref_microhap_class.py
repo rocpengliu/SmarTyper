@@ -363,23 +363,20 @@ class RefMicrotype:
     
     def populate_ref_compre_mt(self):
         #pdb.set_trace()
+        #print_time(f'populate_ref_compre_mt for {self.get_locus()} begin_with_splicer is {self.get_begin_with_splicer0()}')
         if self.get_has_splicer():
-            print_time(f'populate_ref_compre_mt for {self.get_locus()} begin_with_splicer is {self.get_begin_with_splicer0()}')
             for idx, pos_tuple_list in enumerate(self.get_codingpos()):
                 compre_mt = CompreMicrotypeClass()
                 compre_mt.set_mar(self.get_locus())
                 splicer_name = f'splicer_{idx}'
-                print_time(f'processing populate_ref_compre_mt {self.get_locus()}_{splicer_name}')
                 compre_mt.set_splicer(splicer_name)
                 compre_mt.set_splicer_pos_list(pos_tuple_list)
-                print(f"{self.get_locus()} pos_tuple_list is {pos_tuple_list}")
                 dna_seq, aa_seq = trans_single_dna(self.get_dna_ref(), pos_tuple_list)
                 compre_mt.set_ref_dna_seq(dna_seq)
                 compre_mt.set_ref_aa_seq(aa_seq)
                 compre_mt.populate_dna_pos_list(self.get_snppos(), self.get_dna_ref())
                 if not self.is_overlapped_gene():
                     splicer_exon_list = self.get_splicer_exon_list_dict().get(splicer_name)
-                    print_time(f'splicer_exon_list is {splicer_exon_list}')
                     if idx == 0:
                         self.set_aa_ref(aa_seq)
                         self.set_sappos(compre_mt.get_target_aa_snp_pos_list())
@@ -400,6 +397,7 @@ class RefMicrotype:
             compre_mt.set_target_dna_snp_pos_list(self.get_snppos()) #must consider the trim left and trim right
             compre_mt.set_ref_dna_seq(self.get_dna_ref())
             self._ref_microtype_dict[splicer_name] = compre_mt
+        #print_time(f'populate_ref_compre_mt for {self.get_locus()} end')
 
     def get_max_ref_label_len(self)->int:
         return self.get_ref_microtype().get_max_label_len()

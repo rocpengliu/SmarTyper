@@ -2,8 +2,9 @@ from ..utils.common import parent_button_size, child_button_size, bfont, bmbfont
 from ..utils.colors import COLORS
 import customtkinter as ctk
 import tkinter as tk
-import os
-
+import os, datetime
+import threading, queue
+import traceback
 
 def results_summary(parent):
     frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
@@ -26,7 +27,7 @@ def create_header(frame):
     header_frame.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(15, 10), padx=(15, 15))
     header_frame.grid_columnconfigure(0, weight=1)  # Center header content
     
-    label = ctk.CTkLabel(header_frame, text="◙ Result Summary", font=header_font,
+    label = ctk.CTkLabel(header_frame, text="◙ Result Output", font=header_font,
                          fg_color="transparent", text_color=COLORS['primary'])
     label.pack(side=tk.LEFT, pady=(15, 15), padx=(30, 10))
     return header_frame
@@ -47,11 +48,16 @@ def create_footer(parent, frame):
                                     command = lambda:parent.master.show_page("results"))
     footer_frame.previous_button.grid(row=0, column=0, padx=(10, 100), sticky="e")
     
+    # Next Button
+    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Microtype →", font=pnbuttonfont,
+                                fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
+                                corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
+                                state="disabled", command = lambda: go_button(parent))
+    footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
+    
     return footer_frame
 
 def create_body(parent, frame):
-    genotype_class = parent.master.genotype_class
-    
     body_frame = ctk.CTkFrame(frame, fg_color="transparent")
     body_frame.padx = (10, 10)
     body_frame.pady = (5, 5)
@@ -59,32 +65,92 @@ def create_body(parent, frame):
     
     body_frame.grid_rowconfigure(0, weight=1) #top panel
     body_frame.grid_rowconfigure(1, weight=6) # bottom panel
+    body_frame.grid_rowconfigure(2, weight=1) # 
     body_frame.grid_columnconfigure(0, weight=1) # top and bottom panels
+    body_frame.grid_columnconfigure(1, weight=1) # top and bottom panels
     
-    top_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
-    top_panel.grid(row=0, column=0, sticky="nsw", padx=body_frame.padx, pady=(0,0))
+    body_frame.top_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
+    body_frame.top_panel.grid(row=0, column=0, sticky="nsw", padx=body_frame.padx, pady=(0,0))
     #top_panel.grid_propagate(False)
-    
-    bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
-    bottom_panel.grid(row=1, column=0, sticky="nsew", padx=body_frame.padx,pady=(0,0))
-    
-    top_panel.grid_columnconfigure(0, weight=1) #right panel
-    top_panel.grid_rowconfigure('all', weight=1)
-    
-    # Configure the bottom panel (full width)
-    bottom_panel.grid_columnconfigure(0, weight=1)
-    bottom_panel.grid_rowconfigure(0, weight=1)
-    
+    body_frame.top_panel.grid_columnconfigure(0, weight=1) #right panel
+    body_frame.top_panel.grid_rowconfigure('all', weight=1)
+    body_frame.log_queue = queue.Queue()
+    body_frame.res_queue = queue.Queue()
+    poll_log_text(body_frame)
+
     row = 0
+    ctk.CTkLabel(body_frame.top_panel, text="This is to output all tables and figures to local storage! Please be patient, do not close the program.", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(10,10), sticky="e")
+    # ctk.CTkButton(body_frame.top_panel, text="Let's Go",font=confirm_button_font, height=parent_button_size['height'], width=parent_button_size['width'],
+    #               fg_color=COLORS['primary'], hover_color=COLORS['secondary'], corner_radius=10,
+    #               command=lambda: go_button(parent)).grid(row=row, column=1, pady=(10,10), padx=(0,10), sticky="w")
+    row += 1
+    body_frame.bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
+    body_frame.bottom_panel.grid(row=row, column=0, columnspan=2, sticky="nsew", padx=body_frame.padx, pady=(0,0))
+    body_frame.bottom_panel.grid_columnconfigure(0, weight=1)
+    body_frame.bottom_panel.grid_rowconfigure(0, weight=1)
     
-    #confirm button
+    body_frame.log_text = ctk.CTkTextbox(
+        body_frame.bottom_panel,
+        wrap="word",
+        font=bmfont,
+        state="disabled",
+        text_color="white",
+        fg_color=COLORS['background'],
+        border_color="white", border_width=3, corner_radius=8
+    )
+    body_frame.log_text.grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
     
-    ctk.CTkLabel(top_panel, text="For microhap identification", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(10,10), sticky="e")
-    ctk.CTkButton(top_panel, text="Let's Go",font=confirm_button_font, height=parent_button_size['height'], width=parent_button_size['width'],
-                  fg_color=COLORS['primary'], hover_color=COLORS['secondary'], corner_radius=10,
-                  command=lambda: go_button(parent)).grid(row=row, column=1, pady=(10,10), padx=(0,10), sticky="w")
     return body_frame
 
+def poll_log_text(body_frame):
+    try:
+        while True:
+            log_message = body_frame.log_queue.get_nowait()
+            body_frame.log_text.configure(state="normal")
+            cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
+            body_frame.log_text.insert(tk.END, cur_time + log_message + "\n\n")
+            body_frame.log_text.see(tk.END)
+            body_frame.log_text.configure(state="disabled")
+    except queue.Empty:
+        pass
+    body_frame.after(100, lambda: poll_log_text(body_frame))
+
+def run_thread(parent):
+    threading.Thread(target = lambda:run_pool(parent), daemon=True).start()
+
+def run_pool(parent):
+    try:
+        genoclass = parent.master.genotype_class
+        summary_frame = parent.master.pages.get('summary', None)
+        if summary_frame is None:
+            print(f'Error: summary page is not available')
+            return
+        run_frame = summary_frame.body_frame
+        if run_frame is None:
+            print(f'Error, summary frame is not available')
+            return
+        def log_msg(msg):
+            run_frame.log_queue.put(msg)
+        log_msg(f'This process is very memory intensive, it may take a while to finish. Please be patient and do not close the program.\n\n')
+        log_msg(f"-------------------------------start step 1-----------------------------")
+        log_msg(f"starting to dump genotyping project!")
+        log_msg(f"This is slow, please be patient!")
+        genoclass.dump_session("genotype") #must dump session first because generate_all may crash due to high memory usage
+        log_msg(f"finished to dump genotyping project!")
+        log_msg(f"-------------------------------end step 1-------------------------------\n\n")
+        log_msg(f"-------------------------------start step 2-----------------------------")
+        log_msg(f"starting to output all files!")
+        go = genoclass.generate_all(log_func = log_msg)
+        log_msg(f"finished to output all files!")
+        log_msg(f"-------------------------------end step 2-------------------------------\n\n")
+        run_frame.log_queue.put('success', go)
+        log_msg(f"Genotyping processing completed successfully. Please click 'Microtype →' for microtype analysis or 'Exit' to close the program.")
+        summary_frame.footer_frame.next_button.configure(state="normal")
+    except Exception as e:
+        traceback.print_exc()
+        log_msg(f"Error during microhap processing: {e}")
+        run_frame.res_queue.put(('error', str(e)))
+        
 def go_button(parent):
     genoclass = parent.master.genotype_class
     panel = parent.master.pages.get('microtype_data', None)

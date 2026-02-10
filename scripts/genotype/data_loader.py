@@ -1,3 +1,4 @@
+import threading
 import customtkinter as ctk
 import tkinter as tk
 from tkinter import ttk
@@ -310,16 +311,19 @@ def create_footer(parent, frame):
                                 state="disabled", command = lambda:on_click_next_button(parent, footer_frame))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
     return footer_frame
-
 def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
         footer_frame.next_button.configure(text = "Processing...", state='disabled')
         footer_frame.update_idletasks()
-        parent.master.genotype_class.get_microhap().init_sam_mar_dicts(parent.master.genotype_class)
-        footer_frame.next_button.configure(text = "Next →", state='normal')
-        param_frame = parent.master.pages.get("parameters", None)
-        if param_frame is not None:
-            param_frame.footer_frame.next_button.configure(state='normal')
-        parent.master.show_page("parameters")
-        
-    
+        threading.Thread(target=run_and_callback, args=(parent, footer_frame),daemon=True).start()
+
+def run_and_callback(parent, footer_frame):
+    parent.master.genotype_class.get_microhap().init_sam_mar_dicts(parent.master.genotype_class)
+    footer_frame.after(0, on_finish, parent, footer_frame)
+
+def on_finish(parent, footer_frame):
+    footer_frame.next_button.configure(text = "Next →", state='normal')
+    param_frame = parent.master.pages.get("parameters", None)
+    if param_frame is not None:
+        param_frame.footer_frame.next_button.configure(state='normal')
+    parent.master.show_page("parameters")
