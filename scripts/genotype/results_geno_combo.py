@@ -103,14 +103,14 @@ def display_page(genotab, genoclass):
     for cid in range(genotab.grid_size()[0]):
         genotab.grid_columnconfigure(cid,weight=0)
     # Configure grid weights for genotab
-    genotab.grid(row=1, column=0, sticky="nsew", padx=(5,5), pady=(5,5))
+    genotab.grid(row=1, column=0, sticky="nsew", padx=(5,5), pady=(5,0))
     genotab.grid_rowconfigure(0, weight=1)
     genotab.grid_rowconfigure(1, weight=0)
     genotab.grid_columnconfigure(0, weight=1)
     
     # Set up the container with grid layout for better control
     container = ctk.CTkFrame(genotab, fg_color="transparent")
-    container.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
+    container.grid(row=0, column=0, sticky="nsew", padx=5, pady=0)
     container.grid_rowconfigure(0, weight=1)  # Canvas row (body) should expand
     container.grid_columnconfigure(0, weight=1)  # Canvas column should expand
     
@@ -152,7 +152,7 @@ def display_page(genotab, genoclass):
 
     # Create page navigation buttons at the bottom
     page_flip_frame = ctk.CTkFrame(genotab, fg_color="transparent")
-    page_flip_frame.grid(row=1, column=0, pady=(5, 5), sticky="ew")
+    page_flip_frame.grid(row=1, column=0, pady=(5, 0), sticky="ew")
     page_flip_frame.grid_columnconfigure(0, weight=1)
     page_flip_frame.grid_columnconfigure(1, weight=0)
     page_flip_frame.grid_columnconfigure(2, weight=0)
@@ -164,21 +164,21 @@ def display_page(genotab, genoclass):
                                              fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                                              corner_radius=10,
                                              command=lambda: on_previous_page_button_click(genotab, genoclass))
-    previous_page_button.grid(row=0, column=0, sticky="e", padx=(10, 10), pady=(5, 5))
+    previous_page_button.grid(row=0, column=0, sticky="e", padx=(10, 10), pady=(0, 0))
     
     # Page number display and input
     page_info_label = ctk.CTkLabel(page_flip_frame, 
                                    text=f"Page {genotab.current_page + 1} of {genotab.tot_pages}", 
                                    font=fig_font,
                                    text_color=COLORS['text_primary'])
-    page_info_label.grid(row=0, column=1, padx=(10, 10), pady=(5, 5))
+    page_info_label.grid(row=0, column=1, padx=(10, 10), pady=(0, 0))
     
     # Page input entry
     page_var = tk.StringVar(value=str(genotab.current_page + 1))
     page_entry = ctk.CTkEntry(page_flip_frame, width=60, height=22,
                               textvariable=page_var, justify="center",
                               font=bmbfont)
-    page_entry.grid(row=0, column=2, padx=(10, 10), pady=(5, 5))
+    page_entry.grid(row=0, column=2, padx=(10, 10), pady=(5, 0))
     
     def go_to_page(event=None):
         try:
@@ -198,14 +198,14 @@ def display_page(genotab, genoclass):
                               fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                               corner_radius=10,
                               command=go_to_page)
-    go_button.grid(row=0, column=3, padx=(10, 10), pady=(5, 5))
+    go_button.grid(row=0, column=3, padx=(10, 10), pady=(0, 0))
 
     next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=fig_font,
                                      width=child_button_size['width'], height=child_button_size['height'],
                                      fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                                      corner_radius=10,
                                      command=lambda: on_next_page_button_click(genotab, genoclass))
-    next_page_button.grid(row=0, column=4, sticky='w', padx=(10, 10), pady=(5, 5))
+    next_page_button.grid(row=0, column=4, sticky='w', padx=(10, 10), pady=(0, 0))
 
     # Conditionally display navigation buttons
     if genotab.current_page == 0:
@@ -264,55 +264,6 @@ def process_fig_table(sample, marker, genoclass, genotab):
         traceback.print_exc()
         return None,None,None
     
-# def process_fig_table3(sample, marker, genoclass, genotab)->bool:
-#     try:
-#         print(f"Thread {threading.current_thread().name}: 0 Starting to process fig table for {sample}_{marker}")
-#         # Ensure the dictionaries return valid data before accessing it
-#         amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
-#         hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
-#         sam_mar = f"{sample}_{marker}"
-#         if amplicon_df is not None and not amplicon_df.empty:
-#             fig = create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
-#             tmp_df1=amplicon_df.head(genotab.n_rows)
-#             tmp_df2=hap_df if (hap_df is not None and not hap_df.empty) else None
-#             with genotab.figures_lock:
-#                 genotab.figures[sam_mar]=fig
-#                 genotab.seq_tables[sam_mar]=tmp_df1
-#                 genotab.hap_tables[sam_mar]=tmp_df2
-#                 return True
-#             print(f"Thread {threading.current_thread().name}: 3 Finished to create figure and table for {sam_mar}")
-#         print(f"Thread {threading.current_thread().name}: 4 Finished to process fig table for {sam_mar}")
-#         return True
-#     except Exception as e:
-#         # Capture all exceptions for diagnostic information
-#         print(f"5 Exception in {sam_mar}: {e}")
-#         traceback.print_exc()
-#         return True
-#     finally:
-#         # Add diagnostic to indicate the thread reached the end of the function
-#         print(f"Thread {threading.current_thread().name}: 6 finished processing {sam_mar}")
-#         return True
-
-# def process_fig_table2(sample, marker, genoclass, genotab):
-#     try:
-#         print(f"Thread {threading.current_thread().name}: Starting to process fig table for {sample}_{marker}")
-#         amplicon_df = genoclass.get_microhap().get_sam_amplicons_dir().get(f'{sample}').get(f'{marker}')
-#         hap_df = genoclass.get_microhap().get_sam_microhaps_dir().get(f'{sample}').get(f'{marker}')
-#         sam_mar = f"{sample}_{marker}"
-#         #print(f"starting to process figure table for {sam_mar}")
-#         if amplicon_df is not None and not amplicon_df.empty:
-#             with genotab.figures_lock:
-#                 genotab.figures[sam_mar]= create_figure(sample, marker, amplicon_df, hap_df, genotab, genoclass)
-#             with genotab.tables_lock:
-#                 genotab.seq_tables[sam_mar]=amplicon_df.head(genotab.n_rows)
-#                 genotab.hap_tables[sam_mar]=(hap_df if not hap_df.empty else None) 
-#         #print(f"finished to process figure table for {sam_mar}")
-#         print(f"Thread {threading.current_thread().name}: Finished to process fig table for {sample}_{marker}")             
-#     except ValueError as e:
-#          print(f"Exception in {sample}_{marker}: {e}\n{traceback.format_exc()}")
-#     finally:
-#         print(f"Thread {threading.current_thread().name} finished processing {sample}_{marker}")
-
 def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loci_table, genoclass):
     if len(genotab.figures) == 0:
         return

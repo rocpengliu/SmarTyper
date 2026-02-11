@@ -43,7 +43,7 @@ def create_body(parent, frame):
     body_frame.grid(row=1, column=0, sticky="nsew", pady=(2,2))
     
     body_frame.grid_rowconfigure(0, weight=1) #top panel
-    body_frame.grid_rowconfigure(1, weight=1) # bottom panel
+    body_frame.grid_rowconfigure(1, weight=6) # bottom panel
     body_frame.grid_rowconfigure(2, weight=1) # 
     body_frame.grid_columnconfigure(0, weight=1) # top and bottom panels
     body_frame.grid_columnconfigure(1, weight=1) # top and bottom panels
@@ -61,7 +61,7 @@ def create_body(parent, frame):
     
     n_thread_var = tk.StringVar(value=str(genotype_class.get_parameter().get_thread()))
     ctk.CTkLabel(body_frame.top_panel, text="Num. thread:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
-    body_frame.top_panel.n_thread = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=n_thread_var, height=26)
+    body_frame.top_panel.n_thread = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=n_thread_var, height=26, corner_radius=8, border_width=2)
     body_frame.top_panel.n_thread.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
     n_thread_var.trace_add("write", lambda *args: (
         genotype_class.get_parameter().set_thread(
@@ -166,7 +166,7 @@ def confirm_inputfiles(frame, body_frame, genotype_class, confirm_btn):
         args=(genotype_class, body_frame),
         daemon=True
     ).start()
-    frame.after(200, lambda: check_populate_result(frame, body_frame, genotype_class, confirm_btn))
+    frame.after(200, lambda: check_populate_result(frame, body_frame, confirm_btn))
 
 def run_pool(genotype_class, body_frame):
     try:
@@ -195,29 +195,29 @@ def run_pool(genotype_class, body_frame):
         go6 = genotype_class.dump_session("microtype", log_func = log_msg)
         log_msg("-----------------------------------end step 7----------------------------------------\n\n")
         go7 = go0 and go1 and go2 and go3 and go4 and go5 and go6
-        body_frame.result_queue.put(('success', go7))
         if go7:
+            body_frame.result_queue.put(('success', go7))
             log_msg("Microhap processing completed successfully. Please click 'Next' to proceed.")
-            modern_messagebox.showinfo(body_frame.winfo_toplevel(), "Success", "Microhap processing completed successfully. Please click 'Next' to proceed.")
         else:
+            body_frame.result_queue.put(('failture', go7))
             log_msg("Microhap processing failed. Please check the input files and try again.")
-            modern_messagebox.showerror(body_frame.winfo_toplevel(), "Error", "Microhap processing failed. Please check the input files and try again.")
     except Exception as e:
         traceback.print_exc()
         log_msg(f"Error during microhap processing: {e}")
         body_frame.result_queue.put(('error', str(e)))
 
-def check_populate_result(frame, body_frame, genotype_class, confirm_btn):
+def check_populate_result(frame, body_frame, confirm_btn):
     try:
         status, result = body_frame.result_queue.get_nowait()
+        if status == 'success' and result:
+            update_widget_state(frame, 'normal')
+            modern_messagebox.showsuccess(body_frame.winfo_toplevel(), "Success", "Microhap processing completed successfully. Please click 'Next' to proceed.")
+        else:
+            update_widget_state(frame, 'disabled')
+            modern_messagebox.showerror(frame.winfo_toplevel(), "Error", f"Microhap processing failed: {result}")
     except queue.Empty:
-        frame.after(200, lambda: check_populate_result(frame, body_frame, genotype_class, confirm_btn))
+        frame.after(200, lambda: check_populate_result(frame, body_frame, confirm_btn))
         return
-    if status == 'success' and result:
-        update_widget_state(frame, 'normal')
-    else:
-        update_widget_state(frame, 'disabled')
-        modern_messagebox.showerror(frame.winfo_toplevel(), "Error", f"Microhap processing failed: {result}")
     confirm_btn.configure(text="Confirm", state="normal")
 
 def poll_log_text(body_frame):

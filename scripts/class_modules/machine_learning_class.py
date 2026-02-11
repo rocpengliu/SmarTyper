@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +11,7 @@ import joblib
 import numpy as np
 from ..utils.utils_common import print_time
 from ..utils import modern_messagebox
+from ..utils.utils_func import training_each_model_clf
 import pdb
 
 
@@ -58,7 +60,7 @@ class MachineLearningClass:
         if os.path.isfile(fpath):
             t_df = pd.read_csv(fpath, sep='\t', header = 0)
             if t_df.shape[0] == 0:
-                mordern_messagebox.showerror("Invalid Input", "training file must not be empty!")
+                modern_messagebox.showerror("Invalid Input", "training file must not be empty!")
                 raise ValueError("training file must not be empty")
             if parameter_class.get_analtype() == "snp" and t_df.shape[1] == 14:
                 for locus, locus_df in t_df.groupby('Locus'):
@@ -66,33 +68,61 @@ class MachineLearningClass:
             elif parameter_class.get_analtype() == "sat":
                 pass
         print(f"training file: {fpath} done")
-    def training_model_clf(self, parameter_class):
+        
+    def training_model_clf(self, parameter_class, log_func = None):
+        num_loc = 0
+        pass_loc = 0
+        failed_loc = 0
         if parameter_class.get_analtype() == "snp":
-            print(f"starting to trianing model")
-            for locus, locus_df in self._mh_training_df_dict.items():
-                print(f"starting to trianing model for maker: {locus}")   
-                clf_accu = self.training_each_model_clf(locus_df, "snp")
-                self._mh_training_model_clf_dict[locus] = clf_accu[0]
-                self._mh_model_pred_accu_dict[locus] = pd.DataFrame({'accuracy':clf_accu[1]}, index=[0])
+            print(f"starting to training model")
+            with ProcessPoolExecutor() as executor:
+                futures = {}
+                for locus, locus_df in self._mh_training_df_dict.items():
+                    print(f"starting to training model for marker: {locus}")
+                    if 'Zygosity' in locus_df.columns:
+                        if locus_df['Zygosity'].nunique() >= 3 and locus_df['Zygosity'].value_counts().min() >= 3: # at least 2 classes for training
+                            future = executor.submit(training_each_model_clf, locus_df, "snp")
+                            futures[future] = locus
+                            pass_loc += 1
+                        else:
+                            failed_loc += 1
+                            print(f"Marker {locus} has only {locus_df['Zygosity'].nunique()} members in 'Zygosity', skipping training for this marker.")
+                            if log_func is not None:
+                                log_func(f"Marker {locus} has only {locus_df['Zygosity'].nunique()} members in 'Zygosity', skipping training for this marker.")
+                    else:
+                        print(f"DataFrame for marker {locus} missing 'Zygosity' column, skipping training for this marker.")
+                        if log_func is not None:
+                            log_func(f"DataFrame for marker {locus} missing 'Zygosity' column, skipping training for this marker.")
+                for future in as_completed(futures):
+                    locus = futures[future]
+                    try:
+                        if log_func is not None:
+                            log_func(f"Training model for marker {locus} completed...")
+                        clf_accu = future.result()
+                        self._mh_training_model_clf_dict[locus] = clf_accu[0]
+                        self._mh_model_pred_accu_dict[locus] = pd.DataFrame({'accuracy':clf_accu[1]}, index=[0])
+                        num_loc += 1
+                        if num_loc % 10 == 0:
+                            if log_func is not None:
+                                log_func(f"Trained {num_loc} markers....")
+                            print(f"Trained {num_loc} markers....")
+                    except Exception as e:
+                        print(f"Error training model for marker {locus}: {e}")
+                        if log_func is not None:
+                            log_func(f"Error training model for marker {locus}: {e}")
+            print(f"model training completed")
+            if log_func is not None:
+                log_func(f"Model training completed for {num_loc} markers, {pass_loc} markers passed for submission, {failed_loc} markers failed the training criteria.\n\n")
+                log_func("Model training completed.\n\n")
+                log_func(f"Starting to dump training models...")
             joblib.dump(self._mh_training_model_clf_dict, os.path.join(parameter_class.get_mloutputdir(), "all_training_models.pkl"))
-            print(f"trianing model done")
+            print(f"training model done")
+            if log_func is not None:
+                log_func("Training models dumped successfully!")
         elif parameter_class.get_analtype() == "sat":
             pass
-    def training_each_model_clf(self, df, micro_type):
-        if micro_type == "snp":
-            X_tot = df.drop(['Locus', 'Zygosity'], axis = 1)
-            if 'Zygosity' not in df.columns:
-                modern_messagebox.showerror("Invalid Input", "DataFrame missing 'Zygosity' column, cannot train!")
-                raise ValueError("DataFrame missing 'Zygosity' column, cannot train!")
-            y = df['Zygosity']
-            X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = 0.2, random_state = 42, stratify=y)
-            clf = GradientBoostingClassifier(random_state = 42)
-            clf.fit(X_train, y_train)
-            y_pred = clf.predict(X_test)
-            accuracy = accuracy_score(y_test, y_pred)
-            return [clf, accuracy]
-        elif micro_type == "sat":
-            pass
+        return True
+    
     def load_training_model_clf(self, parameter_class):
         fpath = parameter_class.get_mlmodelinputfile()
         print(f"reading ml training model file: {fpath}")

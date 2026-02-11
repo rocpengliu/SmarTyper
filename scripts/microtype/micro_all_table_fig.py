@@ -69,7 +69,13 @@ def display_all_mh_sim_table(genotab, genoclass, start_col=0):
     all_columns = ['Id'] + [str(col) for col in mh_df.columns]
     data_columns = all_columns[1:]
 
-    PAGE_SIZE = genotab.PAGE_SIZE if hasattr(genotab, 'PAGE_SIZE') else 100
+
+    # Ensure PAGE_SIZE is never zero
+    raw_page_size = getattr(genotab, 'PAGE_SIZE', 100) if hasattr(genotab, 'PAGE_SIZE') else 100
+    PAGE_SIZE = raw_page_size if raw_page_size else 100
+    if PAGE_SIZE == 0:
+        PAGE_SIZE = 100
+
     total_pages = max(1, (len(data_columns) - 1) // PAGE_SIZE + 1)
     max_start = max(0, len(data_columns) - PAGE_SIZE)
 
@@ -84,17 +90,20 @@ def display_all_mh_sim_table(genotab, genoclass, start_col=0):
     frame.grid_rowconfigure(1, weight=1)
     frame.grid_columnconfigure(0, weight=1)
 
-    slider = ctk.CTkSlider(
-        frame,
-        from_=0,
-        to=total_pages - 1,
-        number_of_steps=max(1, total_pages - 1),
-        command=lambda v: display_all_mh_sim_table(
-            genotab, genoclass, int(v) * PAGE_SIZE
+    if total_pages > 1:
+        number_of_steps = total_pages - 1
+        slider = ctk.CTkSlider(
+            frame,
+            from_=0,
+            to=total_pages - 1,
+            number_of_steps=number_of_steps,
+            command=lambda v: display_all_mh_sim_table(genotab, genoclass, int(v) * PAGE_SIZE)
         )
-    )
-    slider.set(start_col // PAGE_SIZE)
-    slider.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+        slider.set(start_col // PAGE_SIZE)
+        slider.grid(row=0, column=0, sticky="ew", padx=10, pady=5)
+    else:
+        # Only one page, no need for slider
+        pass
 
     tree_frame = ttk.Frame(frame)
     tree_frame.grid(row=1, column=0, sticky="news")

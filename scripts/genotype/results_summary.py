@@ -1,3 +1,4 @@
+from scripts.utils import modern_messagebox
 from ..utils.common import parent_button_size, child_button_size, bfont, bmbfont,bmfont, brfont, header_font, confirm_button_font, pnbuttonfont
 from ..utils.colors import COLORS
 import customtkinter as ctk
@@ -79,13 +80,13 @@ def create_body(parent, frame):
     poll_log_text(body_frame)
 
     row = 0
-    ctk.CTkLabel(body_frame.top_panel, text="This is to output all tables and figures to local storage! Please be patient, do not close the program.", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(10,10), sticky="e")
-    # ctk.CTkButton(body_frame.top_panel, text="Let's Go",font=confirm_button_font, height=parent_button_size['height'], width=parent_button_size['width'],
-    #               fg_color=COLORS['primary'], hover_color=COLORS['secondary'], corner_radius=10,
-    #               command=lambda: go_button(parent)).grid(row=row, column=1, pady=(10,10), padx=(0,10), sticky="w")
+    ctk.CTkLabel(body_frame.top_panel, 
+                 text="This is to output all tables and figures to local storage! Please be patient, do not close the program.", 
+                 font=bfont, 
+                 text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(10,10), sticky="e")
     row += 1
     body_frame.bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
-    body_frame.bottom_panel.grid(row=row, column=0, columnspan=2, sticky="nsew", padx=body_frame.padx, pady=(0,0))
+    body_frame.bottom_panel.grid(row=row, column=0, columnspan=1, sticky="nsew", padx=body_frame.padx, pady=(0,0))
     body_frame.bottom_panel.grid_columnconfigure(0, weight=1)
     body_frame.bottom_panel.grid_rowconfigure(0, weight=1)
     
@@ -117,6 +118,8 @@ def poll_log_text(body_frame):
 
 def run_thread(parent):
     threading.Thread(target = lambda:run_pool(parent), daemon=True).start()
+    cur_frame = parent.master.pages.get('summary', None)
+    cur_frame.after(100, lambda: check_res_run(cur_frame))
 
 def run_pool(parent):
     try:
@@ -141,16 +144,31 @@ def run_pool(parent):
         log_msg(f"-------------------------------start step 2-----------------------------")
         log_msg(f"starting to output all files!")
         go = genoclass.generate_all(log_func = log_msg)
-        log_msg(f"finished to output all files!")
-        log_msg(f"-------------------------------end step 2-------------------------------\n\n")
-        run_frame.log_queue.put('success', go)
-        log_msg(f"Genotyping processing completed successfully. Please click 'Microtype →' for microtype analysis or 'Exit' to close the program.")
-        summary_frame.footer_frame.next_button.configure(state="normal")
+        if go:
+            log_msg(f"finished to output all files!")
+            log_msg(f"-------------------------------end step 2-------------------------------\n\n")
+            log_msg(f"Genotyping processing completed successfully. Please click 'Microtype →' for microtype analysis or 'Exit' to close the program.")
+            run_frame.res_queue.put(('success', go))
+        else:
+            log_msg(f"Genotyping processing failed. Please check the log for details.")
+            run_frame.res_queue.put(("Genotyping processing failed. Please check the log for details.", go))
     except Exception as e:
         traceback.print_exc()
         log_msg(f"Error during microhap processing: {e}")
-        run_frame.res_queue.put(('error', str(e)))
-        
+        run_frame.res_queue.put((str(e), False))
+
+def check_res_run(cur_frame):
+    try:
+        status, result = cur_frame.body_frame.res_queue.get_nowait()
+        if status == 'success' and result:
+            cur_frame.footer_frame.next_button.configure(state="normal")
+            modern_messagebox.showsuccess(cur_frame.body_frame.winfo_toplevel(), "Success", "Please click 'Microtype →' for microtype analysis or 'Exit'.")
+        else:
+            cur_frame.footer_frame.next_button.configure(state="disabled")
+            modern_messagebox.showerror(cur_frame.body_frame.winfo_toplevel(), "Error", f"Genotyping processing failed: {result}")
+    except queue.Empty:
+        cur_frame.body_frame.after(200, lambda: check_res_run(cur_frame))
+        return   
 def go_button(parent):
     genoclass = parent.master.genotype_class
     panel = parent.master.pages.get('microtype_data', None)

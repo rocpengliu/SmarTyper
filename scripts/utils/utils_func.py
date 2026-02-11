@@ -1,6 +1,9 @@
 import customtkinter as ctk
 from tkinter import filedialog
-from . import modern_messagebox
+
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import GradientBoostingClassifier
 import os, sys
 import threading
 import pandas as pd
@@ -15,7 +18,7 @@ import traceback
 import numpy as np
 import pdb
 import copy
-from ..utils import modern_messagebox
+from .modern_messagebox import ModernMessageBox
 
 def load_pdf(file_path, canvas):
     try:
@@ -33,7 +36,7 @@ def load_pdf(file_path, canvas):
             y_offset += pix.height  # Increment y-offset by the height of the image
         canvas.configure(scrollregion=canvas.bbox("all"))  # Update scroll region after all images are loaded
     except Exception as e:
-        modern_messagebox.showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
+        ModernMessageBox.showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
 
 def output_all_fig_tab(is_pro_fig,output_folder_path, markers,selected_sample,sam_microhap_dict_sam, sam_ml_dict_sam, anal_type)->bool:
     #print(f"starting to output_all_fig_tab for {selected_sample}")
@@ -575,10 +578,10 @@ def split_codingpos(pos_str:str)->list:
         if all(isinstance(item, tuple) and all(isinstance(i, int) for i in item) for sublist in nested_list for item in sublist):
             return nested_list
         else:
-            modern_messagebox.showerror(None, "Invalid Input", f"Invalid coding positions string: {pos_str}")
+            ModernMessageBox.showerror(None, "Invalid Input", f"Invalid coding positions string: {pos_str}")
             raise ValueError(f"Invalid coding positions string: {pos_str}")
     except ValueError as e:
-        modern_messagebox.showerror(None, "Invalid Input", str(e))
+        ModernMessageBox.showerror(None, "Invalid Input", str(e))
         return None
 
 def get_triml_pos(out_lst, trimlpos):
@@ -804,3 +807,16 @@ def init_sam_amplicons(mars, samples):
 def init_sam_mar_ml(mars, samples):
     sam_mar_ml_dict = {sam : {mar : pd.DataFrame(columns=ml_mh_df_columns) for mar in mars} for sam in samples}
     return sam_mar_ml_dict
+
+def training_each_model_clf(df, micro_type):
+    if micro_type == "snp":
+        X_tot = df.drop(['Locus', 'Zygosity'], axis = 1)
+        y = df['Zygosity']
+        X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = 0.2, random_state = 42, stratify=y)
+        clf = GradientBoostingClassifier(random_state = 42)
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        return [clf, accuracy]
+    elif micro_type == "sat":
+        pass

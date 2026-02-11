@@ -50,7 +50,7 @@ def create_body(parent, frame):
     body_frame.grid(row=1, column=0, sticky="nsew")
 
     body_frame.grid_rowconfigure(0, weight=0)  # Top panel
-    body_frame.grid_rowconfigure(1, weight=1)  # Bottom panel
+    body_frame.grid_rowconfigure(1, weight=6)  # Bottom panel
     body_frame.grid_columnconfigure(0, weight=1)  # Center columns
     #body_frame.grid_rowconfigure('all', weight=1)
 
@@ -79,6 +79,7 @@ def create_top_panel(parent, body_frame):
             display_page(body_frame.bottom_panel, genoclass),
             top_panel.highlight_buttons(top_panel, "Geno Combo")
         ]).grid(row=row, column=1, pady=(1,3), padx=(20, 80), sticky="w")
+    
     ctk.CTkRadioButton(top_panel, text="marker", variable=top_panel.res_type, value="marker", font=brfont,
         command=lambda: [
             update_combox(genoclass, top_panel, "marker"),
@@ -215,7 +216,7 @@ def create_footer(parent, frame):
                                                 command=lambda: on_previous_button_click(parent))
     footer_frame.previous_button.grid(row=0, column=0, padx=(10, 100), pady=(10, 10), sticky="e")
 
-    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next →", font=pnbuttonfont,
+    footer_frame.next_button = ctk.CTkButton(footer_frame, text="Next →", font=pnbuttonfont, state="disabled",
                                             fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                                             corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
                                             command=lambda: on_next_button_click(parent, footer_frame))
@@ -227,24 +228,6 @@ def on_previous_button_click(parent):
         parent.master.show_page("loader")
     else:
         parent.master.show_page("run")
-
-# def on_next_button_click(parent, footer_frame):
-#     genoclass = parent.master.genotype_class
-#     # Disable the button to prevent multiple clicks
-#     footer_frame.next_button.configure(state='disabled', text="Processing...")
-#     footer_frame.next_button.update_idletasks()
-#     try:
-#         genoclass.dump_session("genotype") #must dump session first because generate_all may crash due to high memory usage
-#         genoclass.generate_all()
-#             # Schedule GUI update on main thread
-#         footer_frame.next_button.configure(state='normal', text="Next →")
-#         footer_frame.next_button.update_idletasks()
-#         parent.master.after(0, lambda: parent.master.show_page("summary"))
-#         #parent.master.after(0, lambda: footer_frame.next_button.configure(state='normal', text="Next →"))
-#     except Exception as e:
-#         error_msg = f"Error generating summary: {str(e)}"
-#         modern_messagebox.showerror(parent.master, "Error", error_msg)
-#         footer_frame.next_button.configure(state='normal', text="Next →")
 
 def on_next_button_click(parent, footer_frame):
     foot_frame = parent.master.pages.get('results', None).footer_frame

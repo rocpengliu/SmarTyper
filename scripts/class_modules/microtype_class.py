@@ -9,7 +9,7 @@ import pdb
 from ..utils.common import dna_base_list, aa_base_list
 import copy
 from .segment_class import SegmentClass
-from ..utils import modern_messagebox as mordern_messagebox
+from ..utils.modern_messagebox import ModernMessageBox
 
 class CompreVariationClass:
     def __init__(self):
@@ -518,7 +518,7 @@ class CompreMicrotypeClass:
                     ori_tmp_list = [pos for pos in ori_pos_list if pos in range(seg.get_start_pos_in_gene(), seg.get_end_pos_in_gene())]
                     converted_list.extend([pos - seg.get_offset_len() for pos in ori_tmp_list])
         if len(ori_pos_list) != len(converted_list):
-            mordern_messagebox.showerror(None, "Position Conversion Error", f"ori_pos_list and converted_list len not match. ori_len={len(ori_pos_list)}, converted_len={len(converted_list)}") 
+            ModernMessageBox.showerror(None, "Position Conversion Error", f"ori_pos_list and converted_list len not match. ori_len={len(ori_pos_list)}, converted_len={len(converted_list)}") 
             raise ValueError(f"ori_pos_list and converted_list len not match. ori_len={len(ori_pos_list)}, converted_len={len(converted_list)}")
         return sorted(converted_list)
     
@@ -533,7 +533,7 @@ class CompreMicrotypeClass:
                     cur_tmp_list = [pos for pos in cur_pos_list if pos in range(seg.get_start_pos_in_zon(), seg.get_end_pos_in_zon())]
                     ori_list.extend([pos + seg.get_offset_len() for pos in cur_tmp_list])
             if len(cur_pos_list)!= len(ori_list):
-                mordern_messagebox.showerror(None, "Position Conversion Error", f"cur_pos_list and ori_list len not match. cur_len={len(cur_pos_list)}, ori_len={len(ori_list)}") 
+                ModernMessageBox.showerror(None, "Position Conversion Error", f"cur_pos_list and ori_list len not match. cur_len={len(cur_pos_list)}, ori_len={len(ori_list)}") 
                 raise ValueError(f"cur_pos_list and ori_list len not match. cur_len={len(cur_pos_list)}, ori_len={len(ori_list)}")
         else:
             ori_list = cur_pos_list.copy()
