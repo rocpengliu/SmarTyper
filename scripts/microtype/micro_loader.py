@@ -23,6 +23,7 @@ def micro_loader(parent):
     frame.header_frame = create_header(frame)
     frame.body_frame = create_body(parent, frame)
     frame.footer_frame = create_footer(parent, frame)
+    
     return frame
 
 def create_header(frame):
@@ -259,6 +260,7 @@ def create_footer(parent, frame):
                                 state="disabled", command = lambda:on_click_next_button(parent, footer_frame))
     footer_frame.next_button.grid(row=0, column=1, padx=(100, 10), sticky="w")
     return footer_frame
+
 def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
         update_combox_from_others_micro(parent)

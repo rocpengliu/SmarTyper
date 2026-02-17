@@ -136,14 +136,20 @@ def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
         genotype_class = parent.master.genotype_class
         if genotype_class.get_parameter().is_project_genotype_model() and not genotype_class.get_parameter().is_project_microtype_model():
-            parent.after(100, lambda:parent.master.show_page("results"))
+            parent.after(100, lambda:(parent.master.toggle_menu("project", all=True),  # Fold all menus first
+                                    parent.master.toggle_menu("genotype"),           # Unfold microtype menu
+                                    parent.master.button_clicked("results", "genotype"), 
+                                    parent.master.show_page("results")))
             panel = parent.master.pages.get('results').body_frame.bottom_panel
             if panel.winfo_exists():
                 update_combox_from_others(parent)
                 update_genotype_tab(parent,panel)
             parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
         elif genotype_class.get_parameter().is_project_microtype_model() and not genotype_class.get_parameter().is_project_genotype_model():
-            parent.after(100, lambda:parent.master.show_page("microtype_results"))
+            parent.after(100, lambda: (parent.master.toggle_menu("project", all=True),
+                                       parent.master.toggle_menu("microtype"),
+                                       parent.master.button_clicked("microtype_results", "microtype"),
+                                       parent.master.show_page("microtype_results")))
             update_combox_from_others_micro(parent)
             parent.master.pages.get('microtype_results').footer_frame.next_button.configure(state='normal')
         else:

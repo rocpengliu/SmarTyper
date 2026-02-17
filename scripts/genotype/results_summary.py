@@ -183,4 +183,8 @@ def go_button(parent):
                 panel.body_frame.top_panel.in_entry.delete(0, 'end')
                 panel.body_frame.top_panel.in_entry.insert(0, fpath)
                 genoclass.get_metadata().read_cur_microhap_file(genoclass.get_parameter())
+        
+    parent.master.toggle_menu("genotype", all=True)  # Fold all menus first
+    parent.master.toggle_menu("microtype")           # Unfold microtype menu
+    parent.master.button_clicked("microtype_data", "microtype")
     parent.master.show_page("microtype_data")

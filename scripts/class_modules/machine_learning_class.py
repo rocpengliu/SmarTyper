@@ -114,6 +114,11 @@ class MachineLearningClass:
             if log_func is not None:
                 log_func(f"Model training completed for {num_loc} markers, {pass_loc} markers passed for submission, {failed_loc} markers failed the training criteria.\n\n")
                 log_func("Model training completed.\n\n")
+                log_func("Starting to write accuracy file!")
+            com_df = pd.concat(self.get_mh_model_pred_accu_dict(), names = ['locus'], ignore_index = True).reset_index(level='locus', drop = True)
+            com_df.to_csv(os.path.join(parameter_class.get_mloutputdir(), "all_loci_accuracy.txt"), sep = '\t', index = False)
+            if log_func is not None:
+                log_func(f"Finished dump accuracy file!\n\n")
                 log_func(f"Starting to dump training models...")
             joblib.dump(self._mh_training_model_clf_dict, os.path.join(parameter_class.get_mloutputdir(), "all_training_models.pkl"))
             print(f"training model done")

@@ -28,6 +28,7 @@ def micro_viewer(parent):
     create_header(frame)
     frame.body_frame = create_body(parent, frame)
     frame.footer_frame=create_footer(parent, frame)
+    
     highlight_par_buttons(frame.body_frame.top_panel,frame.body_frame.bottom_panel,"micro_align","dna")
     return frame
 
