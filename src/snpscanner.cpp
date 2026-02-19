@@ -532,8 +532,21 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
     if (mOptions->verbose)
         loginfo("Starting to write haplotype table!");
 
-    //*fout2 << "#Locus\tHaplotype\tNumHaploReads\tHaploReadsRatio\tHaploReadsPer\tTotalReads\tZygosity\tIndel\tMicroHaplotype\n";
     *fout2 << "#Locus\tAllele\tBaseChange\tNumReads\tAlleleReadsPer\tVarRatio\tTotalReads\tReadsPer\tConclusive\tZygosity\tIndel\tSequence\n";
+
+
+    std::string foutName2_2 = mOptions->prefix + "_ml_haplotype.txt";
+    std::ofstream *fout2_2 = new std::ofstream();
+    fout2_2->open(foutName2_2.c_str(), std::ofstream::out);
+    if (!fout2_2->is_open()) {
+        delete fout2_2;
+        fout2_2 = nullptr;
+        error_exit("Can not open output file: " + foutName2_2);
+    }
+    if (mOptions->verbose)
+        loginfo("Starting to write ML haplotype table!");
+
+    *fout2_2 << "sample\tlocus\treadt\tread1\tread2\tread3\trprop1\trprop2\trprop3\tmut\tmprop1\tmprop2\vprop\tindel\tzygosity\tconclusive\tbasechane\tseq1\tseq2\tseq3\n";
 
     std::string foutName3 = mOptions->prefix + "_all_amplicon.txt";
     std::ofstream *fout3 = new std::ofstream();
@@ -718,9 +731,6 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
                         } else {
                             locSnpIt->genoStr3 = "heter";
                         }
-                        //locSnpIt->status.second = !mapPair.first; // false;
-                        //locSnpIt->status.first.first = locSnpIt->seqVarVec.at(0).indel;
-                        //locSnpIt->status.first.second = locSnpIt->seqVarVec.at(1).indel;
                     } else {
                         locSnpIt->getBestRatio();
                         if(locSnpIt->ratioVar == 0){
@@ -732,10 +742,6 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
                         } else {
                             locSnpIt->genoStr3 = "inconclusive";
                         }
-                        
-                        //locSnpIt->status.second = !mapPair.first;
-                        //locSnpIt->status.first.first = locSnpIt->seqVarVec.at(0).indel;
-                        //locSnpIt->status.first.second = locSnpIt->seqVarVec.at(1).indel;
                     }
                 } else if (goSet.size() > 1) {  // > 1 snp;
                     if (ratio >= mOptions->mLocSnps.mLocSnpOptions.hmPerH) {
@@ -750,9 +756,6 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
                         } else {
                             locSnpIt->genoStr3 = "heter";
                         }
-                        //locSnpIt->status.second = !mapPair.first;
-                        //locSnpIt->status.first.first = locSnpIt->seqVarVec.at(0).indel;
-                        //locSnpIt->status.first.second = locSnpIt->seqVarVec.at(1).indel;
                     }
                 }
             } else {
@@ -957,8 +960,16 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         fout2 = nullptr;
     }
 
+    fout2_2->flush();
+    fout2_2->clear();
+    fout2_2->close();
+    if (fout2_2) {
+        delete fout2_2;
+        fout2_2  = nullptr;
+    }
+
     if (mOptions->verbose)
-        loginfo("Finished writing haplotype table!");
+        loginfo("Finished writing ML haplotype table!");
 
     fout3->flush();
     fout3->clear();

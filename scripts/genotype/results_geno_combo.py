@@ -112,7 +112,9 @@ def display_page(genotab, genoclass):
     container = ctk.CTkFrame(genotab, fg_color="transparent")
     container.grid(row=0, column=0, sticky="nsew", padx=5, pady=0)
     container.grid_rowconfigure(0, weight=1)  # Canvas row (body) should expand
+    container.grid_rowconfigure(1, weight=0)  # Horizontal scrollbar stays fixed
     container.grid_columnconfigure(0, weight=1)  # Canvas column should expand
+    container.grid_columnconfigure(1, weight=0)  # Vertical scrollbar stays fixed
     
     # Create canvas and scrollbars
     canvas = tk.Canvas(container, bg="white")
@@ -128,18 +130,27 @@ def display_page(genotab, genoclass):
 
     # Create a frame inside the canvas to hold the figures
     figures_frame = ctk.CTkFrame(canvas, fg_color="white")
-    canvas.create_window((0, 0), window=figures_frame, anchor='nw')
+    canvas_window = canvas.create_window((0, 0), window=figures_frame, anchor='nw')
 
-    # Ensure canvas updates scrollregion when figures_frame size changes
-    figures_frame.bind("<Configure>", lambda event: canvas.configure(scrollregion=canvas.bbox("all")))
+    # Ensure canvas updates scrollregion and width when figures_frame size changes
+    def on_figures_frame_configure(event):
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        # Make figures_frame width match canvas display width for proper horizontal expansion
+        # Use canvas_width directly from the canvas widget
+        canvas.update_idletasks()  # Ensure canvas has been rendered
+        canvas_width = canvas.winfo_width()
+        if canvas_width > 1:  # Only update after canvas has been rendered
+            canvas.itemconfig(canvas_window, width=canvas_width)
+    
+    figures_frame.bind("<Configure>", on_figures_frame_configure)
+    
+    # Also bind to canvas to catch resize events
+    def on_canvas_configure(event):
+        canvas.itemconfig(canvas_window, width=event.width)
+    canvas.bind("<Configure>", on_canvas_configure)
 
-    # Configure figures_frame layout
-    figures_frame.grid_columnconfigure(0, weight=1)  # Column for figure expands
-    #figures_frame.grid_columnconfigure(1, weight=1)  # Column for table
-    #figures_frame.grid_columnconfigure(2, weight=1)  # Column for table
-    figures_frame.grid_rowconfigure(0, weight=1)  # Row for figure expands
-    figures_frame.grid_rowconfigure(1, weight=1)  # Row for table
-    figures_frame.grid_rowconfigure(2, weight=1)  # Row for sequence widget
+    # Configure figures_frame layout - column 0 expands, rows will be added dynamically
+    figures_frame.grid_columnconfigure(0, weight=1)  # Column for all content expands
 
     # Add figures and tables to the figures_frame
     
@@ -147,6 +158,18 @@ def display_page(genotab, genoclass):
     end_index = min(start_index + genotab.fig_per_page, len(genotab.figures))
     
     create_fig_tab_combo(canvas, genotab, start_index, end_index, figures_frame, loci_table, genoclass)
+    
+    # Force canvas to update its width tracking after figures are created
+    def update_canvas_width():
+        try:
+            # Check if canvas and canvas_window still exist before updating
+            canvas.winfo_exists()  # Will raise TclError if canvas was destroyed
+            canvas.itemconfig(canvas_window, width=canvas.winfo_width())
+        except:
+            pass  # Canvas was destroyed, skip this update
+    
+    genotab.after(100, update_canvas_width)
+    
     # Update the scroll region of the canvas to fit the figures_frame
     canvas.configure(scrollregion=canvas.bbox("all"))
 
@@ -273,14 +296,19 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
     for fig, tbl, hap in zip(genotab.figures[start_index:end_index],
                         genotab.seq_tables[start_index:end_index],
                         genotab.hap_tables[start_index:end_index]):
+        # Configure rows for this iteration (figure, table, sequence)
+        figures_frame.grid_rowconfigure(row_index, weight=0)      # Figure row - fixed height
+        figures_frame.grid_rowconfigure(row_index + 1, weight=1)  # Table row - expandable
+        figures_frame.grid_rowconfigure(row_index + 2, weight=0)  # Sequence row - fixed height
+        
         fig_canvas = FigureCanvasTkAgg(fig, master=figures_frame)
         fig_canvas.draw()
         widget = fig_canvas.get_tk_widget()
-        widget.grid(row=row_index, column=0, sticky="wn", padx=5, pady=5)  # Place figure in the left column
+        widget.grid(row=row_index, column=0, sticky="w", padx=5, pady=(5,0))  # Place figure on the left without expanding
 
         # Create table frame
         table_frame = ctk.CTkFrame(figures_frame, fg_color="white")
-        table_frame.grid(row=row_index + 1, column=0, sticky="nsew", padx=5, pady=5)  # Place table below the figure
+        table_frame.grid(row=row_index + 1, column=0, sticky="nsew", padx=5, pady=(0,5))  # Place table below the figure
         table_frame.grid_rowconfigure(0, weight=1)
         table_frame.grid_columnconfigure(0, weight=1)
         s_table, marker_tmp = create_table(table_frame, hap, tbl)
@@ -298,12 +326,11 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         marker_tmp = marker_tmp[:(marker_tmp.rfind('_'))]
         genotab.s_table_list[marker_tmp]=s_table
         # Place table and scrollbars
-        #s_table.grid(row=0, column=0, sticky="nsew")
+        s_table.grid(row=0, column=0, sticky="nsew")
         v_table_scrollbar.grid(row=0, column=1, sticky="ns")
         h_table_scrollbar.grid(row=1, column=0, sticky="ew")
         # Reduced sequence widget height from 10 to 6 for more compact display
         seq_widget = tk.Text(figures_frame, wrap="none", bg="white", fg="black", font=seq_font, height=6)
-        figures_frame.grid_columnconfigure(0, weight=1)  # Ensure column expands
         seq_widget.grid(row=row_index + 2, column=0, sticky="nsew", padx=5, pady=5)
         seq_widget.tag_configure("red_highlight", background="red", foreground="white")
         seq_widget.tag_configure("green_highlight", background='green', foreground='white')
@@ -577,6 +604,12 @@ def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
     ax.set_xticklabels(df.index, fontsize=3)
     ax.set_yticks(ax.get_yticks())
     ax.set_yticklabels([str(int(i)) for i in ax.get_yticks()], fontsize=3)
+    
+    # Tighten y-axis to reduce gap at top - set limit to max value with small margin
+    max_value = df['NumReads'].max()
+    if max_value > 0:
+        ax.set_ylim(0, max_value * 1.1)  # 10% margin above max value instead of matplotlib's default
+    
     fig.tight_layout(pad=1)  # Reduced padding from 2 to 1
     fig.canvas.mpl_connect("button_press_event", lambda event: on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass))
     return fig
