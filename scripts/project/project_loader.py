@@ -39,6 +39,9 @@ def create_header(frame):
 def create_body(parent, frame):
     genotype_class = parent.master.genotype_class
 
+    # Reset project dir and input field each time the page is created
+    genotype_class.get_parameter().set_projectdir("")
+
     body_frame = ctk.CTkFrame(frame, fg_color="transparent")
     body_frame.padx = (10, 10)
     body_frame.pady = (5, 5)
@@ -65,7 +68,7 @@ def create_body(parent, frame):
     ))
     row += 1
 
-    input_var = ctk.StringVar(value=genotype_class.get_parameter().get_projectdir())
+    input_var = ctk.StringVar(value="")
     ctk.CTkLabel(body_frame.top_panel, text="Input folder:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.out_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=input_var,
                                       height=26, corner_radius=8, border_width=2)
@@ -136,7 +139,9 @@ def on_click_next_button(parent, footer_frame):
     if footer_frame.next_button.cget('state') == 'normal':
         genotype_class = parent.master.genotype_class
         if genotype_class.get_parameter().is_project_genotype_model() and not genotype_class.get_parameter().is_project_microtype_model():
-            parent.after(100, lambda:(parent.master.toggle_menu("project", all=True),  # Fold all menus first
+            parent.after(100, lambda:(
+                                    parent.master.genotype_class.get_res_param().set_res_type("sample"),
+                                    parent.master.toggle_menu("project", all=True),  # Fold all menus first
                                     parent.master.toggle_menu("genotype"),           # Unfold microtype menu
                                     parent.master.button_clicked("results", "genotype"), 
                                     parent.master.show_page("results")))

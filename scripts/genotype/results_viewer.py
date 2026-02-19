@@ -233,6 +233,17 @@ def on_next_button_click(parent, footer_frame):
     foot_frame = parent.master.pages.get('results', None).footer_frame
     if foot_frame is not None:
         foot_frame.next_button.configure(state = 'disabled')
+    
+    summary_frame = parent.master.pages.get('summary', None)
+    foot_frame_sum = summary_frame.footer_frame if summary_frame is not None else None
+    if foot_frame_sum is not None:
+        foot_frame_sum.next_button.configure(state = 'disabled')
+    log_text = summary_frame.body_frame.log_text if summary_frame is not None and summary_frame.body_frame is not None else None
+    if log_text is not None:
+        log_text.configure(state='normal')
+        log_text.delete("1.0", tk.END)
+        log_text.insert(tk.END, "Running final analysis and generating summary...\n")
+        log_text.configure(state='disabled')
     parent.master.show_page("summary")
     parent.after(100, lambda:run_thread(parent))
         

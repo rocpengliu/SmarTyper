@@ -121,7 +121,7 @@ def create_body(parent, frame):
     ))
     row+=1
     
-    output_var = ctk.StringVar(value=genotype_class.get_parameter().get_post_microhap_output_dir())
+    output_var = tk.StringVar(value="")
     ctk.CTkLabel(body_frame.top_panel, text="Output folder:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.out_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=output_var,
                                          height=26, corner_radius=8, border_width=2)
