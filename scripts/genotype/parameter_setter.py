@@ -109,32 +109,36 @@ def create_body(frame):
     row += 1
 
     if param.get_analtype() == "snp":
-        create_label_entry(body_frame, middle_body, row, 0, "htJetter:", str(param.get_htJetter()), "htJetter", param)
+        create_label_entry(body_frame, middle_body, row, 0, "hmProH:", str(param.get_hmProH()), "hmProH", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "hmPerH:", str(param.get_hmPerH()), "hmPerH", param)
+        create_label_entry(body_frame, middle_body, row, 0, "hmProL:", str(param.get_hmProL()), "hmProL", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "hmPerL:", str(param.get_hmPerL()), "hmPerL", param)
+        create_label_entry(body_frame, middle_body, row, 0, "htProH:", str(param.get_htProH()), "htProH", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "minSeqsPerSnp:", str(param.get_minSeqsPerSnp()), "minSeqsPerSnp", param)
+        create_label_entry(body_frame, middle_body, row, 0, "htProL:", str(param.get_htProL()), "htProL", param)
+        row += 1
+        create_label_entry(body_frame, middle_body, row, 0, "minSeqsProSnp:", str(param.get_minSeqsProSnp()), "minSeqsProSnp", param)
         row += 1
         create_label_entry(body_frame, middle_body, row, 0, "minReads4Filter:", str(param.get_minReads4Filter()), "minReads4Filter", param)
-        row += 3
+        row += 2
     else:
         pass
     
     row = 0
     ctk.CTkLabel(right_body, text="Sex identification options:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "htJetter:", str(param.get_htJetter()), "htJetter", param)
+    create_label_entry(body_frame, right_body, row, 0, "hmProH:", str(param.get_hmProH()), "hmProH", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "hmPerH:", str(param.get_hmPerH()), "hmPerH", param)
+    create_label_entry(body_frame, right_body, row, 0, "hmProL:", str(param.get_hmProL()), "hmProL", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "hmPerL:", str(param.get_hmPerL()), "hmPerL", param)
+    create_label_entry(body_frame, right_body, row, 0, "htProH:", str(param.get_htProH()), "htProH", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "minSeqsPerSnp:", str(param.get_minSeqsPerSnp()), "minSeqsPerSnp", param)
+    create_label_entry(body_frame, right_body, row, 0, "htProL:", str(param.get_htProL()), "htProL", param)
+    row += 1
+    create_label_entry(body_frame, right_body, row, 0, "minSeqsProSnp:", str(param.get_minSeqsProSnp()), "minSeqsProSnp", param)
     row += 1
     create_label_entry(body_frame, right_body, row, 0, "minReads4Filter:", str(param.get_minReads4Filter()), "minReads4Filter", param)
-    row += 3
+    row += 2
     
     return body_frame
 
@@ -166,6 +170,7 @@ def on_previous_button_click(parent):
     parent.master.show_page("data")
 
 def on_run_button_click(parent, footer_frame):
+    parent.master.genotype_class.get_parameter().check_parameters_valid()
     data_frame=parent.master.pages.get('data', None)
     if data_frame is not None:
         data_frame.footer_frame.next_button.configure(state='disabled')

@@ -157,7 +157,7 @@ LocSnp::LocSnp(){
     this->haploVec.clear();
     this->isHaplotype = false;
     this->genoStr3 = "seqerr";
-    this->ratioHaplo = 0;
+    this->ratioHaplo = 0.0;
 }
 
 void LocSnp::print(){
@@ -211,7 +211,8 @@ LocSnp2::LocSnp2(){
     this->totReads = 0;
     this->maxReads = 0;
     this->totHaploReads = 0;
-    this->ratioHaplo = 0;
+    this->ratioHaplo = 0.0;
+    this->ratioHaplo2 = 0.0;
     this->genoStr3 = "seqerr";
     this->isIndel = false;
     this->ft = Sequence("");
@@ -221,7 +222,7 @@ LocSnp2::LocSnp2(){
     this->aveErrorRate = 0.000;
     this->seqVarVec.clear();
     this->status = std::make_pair(std::make_pair(false, false), false);
-    this->ratioVar = 0;
+    this->ratioVar = 0.0;
 }
 
 std::string LocSnp2::getHaploStr(bool snp2){
@@ -254,7 +255,7 @@ std::string LocSnp2::getHaploStr(bool snp2){
 
 int LocSnp2::getNumSnps(){
     int num = 0;
-    if (genoStr3 != "homo") {
+    if (genoStr3 != "homo" && !status.second) {
         for (const auto & it : ssnpsMap) {
             if(seqVarVec.at(0).seq[it.first] != seqVarVec.at(1).seq[it.first]){
                 num++;
@@ -340,7 +341,7 @@ int LocSnp2::getHaploReads(bool haplo2){
 
 int LocSnp2::getVarReads(int index){
     int num = 0;
-    if(index <= seqVarVec.size()){
+    if(index < seqVarVec.size()){
         num = seqVarVec.at(index).numReads;
     }
     return num;
@@ -348,12 +349,25 @@ int LocSnp2::getVarReads(int index){
 
 double LocSnp2::getHaploReadsRatio(bool haplo2){
     if(haplo2){
-        return getPer(getVarReads(1), getVarReads(0) + getVarReads(1));
+        return getPer(getVarReads(1), getVarReads(0) + getVarReads(1), false);
     } else {
         if(seqVarVec.size() > 1){
-            return getPer(getVarReads(0), getVarReads(0) + getVarReads(1));
+            return getPer(getVarReads(0), getVarReads(0) + getVarReads(1), false);
         } else {
             return 1.0000;
+        }
+    }
+}
+
+double LocSnp2::getHaploReadsRatio2(bool haplo2){
+    if (seqVarVec.size() <= 2) return 0.00;
+    if(haplo2){
+        return getPer(getVarReads(2), getVarReads(1) + getVarReads(2), false);
+    } else {
+        if(seqVarVec.size() > 1){
+            return getPer(getVarReads(1), getVarReads(1) + getVarReads(2), false);
+        } else {
+            return 1.00;
         }
     }
 }

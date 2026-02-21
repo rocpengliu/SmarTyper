@@ -123,11 +123,6 @@ def update_log_text(run_frame):
                         if message.strip():
                             cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
                             time_stamped_msg = f"{cur_time}{message}"
-                            # frame.log_text.configure(state="normal")
-                            # frame.log_text.insert("end", time_stamped_msg + "\n")
-                            # frame.log_text.configure(state="disabled")
-                            # frame.log_text.yview("end")
-                            # frame.update_idletasks()  # Process internal Tkinter event queue
                             run_frame.after(0, lambda msg=time_stamped_msg: insert_to_log_text(run_frame, msg))
                     except queue.Empty:
                         break
@@ -152,6 +147,14 @@ def insert_to_log_text(frame, msg):
     frame.log_text.configure(state="disabled")
     frame.log_text.yview("end")
     frame.update_idletasks()  # Process internal Tkinter event queue
+    
+    # Real-time append to log file if handle is open
+    if hasattr(frame, 'log_file_handle') and frame.log_file_handle:
+        try:
+            frame.log_file_handle.write(str(msg) + "\n")
+            frame.log_file_handle.flush()  # Force write to disk immediately
+        except Exception as e:
+            print_time(f"Error writing to log file: {str(e)}")
     
 def update_timer(run_frame):
     if not run_frame.run_finished.is_set():
@@ -209,10 +212,11 @@ def target(parent):
     subargs['average_qual'] = genoclass.get_parameter().get_average_qual()
     subargs['length_required'] = genoclass.get_parameter().get_length_required()
     if genoclass.get_parameter().get_analtype() == "snp":
-        subargs['htJetter'] = genoclass.get_parameter().get_htJetter()
-        subargs['hmPerH'] = genoclass.get_parameter().get_hmPerH()
-        subargs['hmPerL'] = genoclass.get_parameter().get_hmPerL()
-        subargs['minSeqsPerSnp'] = genoclass.get_parameter().get_minSeqsPerSnp()
+        subargs['hmProH'] = genoclass.get_parameter().get_hmProH()
+        subargs['hmProL'] = genoclass.get_parameter().get_hmProL()
+        subargs['htProH'] = genoclass.get_parameter().get_htProH()
+        subargs['htProL'] = genoclass.get_parameter().get_htProL()
+        subargs['minSeqsProSnp'] = genoclass.get_parameter().get_minSeqsProSnp()
         subargs['minReads4Filter'] = genoclass.get_parameter().get_minReads4Filter()
     else:
         pass
@@ -243,6 +247,17 @@ def target(parent):
     run_frame.cur_sam_idx = 0
     run_frame.tot_sams = len(run_frame.args_dir)
     run_frame.tot_mars = len(genoclass.get_metadata().get_ref_markers_list())
+    
+    # Set up real-time log file path
+    output_dir = genoclass.get_parameter().get_outputdir()
+    run_frame.log_file_path = os.path.join(output_dir, "smartyper_log.txt")
+    # Open log file handle for real-time writing
+    try:
+        run_frame.log_file_handle = open(run_frame.log_file_path, 'w', encoding='utf-8', buffering=1)  # Line buffered
+    except Exception as e:
+        print_time(f"Error creating log file: {str(e)}")
+        run_frame.log_file_handle = None
+    
     run_thread = threading.Thread(target=run_wrapper, args=(parent, run_frame), daemon=True)
     run_thread.start()
 
@@ -255,6 +270,12 @@ def target(parent):
                 update_log_text(run_frame)
                 update_progressbar(run_frame)
                 if run_frame.run_finished.is_set():
+                    # Close log file handle when finished
+                    if hasattr(run_frame, 'log_file_handle') and run_frame.log_file_handle:
+                        try:
+                            run_frame.log_file_handle.close()
+                        except:
+                            pass
                     run_frame.master.footer_frame.next_button.configure(state='normal')
                     break
     else:
@@ -294,7 +315,9 @@ def run_wrapper(parent, run_frame):
             run_frame.output_queue.put(f'starting to generate all sample figures\n')
         if genoclass.get_parameter().is_pro_figure():
             genoclass.pro_all_sample_figs(run_frame.output_queue)
+        
         with run_update_lock:
+            run_frame.output_queue.put(f"Log file saved to: {run_frame.log_file_path}\n")
             run_frame.output_queue.put("Congrats! Seq2Type ran successfully! Please click 'Next' to proceed.\n")
             parent.master.after(0, lambda: modern_messagebox.showsuccess(run_frame, "Success", "Seq2Type ran successfully"))
             parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
@@ -305,5 +328,6 @@ def run_wrapper(parent, run_frame):
             run_frame.output_queue.put(emsg)
         parent.master.after(0, lambda msg=emsg: modern_messagebox.showerror(run_frame, "Error", msg))
     finally:
+        # Don't close file here - let main thread close it after processing all messages
         with run_update_lock:
             run_frame.run_finished.set()

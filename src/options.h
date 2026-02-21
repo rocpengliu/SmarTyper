@@ -303,10 +303,13 @@ public:
         maxScorePrimer = -1;
         minSeqs = 5;
         minSeqsPer = 0.1;
-        hmPerH = 0.9;
-        hmPerL = 0.85;
+        hmProH = 0.84;
+        hmProL = 0.78;
+        htProH = 0.83;
+        htProL = 0.79;
+        htPro3 = 0.80;
         hmPer = 0.0;
-        htJetter = 0.25;
+        //htJetter = 0.25;
         minReads4Filter = 50;
         maxRows4Align = 6;
     };
@@ -316,7 +319,7 @@ public:
     uint32 minSeqs;
     double minSeqsPer;//against largest peak; 10/%
     int minReads4Filter;
-    double hmPerL, hmPerH, htJetter;
+    double hmProL, hmProH, htProL, htProH, htPro3;
     double hmPer; //the actual one, it is either hmPerL or hmPerH, depending on how many true snps there.
     int maxRows4Align;
 };

@@ -546,7 +546,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
     if (mOptions->verbose)
         loginfo("Starting to write ML haplotype table!");
 
-    *fout2_2 << "sample\tlocus\treadt\tread1\tread2\tread3\trprop1\trprop2\trprop3\tmut\tmprop1\tmprop2\vprop\tindel\tzygosity\tconclusive\tbasechane\tseq1\tseq2\tseq3\n";
+    *fout2_2 << "sample\tlocus\treadt\tread1\tread2\tread3\trprop1\trprop2\trprop3\tmprop1\tmprop2\tprop\tmut\tindel\tzygosity\tconclusive\tbasechange\tseq1\tseq2\tseq3\n";
 
     std::string foutName3 = mOptions->prefix + "_all_amplicon.txt";
     std::ofstream *fout3 = new std::ofstream();
@@ -572,12 +572,13 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         loginfo("Starting to write error rate table!");
     *fout4 << "#Locus\tErrorRate\tAverage\tTotalReads\n";
 
+    LocSnp2 *locSnpIt = nullptr;
     for (const auto &it : tmpSnpSeqsMap) {
         if (mOptions->mLocSnps.refLocMap.find(it.first) == mOptions->mLocSnps.refLocMap.end()) {
             continue;
         }
         if (it.second.empty()) continue;
-        LocSnp2 *locSnpIt = &(mOptions->mLocSnps.refLocMap[it.first]);
+        locSnpIt = &(mOptions->mLocSnps.refLocMap[it.first]);
 
         std::map<std::string, uint32> tmpMap;
         if (locSnpIt->trimPos.first == 0 && locSnpIt->trimPos.second == 0) {
@@ -672,7 +673,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         
         if (locSnpIt->seqVarVec.size() == 1) {
             locSnpIt->genoStr3 = "homo";
-            locSnpIt->ratioHaplo = 1;
+            locSnpIt->ratioHaplo = 1.0;
 
             locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
             locSnpIt->status.first.first = locSnpIt->seqVarVec.at(0).indel;
@@ -690,6 +691,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         } else {
             double ratio = getPer(locSnpIt->seqVarVec.at(0).numReads, (locSnpIt->seqVarVec.at(0).numReads + locSnpIt->seqVarVec.at(1).numReads), false);
             locSnpIt->ratioHaplo = ratio;
+            locSnpIt->ratioHaplo2 = locSnpIt->getHaploReadsRatio2();
             const char *rchar1 = locSnpIt->seqVarVec.at(0).seq.c_str();
             const char *rchar2 = locSnpIt->seqVarVec.at(1).seq.c_str();
             auto mapPair2 = doAlignment2(mOptions, "read1", rchar1, locSnpIt->seqVarVec.at(0).seq.length(), "read2", rchar2, locSnpIt->seqVarVec.at(1).seq.length());
@@ -720,46 +722,104 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
 
             if(go){
                 if (goSet.size() == 1) {  // one snp;
-                    if (ratio >= mOptions->mLocSnps.mLocSnpOptions.hmPerL) {
+                    if (ratio >= mOptions->mLocSnps.mLocSnpOptions.hmProH) {
                         locSnpIt->genoStr3 = "homo"; // also include if it is heter against the ref, eg, ref: AA, target: CC;
                         locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
                         locSnpIt->getBestRatio();//don't move, it must be done this step.
-                    } else if (abs(ratio - 0.5) <= mOptions->mLocSnps.mLocSnpOptions.htJetter) {
+                    } else if (abs(ratio) <= mOptions->mLocSnps.mLocSnpOptions.hmProL) {
                         locSnpIt->getBestRatio();
                         if (locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minSeqs) {
                             locSnpIt->genoStr3 = "inconclusive";
                         } else {
-                            locSnpIt->genoStr3 = "heter";
+                            if(locSnpIt->seqVarVec.size() > 2){
+                                if (locSnpIt->ratioHaplo2 >= mOptions->mLocSnps.mLocSnpOptions.htPro3) {
+                                    locSnpIt->genoStr3 = "heter";
+                                } else {
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                }
+                            } else {
+                                locSnpIt->genoStr3 = "heter";
+                            }
                         }
                     } else {
                         locSnpIt->getBestRatio();
-                        if(locSnpIt->ratioVar == 0){
+                        if(locSnpIt->ratioVar == 0.0){
                             locSnpIt->genoStr3 = "inconclusive";
-                        } else if (abs(locSnpIt->ratioVar - 0.5) <= mOptions->mLocSnps.mLocSnpOptions.htJetter){
-                            locSnpIt->genoStr3 = "heter";
-                        } else if(locSnpIt->ratioVar >= mOptions->mLocSnps.mLocSnpOptions.hmPerL){
-                            locSnpIt->genoStr3 = "homo";
                         } else {
-                            locSnpIt->genoStr3 = "inconclusive";
+                            if(locSnpIt->ratioVar >= mOptions->mLocSnps.mLocSnpOptions.hmProH){
+                                locSnpIt->genoStr3 = "homo";
+                                locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                            } else if (locSnpIt->ratioVar <= mOptions->mLocSnps.mLocSnpOptions.hmProL) {
+                                if(locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minSeqs){
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                } else {
+                                    if (locSnpIt->seqVarVec.size() > 2) {
+                                        if (locSnpIt->ratioHaplo2 >= mOptions->mLocSnps.mLocSnpOptions.htPro3) {
+                                            locSnpIt->genoStr3 = "heter";
+                                        } else {
+                                            locSnpIt->genoStr3 = "inconclusive";
+                                        }
+                                    } else {
+                                        locSnpIt->genoStr3 = "heter";
+                                    }
+                                }
+                            } else {
+                                locSnpIt->genoStr3 = "inconclusive";
+                            }
                         }
                     }
                 } else if (goSet.size() > 1) {  // > 1 snp;
-                    if (ratio >= mOptions->mLocSnps.mLocSnpOptions.hmPerH) {
+                    if (ratio >= mOptions->mLocSnps.mLocSnpOptions.htProH) {
                         locSnpIt->genoStr3 = "homo"; // also include if it is heter against the ref, eg, ref: AA, target: CC;
                         //locSnpIt->ratioHaplo = 1; // if the ratioHaplo for homo is not 1, it should have the seq erros
                         locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
                         locSnpIt->getBestRatio();
                     } else {
                         locSnpIt->getBestRatio();
-                        if (locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minSeqs) {
-                            locSnpIt->genoStr3 = "inconclusive";
+                        if (ratio <= mOptions->mLocSnps.mLocSnpOptions.htProL) {
+                            if(locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minSeqs){
+                                locSnpIt->genoStr3 = "inconclusive";
+                            } else {
+                                if (locSnpIt->seqVarVec.size() > 2) {
+                                    if (locSnpIt->ratioHaplo2 >= mOptions->mLocSnps.mLocSnpOptions.htPro3) {
+                                        locSnpIt->genoStr3 = "heter";
+                                    } else {
+                                        locSnpIt->genoStr3 = "inconclusive";
+                                    }
+                                } else {
+                                    locSnpIt->genoStr3 = "heter";
+                                }
+                            }
                         } else {
-                            locSnpIt->genoStr3 = "heter";
+                            if(locSnpIt->ratioVar == 0.0){
+                                locSnpIt->genoStr3 = "inconclusive";
+                            } else {
+                                if(locSnpIt->ratioVar >= mOptions->mLocSnps.mLocSnpOptions.htProH){
+                                    locSnpIt->genoStr3 = "homo";
+                                    locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                                } else if (locSnpIt->ratioVar <= mOptions->mLocSnps.mLocSnpOptions.htProL) {
+                                    if(locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minSeqs){
+                                        locSnpIt->genoStr3 = "inconclusive";
+                                    } else {
+                                        if (locSnpIt->seqVarVec.size() > 2) {
+                                            if (locSnpIt->ratioHaplo2 >= mOptions->mLocSnps.mLocSnpOptions.htPro3) {
+                                                locSnpIt->genoStr3 = "heter";
+                                            } else {
+                                                locSnpIt->genoStr3 = "inconclusive";
+                                            }
+                                        } else {
+                                            locSnpIt->genoStr3 = "heter";
+                                        }
+                                    }
+                                } else {
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                }
+                            }
                         }
                     }
                 }
             } else {
-                if (ratio >= mOptions->mLocSnps.mLocSnpOptions.hmPerH) {// 5 / 5 + x >= 0.9
+                if (ratio >= mOptions->mLocSnps.mLocSnpOptions.htProH) {// 5 / 5 + x >= 0.9
                         locSnpIt->genoStr3 = "homo"; // also include if it is heter against the ref, eg, ref: AA, target: CC;
                         //locSnpIt->ratioHaplo = 1; // if the ratioHaplo for homo is not 1, it should have the seq erros
                         locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
@@ -822,6 +882,9 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         if (locSnpIt->genoStr3 == "homo") {
             if (!locSnpIt->status.first.first) {
                 for (const auto & its : locSnpIt->snpPosSetHaplo) {
+                    if(its >= locSnpIt->ref.length() || its >= locSnpIt->seqVarVec.at(0).seq.length()){
+                        continue;
+                    }
                     if (locSnpIt->ref.mStr[its] == locSnpIt->seqVarVec.at(0).seq[its]) {
                         locSnpIt->ssnpsMap[its] = SSimSnp(locSnpIt->ref.mStr[its], locSnpIt->ref.mStr[its], 'g');
                     } else {
@@ -835,6 +898,9 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
             if (!locSnpIt->status.first.first && !locSnpIt->status.first.second && !locSnpIt->status.second) {
                 for (const auto & its : locSnpIt->snpPosSetHaplo) {
                     //3 comparisions;
+                    if (its >= locSnpIt->ref.length() || its >= locSnpIt->seqVarVec.at(0).seq.length() || its >= locSnpIt->seqVarVec.at(1).seq.length()) {
+                        continue;
+                    }
                     if (locSnpIt->seqVarVec.at(0).seq[its] == locSnpIt->seqVarVec.at(1).seq[its]) {
                         if (locSnpIt->ref.mStr[its] == locSnpIt->seqVarVec.at(0).seq[its]) {
                             locSnpIt->ssnpsMap[its] = SSimSnp(locSnpIt->ref.mStr[its], locSnpIt->ref.mStr[its], 'g');
@@ -916,6 +982,24 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
             *fout2 << locSnpIt->name << "\t" << "2" << "\t" << locSnpIt->getHaploStr(true) << "\t" << locSnpIt->getVarReads(1) << "\t" << locSnpIt->getHaploReadsRatio(1) << "\t" <<
                      locSnpIt->getRatioStr() << "\t" << locSnpIt->totReads << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads) << "\t" << 
                      (locSnpIt->genoStr3 == "heter" ? "Y" : "N" ) << "\t" << locSnpIt->genoStr3 << "\t" << (locSnpIt->status.first.second ? "Y" : "N") << "\t" << locSnpIt->seqVarVec.at(1).seq << "\n";
+        }
+
+        if (locSnpIt->genoStr3 == "homo") {
+            *fout2_2 << basename(mOptions->prefix) << "\t" << locSnpIt->name << "\t" <<
+                    locSnpIt->totReads << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getVarReads(1) << "\t" << locSnpIt->getVarReads(2) << "\t" <<
+                    getPer(locSnpIt->getVarReads(0), locSnpIt->totReads) << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads) << "\t" << getPer(locSnpIt->getVarReads(2), locSnpIt->totReads) << "\t" <<
+                    locSnpIt->getHaploReadsRatio(0) << "\t" << locSnpIt->getHaploReadsRatio2(0) << "\t" << locSnpIt->ratioVar << "\t" << 
+                    locSnpIt->getNumSnps() << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" <<  locSnpIt->genoStr3  << "\t" << "Y" << "\t" << 
+                    locSnpIt->getHaploStr() << "\t" << 
+                    locSnpIt->seqVarVec.at(0).seq << "\t" << (locSnpIt->seqVarVec.size() > 1 ? locSnpIt->seqVarVec.at(1).seq : "") << "\t" << (locSnpIt->seqVarVec.size() > 2 ? locSnpIt->seqVarVec.at(2).seq : "") << "\n";
+        } else {
+            *fout2_2 << basename(mOptions->prefix) << "\t" << locSnpIt->name << "\t" <<
+                    locSnpIt->totReads << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getVarReads(1) << "\t" << locSnpIt->getVarReads(2) << "\t" <<
+                    getPer(locSnpIt->getVarReads(0), locSnpIt->totReads) << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads) << "\t" << getPer(locSnpIt->getVarReads(2), locSnpIt->totReads) << "\t" <<
+                    locSnpIt->getHaploReadsRatio(0) << "\t" << locSnpIt->getHaploReadsRatio2(0) << "\t" << locSnpIt->ratioVar << "\t" << 
+                    locSnpIt->getNumSnps() << "\t" << (locSnpIt->status.second ? "Y" : "N") << "\t" <<  locSnpIt->genoStr3  << "\t" << "Y" << "\t" << 
+                    locSnpIt->getHaploStr() << "\t" <<
+                    locSnpIt->seqVarVec.at(0).seq << "\t" << (locSnpIt->seqVarVec.size() > 1 ? locSnpIt->seqVarVec.at(1).seq : "") << "\t" << (locSnpIt->seqVarVec.size() > 2 ? locSnpIt->seqVarVec.at(2).seq : "") << "\n";
         }
 
         //if (mOptions->verbose) loginfo("Starting to write ERROR table for " + locSnpIt->name + "!");

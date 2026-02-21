@@ -30,12 +30,31 @@ class CoutRedirect : public std::streambuf{
     protected:
     virtual std::streamsize xsputn(const char_type* s, std::streamsize n){
         std::lock_guard<std::mutex> lock(cout_mutex);
-        cout_queue.push(std::string(s, n));
+        buffer_.append(s, static_cast<size_t>(n));
+        flush_lines();
         return n;
     }
     virtual int overflow(int c = EOF){
-        return c;
+        if (c == EOF) {
+            return traits_type::eof();
+        }
+        char ch = static_cast<char>(c);
+        std::lock_guard<std::mutex> lock(cout_mutex);
+        buffer_.push_back(ch);
+        flush_lines();
+        return traits_type::not_eof(c);
     }
+
+    private:
+    void flush_lines(){
+        size_t pos = 0;
+        while ((pos = buffer_.find('\n')) != std::string::npos) {
+            cout_queue.push(buffer_.substr(0, pos + 1));
+            buffer_.erase(0, pos + 1);
+        }
+    }
+
+    std::string buffer_;
 } cout_redirect;
 
 void setup_cout_capture(){
@@ -108,10 +127,12 @@ void run_seqtyper(int argc, char* argv[]){
     cmd.add<double>("maxVarRatio", 0, "ratio of two heter alleles based on variations either in flanking regions or MRA, the ideal is 1, default: 1.5", false, 1.5);
     
     //for snp;
-    cmd.add<int>("htJetter", 0, "jetter rate for heter loci, eg 25 means the percentage of reads with SNPs to total reads are from 25 - 75 %, must be coupled with hmPer, default: 25", false, 25);
-    cmd.add<int>("hmPerH", 0, "allele is considered as homo when its reads against total reads is > 90 % and there are at least 2 true SNPs, must be coupled with htJetter and hmPerL, must be > hmPerL. default: 90", false, 90);
-    cmd.add<int>("hmPerL", 0, "allele is considered as homo when its reads against total reads is > 80 % and there are at most 1 true SNP, must be coupled with htJetter and hmPerH, must be < hmPerH and > htJetter + 50. default: 85", false, 85);
-    cmd.add<int>("minSeqsPerSnp", 0, "minimum percentage (%) reads against largest peak for a genotype, default: 10 (10%)", false, 10);
+    cmd.add<double>("hmProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= hmProH when there is only one true SNP, must be > hmProL and coupled with hmProL. default: 0.84", false, 0.84);
+    cmd.add<double>("hmProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= hmProL when there is only one true SNP, must be < hmProH and coupled with hmProH. default: 0.78", false, 0.78);
+    cmd.add<double>("htProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= htProH when there are at least two true SNPs, must be > htProL and coupled with htProL. default: 0.83", false, 0.83);
+    cmd.add<double>("htProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= htProL when there are at least two true SNPs, must be < htProH and coupled with htProH. default: 0.79", false, 0.79);
+    cmd.add<double>("htPro3", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= htPro3. default: 0.8", false, 0.8);
+    cmd.add<double>("minSeqsProSnp", 0, "minimum proportion reads against largest peak for a genotype, default: 0.1 (10%)", false, 0.10);
     cmd.add<int>("minReads4Filter", 0, "minimum reads for filtering read variant. if the maximum reads of haplotype is more than this, the low abundance read variants will be filtered, otherwise will be kept. This is used for the shallow sequencing. default: 50", false, 50);
     cmd.add<int>("maxRows4Align", 0, "maximum rows for alignment table, must be > 2 rows. default: 6", false, 6);
     cmd.add("noSnpPlot", 0, "If specified, do not plot SNPs");
@@ -252,10 +273,12 @@ void run_seqtyper(int argc, char* argv[]){
         
     if (opt->var == "snp" || opt->sexFile != "") {
         opt->mLocSnps.mLocSnpOptions.minSeqs = cmd.get<int>("minSeqs");
-        opt->mLocSnps.mLocSnpOptions.minSeqsPer = (double) cmd.get<int>("minSeqsPerSnp") / 100.00;
-        opt->mLocSnps.mLocSnpOptions.htJetter = (double) cmd.get<int>("htJetter") / 100.00;
-        opt->mLocSnps.mLocSnpOptions.hmPerH = (double) cmd.get<int>("hmPerH") / 100.00;
-        opt->mLocSnps.mLocSnpOptions.hmPerL = (double) cmd.get<int>("hmPerL") / 100.00;
+        opt->mLocSnps.mLocSnpOptions.minSeqsPer = cmd.get<double>("minSeqsProSnp");
+        opt->mLocSnps.mLocSnpOptions.hmProH = cmd.get<double>("hmProH");
+        opt->mLocSnps.mLocSnpOptions.hmProL = cmd.get<double>("hmProL");
+        opt->mLocSnps.mLocSnpOptions.htProH = cmd.get<double>("htProH");
+        opt->mLocSnps.mLocSnpOptions.htProL = cmd.get<double>("htProL");
+        opt->mLocSnps.mLocSnpOptions.htPro3 = cmd.get<double>("htPro3");
         opt->mLocSnps.mLocSnpOptions.minReads4Filter = cmd.get<int>("minReads4Filter");
         opt->mLocSnps.mLocSnpOptions.maxRows4Align = cmd.get<int>("maxRows4Align");
         opt->noSnpPlot = cmd.exist("noSnpPlot");

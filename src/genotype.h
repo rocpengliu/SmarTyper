@@ -218,7 +218,7 @@ public:
     int totHaploReads;
     
     double ratioHaplo; //ratio = big one / big one + small one; if 1 is homo,  if < jetter is heter, is <homo > jetter is inconclusive.
-    
+    double ratioHaplo2;//ratio = read2 / read2 + read3
     std::string genoStr3;//seqerr (ratio > homo and should regarded as seq errors), inconclusive (ratio between homo and heter), homo or heter;//homo also include CC against ref AA;;
     bool isIndel;
     std::pair<std::pair<bool, bool>, bool> status;//isindel for hp1/ref, isindel for hp2/ref, isindel for hp1/hp2
@@ -231,12 +231,13 @@ public:
     double aveErrorRate;// sum of error rate of each position / total length
     std::string getHaploStr(bool snp2 = false);
     std::string getHaploStr(int index); // must > 1 for homo or 2 for heter
-    int getNumSnps();
+    int getNumSnps();//get the number of snps of the top2 reads
     std::string getSnpStr(bool snp2 = false);
     std::string getSnpStr(int index);
     int getHaploReads(bool haplop2 = false);
     int getVarReads(int index);
     double getHaploReadsRatio(bool haplot2 = false); // top 2 reads;
+    double getHaploReadsRatio2(bool haplot2 = false); // top 2 and 3 reads;
     double getHaploReadsPer(bool haplop2 = false);   // against totoal reads;
     double getReadsVarPer(int index);
     void getBestRatio();  // pos and ratio = num variants with and without that SNP; for assisting the genotyping calling

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.pyd
+
+# Cython
+*.c
+*.cpp
+*.html
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+seq2type_args.log
+smartyper_log.txt
+
+# Build artifacts
+build/
+temp.linux-x86_64-*/
+lib.linux-x86_64-*/
