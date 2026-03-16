@@ -166,6 +166,8 @@ class MetaDataClass:
                                 trimmedsnpos=[(pos - mar_ref.get_triml()) for pos in trimmedsnpos if (pos >= mar_ref.get_triml())]
                             if len(trimmedsnpos) != 0:
                                 mar_ref.set_snppos(trimmedsnpos)
+                            else:
+                                mar_ref.set_snppos(snpos)
                             # if mh:
                             #     trimmedsnpos = []
                             #     if mar_ref.get_trimr() != 0:

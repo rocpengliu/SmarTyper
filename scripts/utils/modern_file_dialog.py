@@ -266,6 +266,14 @@ class ModernFileDialog(ctk.CTkToplevel):
         except PermissionError:
             self.file_tree.insert('', 'end', text="[Permission Denied]",
                                  values=("", "", ""), tags=('error',))
+
+    def select_item_by_name(self, item_name):
+        for item_id in self.file_tree.get_children():
+            if self.file_tree.item(item_id, 'text') == item_name:
+                self.file_tree.selection_set(item_id)
+                self.file_tree.focus(item_id)
+                self.file_tree.see(item_id)
+                break
     
     def matches_filetype(self, filename):
         if self.filetype == "all":
@@ -353,6 +361,7 @@ class ModernFileDialog(ctk.CTkToplevel):
             new_dir.mkdir(parents=False, exist_ok=False)
             self.update_file_list()
             self.selected_var.set(folder_name)
+            self.select_item_by_name(folder_name)
         except FileExistsError:
             modern_messagebox.showwarning(None, "Already Exists", f"Folder '{folder_name}' already exists.")
         except Exception as e:
