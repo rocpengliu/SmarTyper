@@ -212,10 +212,12 @@ def target(parent):
     subargs['average_qual'] = genoclass.get_parameter().get_average_qual()
     subargs['length_required'] = genoclass.get_parameter().get_length_required()
     if genoclass.get_parameter().get_analtype() == "snp":
-        subargs['hmProH'] = genoclass.get_parameter().get_hmProH()
-        subargs['hmProL'] = genoclass.get_parameter().get_hmProL()
-        subargs['htProH'] = genoclass.get_parameter().get_htProH()
-        subargs['htProL'] = genoclass.get_parameter().get_htProL()
+        # Keep internal parameter names decoupled from CLI flags expected by seqtyper core.
+        subargs['ssProH'] = genoclass.get_parameter().get_ssProH()
+        subargs['ssProL'] = genoclass.get_parameter().get_ssProL()
+        subargs['msProH'] = genoclass.get_parameter().get_msProH()
+        subargs['msProL'] = genoclass.get_parameter().get_msProL()
+        subargs['sPro3'] = genoclass.get_parameter().get_sPro3()
         subargs['minSeqsProSnp'] = genoclass.get_parameter().get_minSeqsProSnp()
         subargs['minReads4Filter'] = genoclass.get_parameter().get_minReads4Filter()
     else:

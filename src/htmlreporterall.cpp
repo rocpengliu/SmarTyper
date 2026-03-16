@@ -15,10 +15,10 @@ HtmlReporterAll::~HtmlReporterAll() {
 void HtmlReporterAll::report() {
     
     ofstream ofs;
-    ofs.open(dirname(mOptions->prefix) + "Seq2Sat_all_samples.html");
+    ofs.open(dirname(mOptions->prefix) + "Seq2Type_all_samples.html");
     printHeader(ofs);
 
-    ofs << "<h1 style='text-align:left;'><a href='https://github.com/seq2sat' target='_blank' style='color:#009900;text-decoration:none;'>Seq2Sat report</a </h1>" << std::endl;
+    ofs << "<h1 style='text-align:left;'><a href='https://github.com/seq2type' target='_blank' style='color:#009900;text-decoration:none;'>Seq2Type report</a </h1>" << std::endl;
     //string intro = "Created by <a href='https://github.com/OpenGene/fastv' style='color:#1F77B4'>fastv</a> v" + string(FASTV_VER)+ ", " + " an ultra-fast tool for fast identification of SARS-CoV-2 and other microbes from sequencing data";
     //ofs << "<div style='font-size:10px;font-weight:normal;text-align:left;color:#666666;padding:5px;'>" << basename(mOptions->prefix) << "</div>" << std::endl;
     ofs << "<div class='section_div'>\n";

@@ -24,10 +24,11 @@ class ParameterClass:
         
         self._maxMismatchesPSeq = 2
         self._minSeqs = 5
-        self._hmProH = 0.84
-        self._hmProL = 0.78
-        self._htProH = 0.83
-        self._htProL = 0.79
+        self._ssProH = 0.84
+        self._ssProL = 0.78
+        self._msProH = 0.83
+        self._msProL = 0.79
+        self._sPro3 = 0.80
         self._minSeqsProSnp = 0.1
         self._minReads4Filter = 10
         
@@ -49,48 +50,57 @@ class ParameterClass:
         self._has_pre_mh = False
         self._pro_figure = True
     
-    def get_hmProH(self):
-        return self._hmProH
+    def get_sPro3(self):
+        return self._sPro3
     
-    def set_hmProH(self, hmProH):
+    def set_sPro3(self, sPro3):
+        if sPro3 < 0 or sPro3 > 1:
+            showerror("Invalid sPro3 threshold", "Invalid sPro3 threshold. Must be between 0 and 1" )
+            raise ValueError("Invalid sPro3 threshold. Must be between 0 and 1")
+        self._sPro3 = sPro3
+    
+    def get_ssProH(self):
+        return self._ssProH
+    
+    def set_ssProH(self, hmProH):
         if hmProH < 0 or hmProH > 1:
             showerror("Invalid mProH threshold", "Invalid mProH threshold. Must be between 0 and 1" )
             raise ValueError("Invalid mProH threshold. Must be between 0 and 1")
-        self._hmProH = hmProH
+        self._ssProH = hmProH
     
-    def get_hmProL(self):
-        return self._hmProL
+    def get_ssProL(self):
+        return self._ssProL
     
-    def set_hmProL(self, hmProL):
-        if hmProL < 0 or hmProL > 1:
+    def set_ssProL(self, ssProL):
+        if ssProL < 0 or ssProL > 1:
             showerror("Invalid mProL threshold", "Invalid mProL threshold. Must be between 0 and 1" )
             raise ValueError("Invalid mProL threshold. Must be between 0 and 1")
-        self._hmProL = hmProL
+        self._ssProL = ssProL
     
-    def get_htProH(self):
-        return self._htProH
+    def get_msProH(self):
+        return self._msProH
     
-    def set_htProH(self, htProH):
-        if htProH < 0 or htProH > 1:
+    def set_msProH(self, msProH):
+        if msProH < 0 or msProH > 1:
             showerror("Invalid HtProH threshold", "Invalid HtProH threshold. Must be between 0 and 1" )
             raise ValueError("Invalid HtProH threshold. Must be between 0 and 1")
-        self._htProH = htProH
+        self._msProH = msProH
         
-    def get_htProL(self):
-        return self._htProL
+    def get_msProL(self):
+        return self._msProL
     
-    def set_htProL(self, htProL):
-        if htProL < 0 or htProL > 1:
+    def set_msProL(self, msProL):
+        if msProL < 0 or msProL > 1:
             showerror("Invalid HtProL threshold", "Invalid HtProL threshold. Must be between 0 and 1" )
             raise ValueError("Invalid HtProL threshold. Must be between 0 and 1")
-        self._htProL = htProL
+        self._msProL = msProL
     
     
     def check_parameters_valid(self):
-        if self._hmProL > self._hmProH:
+        if self._ssProL > self._ssProH:
             showerror("Invalid mPro thresholds", "Invalid mPro thresholds. mProL threshold cannot be greater than mProH threshold.")
             raise ValueError("Invalid mPro thresholds. mProL threshold cannot be greater than mProH threshold.")      
-        if self._htProL > self._htProH:
+        if self._msProL > self._msProH:
             showerror("Invalid HtPro thresholds", "Invalid HtPro thresholds. HtProL threshold cannot be greater than HtProH threshold.")
             raise ValueError("Invalid HtPro thresholds. HtProL threshold cannot be greater than HtProH threshold.")
     

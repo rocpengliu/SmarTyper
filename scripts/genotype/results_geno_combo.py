@@ -313,10 +313,10 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         table_frame.grid_columnconfigure(0, weight=1)
         s_table, marker_tmp = create_table(table_frame, hap, tbl)
         if hap is not None:
-            if hap['Zygosity'].iloc[0] == "heter":
+            if hap['zygosity'].iloc[0] == "heter":
                 toggle_row_background(s_table, 0, 'bg_red')
                 toggle_row_background(s_table, 1, 'bg_red')
-            elif hap['Zygosity'].iloc[0] == "homo":
+            elif hap['zygosity'].iloc[0] == "homo":
                 toggle_row_background(s_table, 0, 'bg_red')
         # Create scrollbars for the table
         v_table_scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=s_table.yview)
@@ -342,12 +342,12 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         poset=set()
         poslst=[]
         for _, row in tbl.iterrows():
-            pos=extract_pos_basechange(row['BaseChange'])
+            pos=extract_pos_basechange(row['baseChange'])
             poslst.append(pos)
             if pos:
                 poset.update(pos)
         
-        marker=hap['Locus'].iloc[0]
+        marker=hap['locus'].iloc[0]
         ref=loci_table.loc[loci_table['locus']==marker, 'ref'].values[0]
         seq_widget.insert("1.0", "**: " + ref + "\n")
         
@@ -371,7 +371,7 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         for line_num, (index, row) in enumerate(tbl.iterrows(), start=2):
             padded_index = f"{index:02}"
             padded_seq = ("*" * genoclass.get_post_microhap().get_loc_ref_dict().get(marker).get_triml() \
-                            + row['Sequence'] \
+                            + row['seq'] \
                             + "*" * genoclass.get_post_microhap().get_loc_ref_dict().get(marker).get_trimr())
             
             seq_widget.insert(f"{line_num}.0", padded_index + ": " + padded_seq + "\n")
@@ -412,8 +412,8 @@ def create_table(table_frame, hap, tbl):
     s_table = ttk.Treeview(
         table_frame,
         columns=(
-            'id','sample', 'allele', 'base change', 't. reads', 'n. reads', 'percentage',
-            'hap prop', 'allele prop', 'conclusive', 'zygosity', 'indel', 'len'
+            'id','sample', 'allele', 'baseChange', 'readt', 'read', 'rprop',
+            'mprop', 'sprop', 'mut', 'zygosity', 'indel', 'len'
         ),
         show='headings',
         height=6  # 1 header + 5 data rows
@@ -428,13 +428,13 @@ def create_table(table_frame, hap, tbl):
     s_table.heading('id', text='id')
     s_table.heading('sample', text='sample')
     s_table.heading('allele', text='allele')
-    s_table.heading('base change', text='base change')
-    s_table.heading('t. reads', text='t. reads')
-    s_table.heading('n. reads', text='n. reads')
-    s_table.heading('percentage', text='percentage')
-    s_table.heading('hap prop', text='hap prop')
-    s_table.heading('allele prop', text='allele prop')
-    s_table.heading('conclusive', text='conclusive')
+    s_table.heading('baseChange', text='baseChange')
+    s_table.heading('readt', text='readt')
+    s_table.heading('read', text='read')
+    s_table.heading('rprop', text='rprop')
+    s_table.heading('mprop', text='mprop')
+    s_table.heading('sprop', text='sprop')
+    s_table.heading('mut', text='mut')
     s_table.heading('zygosity', text='zygosity')
     s_table.heading('indel', text='indel')
     s_table.heading('len', text='len')
@@ -444,64 +444,66 @@ def create_table(table_frame, hap, tbl):
     if hap is None:
         for index, row in tbl.iterrows():
                 if index == 0:
-                    marker_tmp = str(row['Sample'])+"_"+row['id']
+                    marker_tmp = str(row['sample'])+"_"+row['id']
                 if index < 5:  # Limit to 5 rows
                     s_table.insert('', 'end',
                         values=(
                             str(index),
-                            str(row['Sample']),
+                            str(row['sample']),
                             row['id'],
-                            row['BaseChange'],
-                            str(row['TotalReads']),
-                            str(row['NumReads']),
-                            str(row['ReadRatio']),
+                            row['baseChange'],
+                            str(row['readt']),
+                            str(row['reads']),
+                            str(row['prop']),
                             "nan",
                             "nan",
                             "nan",
+                            "inconclusive",
                             "nan",
-                            "nan",
-                            str(row['Length'])
+                            str(row['len'])
                         )
                     )
+                else:
+                    break
     else:
         for index, row in tbl.iterrows():
                 if index == 0:
-                    marker_tmp = str(row['Sample'])+"_"+row['id']
+                    marker_tmp = str(row['sample'])+"_"+row['id']
                 if index < 5:  # Limit to 5 rows
                     if index <= (len(hap) - 1):
                         s_table.insert('', 'end',
                             values=(
                                 str(index),
-                                str(row['Sample']),
+                                str(row['sample']),
                                 str(row['id']),
-                                hap.iloc[index]['BaseChange'],
-                                str(row['TotalReads']),
-                                str(row['NumReads']),
-                                str(row['ReadRatio']),
-                                str(hap.iloc[index]['AlleleReadsPer']),
-                                str(hap.iloc[index]['VarRatio']),
-                                hap.iloc[index]['Conclusive'],
-                                hap.iloc[index]['Zygosity'],
-                                hap.iloc[index]['Indel'],
-                                str(row['Length'])
+                                hap.iloc[index]['baseChange'],
+                                str(row['readt']),
+                                str(row['reads']),
+                                str(row['prop']),
+                                str(hap.iloc[index]['mprop']),
+                                str(hap.iloc[index]['sprop']),
+                                str(hap.iloc[index]['mut']),
+                                hap.iloc[index]['zygosity'],
+                                hap.iloc[index]['indel'],
+                                str(row['len'])
                             )
                         )
                     else:
                         s_table.insert('', 'end',
                             values=(
                                 str(index),
-                                str(row['Sample']),
+                                str(row['sample']),
                                 str(row['id']),
-                                row['BaseChange'],
-                                str(row['TotalReads']),
-                                str(row['NumReads']),
-                                str(row['ReadRatio']),
+                                row['baseChange'],
+                                str(row['readt']),
+                                str(row['reads']),
+                                str(row['prop']),
                                 "nan",
                                 "nan",
                                 "nan",
+                                "inconclusive",
                                 "nan",
-                                "nan",
-                                str(row['Length'])
+                                str(row['len'])
                             )
                         )
     # Configure columns to auto-adjust based on content
@@ -527,6 +529,7 @@ def create_table(table_frame, hap, tbl):
 def on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass):
     if event.inaxes == ax:
         micro_df = genoclass.get_microhap().get_sam_microhaps_dir().get(sample).get(mar)
+        ml_df = genoclass.get_microhap().get_sam_mar_ml_dict().get(sample).get(mar)
         print(f"sample: {sample} and marker: {mar} are selected")
         sam_mar_id=sample+"_"+mar
         if bars[0].contains(event)[0]:
@@ -536,25 +539,24 @@ def on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass):
             if new_fir_bar_col == color_bars['lgray']:
                 toggle_row_background(s_table, 0, 'bg_white', 'inconclusive')
                 bars[0].set_facecolor(color_bars['lgray'])
-                micro_df.at[0, 'Zygosity'] = 'inconclusive'
-                micro_df.at[0, 'Conclusive'] = 'N'
+                micro_df.at[0, 'zygosity'] = 'inconclusive'
+                ml_df.at[0, 'zygosity'] = 0
                 if len(bars) > 1:
                     toggle_row_background(s_table, 1, 'bg_white', 'inconclusive')
                     bars[1].set_facecolor(color_bars['lgray'])
-                    micro_df.at[1, 'Zygosity'] = 'inconclusive'
-                    micro_df.at[1, 'Conclusive'] = 'N'
+                    micro_df.at[1, 'zygosity'] = 'inconclusive'
             else:
                 toggle_row_background(s_table, 0, 'bg_red', 'homo')
                 bars[0].set_facecolor(color_bars['dgreen'])
-                micro_df.at[0, 'Zygosity'] = 'homo'
-                micro_df.at[0, 'Conclusive'] = 'Y'
+                micro_df.at[0, 'zygosity'] = 'homo'
+                ml_df.at[0, 'zygosity'] = 1
                 if len(bars) > 1:
                     toggle_row_background(s_table, 1, 'bg_white', 'homo')
                     bars[1].set_facecolor(color_bars['lgray'])
-                    micro_df.at[1, 'Zygosity'] = 'homo'
-                    micro_df.at[1, 'Conclusive'] = 'Y'
+                    micro_df.at[1, 'zygosity'] = 'homo'
             fig.canvas.draw_idle()
             genoclass.get_microhap().get_sam_microhaps_dir().get(sample)[mar] = micro_df
+            genoclass.get_microhap().get_sam_mar_ml_dict().get(sample)[mar] = ml_df
         elif bars[1].contains(event)[0]:
             cur_sec_bar_col = bars[1].get_facecolor()
             new_sec_bar_col = color_bars['lgray'] if cur_sec_bar_col == color_bars['orange'] else color_bars['orange']
@@ -564,25 +566,26 @@ def on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass):
                 bars[1].set_facecolor(color_bars['lgray'])
                 toggle_row_background(s_table, 0, 'bg_red', 'homo')
                 bars[0].set_facecolor(color_bars['dgreen'])
-                micro_df.at[0:1, 'Zygosity'] = ['homo', 'homo']
-                micro_df.at[0:1, 'Conclusive'] = ['Y','Y']
+                micro_df.at[0:1, 'zygosity'] = ['homo', 'homo']
+                ml_df.at[0, 'zygosity'] = 1
             else:
                 toggle_row_background(s_table, 1, 'bg_red', 'heter')
                 bars[1].set_facecolor(color_bars['orange'])
                 toggle_row_background(s_table, 0, 'bg_red', 'heter')
                 bars[0].set_facecolor(color_bars['dgreen'])
-                micro_df.at[0:1, 'Zygosity'] = ['heter', 'heter']
-                micro_df.at[0:1, 'Conclusive'] = ['Y','Y']
+                micro_df.at[0:1, 'zygosity'] = ['heter', 'heter']
+                ml_df.at[0, 'zygosity'] = 2
             fig.canvas.draw_idle()
             genoclass.get_microhap().get_sam_microhaps_dir().get(sample)[mar] = micro_df
+            genoclass.get_microhap().get_sam_mar_ml_dict().get(sample)[mar] = ml_df
             
 def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
     df = amplicon_df.head(5)
     colors=list(repeat(color_bars['lgray'], 5))
     if not hap_df.empty:
-        if hap_df['Zygosity'].iloc[0] == "heter":
+        if hap_df['zygosity'].iloc[0] == "heter":
             colors[0:2]=(color_bars['dgreen'], color_bars['orange'])
-        elif hap_df['Zygosity'].iloc[0] == "homo":
+        elif hap_df['zygosity'].iloc[0] == "homo":
             colors[0]=color_bars['dgreen']
     else:
         print(f"fig generation is none")
@@ -594,7 +597,7 @@ def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
     ax = fig.add_subplot(111)
     #bars = ax.bar(df['id'], df['NumReads'], tick_label=[str(x) for x in df['id']], color=colors)
     bars = ax.bar(df.index,
-                    df['NumReads'],
+                    df['reads'],
                     tick_label=[str(x) for x in df.index],
                     color = colors)
     ax.set_title(f"Sample: {sample}, Marker: {mar}", fontdict={'fontsize': 5, 'fontweight': 'bold'})
@@ -606,13 +609,14 @@ def create_figure(sample, mar, amplicon_df, hap_df, genotab, genoclass):
     ax.set_yticklabels([str(int(i)) for i in ax.get_yticks()], fontsize=3)
     
     # Tighten y-axis to reduce gap at top - set limit to max value with small margin
-    max_value = df['NumReads'].max()
+    max_value = df['reads'].max()
     if max_value > 0:
         ax.set_ylim(0, max_value * 1.1)  # 10% margin above max value instead of matplotlib's default
     
     fig.tight_layout(pad=1)  # Reduced padding from 2 to 1
     fig.canvas.mpl_connect("button_press_event", lambda event: on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass))
     return fig
+
 def toggle_row_background(treeview, idx, tag_to_set=None, zygosity=None):
     #print(f"change the background of indx:{idx}, tag_to_set:{tag_to_set}, zygosity:{zygosity}")
     background_tags = {'bg_red', 'bg_white'}
@@ -634,8 +638,8 @@ def toggle_row_background(treeview, idx, tag_to_set=None, zygosity=None):
         zygosity_column_index = treeview['columns'].index('zygosity')
         values = list(treeview.item(row_id, 'values'))
         values[zygosity_column_index] = zygosity
-        con_column_index = treeview['columns'].index('conclusive')
-        values[con_column_index] = "N" if (zygosity == "inconclusive" or zygosity == 'nan') else "Y"
+        # con_column_index = treeview['columns'].index('conclusive')
+        # values[con_column_index] = "N" if (zygosity == "inconclusive" or zygosity == 'nan') else "Y"
         treeview.item(row_id, values=values)
     
 def on_previous_page_button_click(tab, genoclass):

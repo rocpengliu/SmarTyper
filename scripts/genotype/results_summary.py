@@ -177,7 +177,7 @@ def go_button(parent):
         panel.body_frame.top_panel.loci_entry.insert(0, genoclass.get_parameter().get_locifile())
         genoclass.get_metadata().read_locifile(genoclass.get_parameter(), genoclass.get_post_microhap(), True)
         if genoclass.get_parameter().get_outputdir() and os.path.isdir(genoclass.get_parameter().get_outputdir()):
-            fpath = os.path.join(genoclass.get_parameter().get_outputdir(), 'All_sample_final_genotype.txt')
+            fpath = os.path.join(genoclass.get_parameter().get_outputdir(), 'All_sample_final_haplotype.txt')
             if os.path.isfile(fpath):
                 genoclass.get_parameter().set_cur_microhap_input_file(fpath)
                 panel.body_frame.top_panel.in_entry.delete(0, 'end')

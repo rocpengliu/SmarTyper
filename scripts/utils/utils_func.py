@@ -38,21 +38,50 @@ def load_pdf(file_path, canvas):
     except Exception as e:
         ModernMessageBox.showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
 
-def output_all_fig_tab(is_pro_fig,output_folder_path, markers,selected_sample,sam_microhap_dict_sam, sam_ml_dict_sam, anal_type)->bool:
+def output_all_fig_tab(is_pro_fig,output_folder_path, markers,selected_sample,sam_microhap_dict_sam, sam_ml_dict_sam, sam_mar_snp_dict_sam, anal_type)->bool:
     #print(f"starting to output_all_fig_tab for {selected_sample}")
     if is_pro_fig:
         produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, selected_sample, anal_type)
     output_geno_table(output_folder_path,selected_sample, sam_microhap_dict_sam, anal_type)
-    ml_df_dict = prod_ml_tbl(sam_microhap_dict_sam,sam_ml_dict_sam, selected_sample, anal_type)
+    #ml_df_dict = prod_ml_tbl(sam_microhap_dict_sam, sam_ml_dict_sam, selected_sample, anal_type)
+    output_ml_table(output_folder_path,selected_sample, sam_ml_dict_sam, anal_type)
+    output_snp_table(output_folder_path, selected_sample, sam_mar_snp_dict_sam, sam_ml_dict_sam, anal_type)
     #print(f"finished to output_all_fig_tab for {selected_sample}")
-    return ml_df_dict
+    return True
+
+def output_snp_table(output_folder_path, selected_sample, sam_mar_snp_dict_sam, sam_ml_dict_sam, anal_type) -> bool:
+    for mar, snp_df in sam_mar_snp_dict_sam.items():
+        if snp_df is None or snp_df.empty:
+            continue
+        snp_df['conclusive'] = 'N'
+        if mar in sam_ml_dict_sam.keys():
+            if sam_ml_dict_sam[mar] is None or sam_ml_dict_sam[mar].empty:
+                continue
+            zygo = sam_ml_dict_sam[mar].iloc[0]['zygosity']
+            if zygo == 1:
+                snp_df['conclusive'] = 'Y'
+                snp_df['allele2'] = snp_df['allele1']
+            elif zygo == 2:
+                snp_df['conclusive'] = 'Y'
+                snp_df['allele2'] = snp_df['allele3']
+
+    tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_snp.txt")
+    snp_df = pd.concat(sam_mar_snp_dict_sam.values(), ignore_index=True)
+    snp_df.to_csv(tab_file_path, sep="\t", index=False)
+    return True
 
 def output_geno_table(output_folder_path,selected_sample, sam_microhap_dict_sam, anal_type)->bool:
     #print(f"starting to output_geno_table for {selected_sample}")
-    tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_genotype.txt")
+    tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_haplotype.txt")
     geno_df = pd.concat(sam_microhap_dict_sam.values(), ignore_index=True)
     geno_df.to_csv(tab_file_path, sep="\t", index=False)
     #print(f"finished to output_geno_table for {selected_sample}")
+    return True
+
+def output_ml_table(output_folder_path,selected_sample, sam_ml_dict_sam, anal_type)->bool:
+    tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_ml.txt")
+    ml_df = pd.concat(sam_ml_dict_sam.values(), ignore_index=True)
+    ml_df.to_csv(tab_file_path, sep="\t", index=False)
     return True
 
 def prod_ml_tbl(sam_microhap_dict_sam, sam_ml_dict_sam, selected_sample, anal_type):
@@ -66,16 +95,18 @@ def prod_ml_tbl(sam_microhap_dict_sam, sam_ml_dict_sam, selected_sample, anal_ty
     if ml_df_dict is not None:
         for mar, microh_df in sam_microhap_dict_sam.items():
             if mar in ml_df_dict.keys():
-                zygo = microh_df.at[0, 'Zygosity']
+                zygo = microh_df.at[0, 'zygosity']
                 if zygo == 'heter':
-                    ml_df_dict[mar].at[0, 'Zygosity'] = 2
+                    ml_df_dict[mar].at[0, 'zygosity'] = 2
                 elif zygo == 'homo':
-                    ml_df_dict[mar].at[0, 'Zygosity'] = 1
+                    ml_df_dict[mar].at[0, 'zygosity'] = 1
+                else:
+                    ml_df_dict[mar].at[0, 'zygosity'] = 0
     #print(f"finished to prod_ml_tbl for {selected_sample}")
     return ml_df_dict
 
 def output_all_geno_table(genoclass, anal_type):
-    tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"All_sample_final_genotype.txt")
+    tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"All_sample_final_haplotype.txt")
     for idx, (sam, sam_dict) in enumerate(genoclass.get_microhap().get_sam_microhaps_dir().items()):
         geno_df = pd.concat(sam_dict.values(), ignore_index=True)
         if idx == 0:
@@ -83,11 +114,11 @@ def output_all_geno_table(genoclass, anal_type):
         else:
             geno_df.to_csv(tab_file_path, sep="\t", index=False, header=False, mode='a')
     
-    tab_file_path2 = os.path.join(genoclass.get_parameter().get_outputdir(), "All_ml_table.txt")
+    tab_file_path2 = os.path.join(genoclass.get_parameter().get_outputdir(), "All_sample_final_ml.txt")
     ml_df = pd.concat(
-                    [df for od in genoclass.get_microhap().get_sam_mar_ml_dir().values() for df in od.values() if df is not None],
+                    [df for od in genoclass.get_microhap().get_sam_mar_ml_dict().values() for df in od.values() if df is not None],
                     axis = 0, ignore_index = True)
-    ml_df = ml_df.sort_values(by=['Locus']).reset_index(drop=True)
+    ml_df = ml_df.sort_values(by=['locus']).reset_index(drop=True)
     ml_df.to_csv(tab_file_path2, sep = "\t", index = False)
 
 def produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, selected_sample, anal_type)->bool:
@@ -120,19 +151,19 @@ def produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, 
                     subset = pd.DataFrame(
                         {
                             "id": [f"{loc}_0", f"{loc}_1"],
-                            "NumReads": [0, 0],
-                            "Allele": [1, 2],
-                            "Zygosity": ["nan", "nan"],
+                            "read": [0, 0],
+                            "allele": [1, 2],
+                            "zygosity": ["nan", "nan"],
                         }
                     )
-                zygo = subset["Zygosity"].iloc[0]
+                zygo = subset["zygosity"].iloc[0]
                 if zygo == "heter":
                     colors[0:2] = ("darkgreen", "orange")
                 elif zygo == "homo":
                     colors[0] = "darkgreen"
-                ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                ax.bar(x=subset["id"], height=subset["read"], color=colors)
                 ax.set_xticks(range(len(subset)))
-                ax.set_xticklabels(subset["Allele"].astype(str))
+                ax.set_xticklabels(subset["allele"].astype(str))
                 ax.set_title(
                     f"marker: {loc} ({zygo})",
                     fontsize=8,
@@ -159,7 +190,7 @@ def produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, 
 
 def produce_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict, selected_marker, anal_type) -> bool:
     #print(f"Starting to process marker: {selected_marker}")
-    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_marker_genotype.pdf")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_locus_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
     # with matplotlib_lock:
@@ -186,20 +217,20 @@ def produce_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict,
                         subset = pd.DataFrame(
                             {
                                 "id": [f"{selected_marker}_0", f"{selected_marker}_1"],
-                                "NumReads": [0, 0],
-                                "Allele": [1, 2],
-                                "Zygosity": ["nan", "nan"],
+                                "read": [0, 0],
+                                "allele": [1, 2],
+                                "zygosity": ["nan", "nan"],
                             }
                         )
-                    zygo = subset["Zygosity"].iloc[0]
+                    zygo = subset["zygosity"].iloc[0]
                     if zygo == "heter":
                         colors[0:2] = ("darkgreen", "orange")
                     elif zygo == "homo":
                         colors[0] = "darkgreen"
                     try:
-                        ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                        ax.bar(x=subset["id"], height=subset["read"], color=colors)
                         ax.set_xticks(range(len(subset)))
-                        ax.set_xticklabels(subset["Allele"].astype(str))
+                        ax.set_xticklabels(subset["allele"].astype(str))
                         ax.set_title(
                             f"sample: {sam} ({zygo})",
                             fontsize=8,
@@ -211,7 +242,7 @@ def produce_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict,
                         print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                         traceback.print_exc()
                     fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.suptitle(f"Genotypes of locus {selected_marker}")
                     fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 # Blank remaining axes (if any)
                 total_plots = len(page_samples)
@@ -230,9 +261,9 @@ def produce_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict,
     #print(f"finished to output genotype plots for {selected_marker}")
     return True
 
-def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict, selected_marker, anal_type = 'snp') -> bool:
+def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict, selected_marker, micotype = 'microhap', anal_type = 'snp') -> bool:
     #print(f"Starting to process marker: {selected_marker}")
-    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_marker_microhap_genotype.pdf")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_locus_{micotype}_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
     # with matplotlib_lock:
@@ -259,20 +290,20 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
                         subset = pd.DataFrame(
                             {
                                 "id": [f"mh_0", f"mh_1"],
-                                "NumReads": [0, 0],
-                                "Allele": [1, 2],
-                                "Zygosity": ["nan", "nan"],
+                                "read": [0, 0],
+                                "allele": [1, 2],
+                                "zygosity": ["nan", "nan"],
                             }
                         )
-                    zygo = subset["Zygosity"].iloc[0]
+                    zygo = subset["zygosity"].iloc[0]
                     if zygo == "heter":
                         colors[0:2] = ("darkgreen", "orange")
                     elif zygo == "homo":
                         colors[0] = "darkgreen"
                     try:
-                        ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                        ax.bar(x=subset["id"], height=subset["read"], color=colors)
                         ax.set_xticks(range(len(subset)))
-                        ax.set_xticklabels(subset["Allele"].astype(str))
+                        ax.set_xticklabels(subset["allele"].astype(str))
                         ax.set_title(
                             f"sample: {sam} ({zygo})",
                             fontsize=8,
@@ -284,7 +315,7 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
                         print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                         traceback.print_exc()
                     fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.suptitle(f"{micotype} of locus {selected_marker}")
                     fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 # Blank remaining axes (if any)
                 total_plots = len(page_samples)
@@ -332,20 +363,20 @@ def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_di
                         subset = pd.DataFrame(
                             {
                                 "id": [f"mh_0", f"mh_1"],
-                                "NumReads": [0, 0],
-                                "Allele": [1, 2],
-                                "Zygosity": ["nan", "nan"],
+                                "read": [0, 0],
+                                "allele": [1, 2],
+                                "zygosity": ["nan", "nan"],
                             }
                         )
-                    zygo = subset["Zygosity"].iloc[0]
+                    zygo = subset["zygosity"].iloc[0]
                     if zygo == "heter":
                         colors[0:2] = ("darkgreen", "orange")
                     elif zygo == "homo":
                         colors[0] = "darkgreen"
                     try:
-                        ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                        ax.bar(x=subset["id"], height=subset["read"], color=colors)
                         ax.set_xticks(range(len(subset)))
-                        ax.set_xticklabels(subset["Allele"].astype(str))
+                        ax.set_xticklabels(subset["allele"].astype(str))
                         ax.set_title(
                             f"marker: {mar} ({zygo})",
                             fontsize=8,
@@ -370,7 +401,7 @@ def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_di
                 plt.close(fig)
                 tot_pages += 1
     except Exception as e:
-        print(f"Thread {threading.current_thread().name}: Error for marker {selected_marker}: {e}")
+        print(f"Thread {threading.current_thread().name}: Error for sample {selected_sample}: {e}")
         traceback.print_exc()
         return False
     #print(f"finished to output genotype plots for {selected_marker}")
@@ -378,7 +409,7 @@ def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_di
 
 def produce_fig_mar_sam_pdf(output_folder_path, samples, sam_microhap_dict, selected_marker, anal_type) -> bool:
     #print(f"Starting to process marker: {selected_marker}")
-    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_marker_genotype.pdf")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_marker}_locus_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
     # with matplotlib_lock:
@@ -405,20 +436,20 @@ def produce_fig_mar_sam_pdf(output_folder_path, samples, sam_microhap_dict, sele
                         subset = pd.DataFrame(
                             {
                                 "id": [f"{selected_marker}_0", f"{selected_marker}_1"],
-                                "NumReads": [0, 0],
-                                "Allele": [1, 2],
-                                "Zygosity": ["nan", "nan"],
+                                "read": [0, 0],
+                                "allele": [1, 2],
+                                "zygosity": ["nan", "nan"],
                             }
                         )
-                    zygo = subset["Zygosity"].iloc[0]
+                    zygo = subset["zygosity"].iloc[0]
                     if zygo == "heter":
                         colors[0:2] = ("darkgreen", "orange")
                     elif zygo == "homo":
                         colors[0] = "darkgreen"
                     try:
-                        ax.bar(x=subset["id"], height=subset["NumReads"], color=colors)
+                        ax.bar(x=subset["id"], height=subset["read"], color=colors)
                         ax.set_xticks(range(len(subset)))
-                        ax.set_xticklabels(subset["Allele"].astype(str))
+                        ax.set_xticklabels(subset["allele"].astype(str))
                         ax.set_title(
                             f"sample: {sam} ({zygo})",
                             fontsize=8,
@@ -430,7 +461,7 @@ def produce_fig_mar_sam_pdf(output_folder_path, samples, sam_microhap_dict, sele
                         print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                         traceback.print_exc()
                     fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.suptitle(f"Genotypes of locus {selected_marker}")
                     fig.text(
                         0.08, 0.5, "Number of reads", va="center", rotation="vertical"
                     )
@@ -454,7 +485,7 @@ def produce_fig_mar_sam_pdf(output_folder_path, samples, sam_microhap_dict, sele
 def produce_fig_mar_sam_pdf1(genoclass,selected_marker, anal_type)->bool:
     #print(f"Thread {threading.current_thread().name}: Starting to process marker: {selected_marker}")
     samples = genoclass.get_metadata().get_samples_list()
-    pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_marker_genotype.pdf")
+    pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{selected_marker}_locus_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
     with matplotlib_lock:
@@ -498,7 +529,7 @@ def produce_fig_mar_sam_pdf1(genoclass,selected_marker, anal_type)->bool:
                     ax.tick_params(axis='x', labelsize=6)
                     ax.tick_params(axis='y', labelsize=6)
                     fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of marker {selected_marker}")
+                    fig.suptitle(f"Genotypes of locus {selected_marker}")
                     fig.text(0.08, 0.5, 'Number of reads', va='center', rotation='vertical')
                     #print(f"Thread {threading.current_thread().name}: Finished to process marker: {selected_marker} in index: {i} for sample: {sam}")
                 if fig is not None:
@@ -723,37 +754,37 @@ def process_sample_for_pool(args):
     return sam, pd.concat([df.dropna(axis=1, how='all') for df in vdic.values()], axis=0, ignore_index=True)
 
 def populate_mar_sam_microhap(mar, samples, mar_mh_df, cur = True)->pd.DataFrame:
-    tmp_df = pd.DataFrame(columns=['Locus','Label','Seq', 'ID'])
+    tmp_df = pd.DataFrame(columns=['locus','label','seq', 'id'])
     try:
         if cur:
             mar_sam_microhap=set()#microhap seqs
             for sam in samples:
-                mar_sam_microhap_df = mar_mh_df.loc[mar_mh_df['Sample'] == sam]
-                zygo= mar_sam_microhap_df['Zygosity'].iloc[0]
+                mar_sam_microhap_df = mar_mh_df.loc[mar_mh_df['sample'] == sam]
+                zygo= mar_sam_microhap_df['zygosity'].iloc[0]
                 if zygo == "homo":
-                    mar_sam_microhap.add(mar_sam_microhap_df['Sequence'].iloc[0])
+                    mar_sam_microhap.add(mar_sam_microhap_df['seq'].iloc[0])
                 elif zygo == "heter":
-                    mar_sam_microhap.add(mar_sam_microhap_df['Sequence'].iloc[0])
-                    mar_sam_microhap.add(mar_sam_microhap_df['Sequence'].iloc[1])
+                    mar_sam_microhap.add(mar_sam_microhap_df['seq'].iloc[0])
+                    mar_sam_microhap.add(mar_sam_microhap_df['seq'].iloc[1])
             if mar_sam_microhap:
                 mar_sam_microhap = sorted(mar_sam_microhap)
             if len(mar_sam_microhap) !=0:
                 tmp_df=pd.DataFrame({
-                                'Locus':[mar]*len(mar_sam_microhap),
-                                'Label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
-                                'Seq':mar_sam_microhap, 
-                                'ID': [i for i in range(len(mar_sam_microhap))]})
+                                'locus':[mar]*len(mar_sam_microhap),
+                                'label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
+                                'seq':mar_sam_microhap, 
+                                'id': [i for i in range(len(mar_sam_microhap))]})
             else:
                 return tmp_df
         else:
             if mar_mh_df is None :
                 return tmp_df
             tmp_df = mar_mh_df.reset_index(drop=True)
-            tmp_df = tmp_df.drop_duplicates(subset='Seq')
-            tmp_df.columns = ['Locus','Label','Seq', 'ID']
+            tmp_df = tmp_df.drop_duplicates(subset='seq')
+            tmp_df.columns = ['locus','label','seq', 'id']
         if tmp_df is None or len(tmp_df) == 0:
             return tmp_df
-        tmp_df = tmp_df.sort_values(by="ID").reset_index(drop=True)
+        tmp_df = tmp_df.sort_values(by="id").reset_index(drop=True)
     except Exception as e:
         print(f"Error in populate_mar_sam_microhap for marker {mar}: {e}", flush=True)
         traceback.print_exc()
@@ -766,29 +797,29 @@ def populate_each_mar_mh_dict(mar, records) -> tuple:
     cur_mar_mh_df = pd.DataFrame.from_records(records)
     if cur_mar_mh_df.empty:
         return final_sam_cur_mh_dict, final_sam_cur_mh_sim_dict
-    for sam in sorted(cur_mar_mh_df['Sample'].unique()):
-        tmp_df = cur_mar_mh_df[cur_mar_mh_df['Sample'] == sam].reset_index(drop=True)
+    for sam in sorted(cur_mar_mh_df['sample'].unique()):
+        tmp_df = cur_mar_mh_df[cur_mar_mh_df['sample'] == sam].reset_index(drop=True)
         final_sam_cur_mh_dict[sam] = tmp_df
-        tmp_sim_df = tmp_df[['Sample', 'Allele', 'Zygosity']].copy()
-        zygo = tmp_sim_df['Zygosity'].iloc[0]
+        tmp_sim_df = tmp_df[['sample', 'allele', 'zygosity']].copy()
+        zygo = tmp_sim_df['zygosity'].iloc[0]
         if zygo == 'homo':
             if tmp_sim_df.shape[0] == 1:
                 tmp_sim_df = pd.concat([tmp_sim_df, tmp_sim_df], ignore_index=True)
             else:
-                tmp_sim_df.iloc[1, tmp_sim_df.columns.get_loc('Allele')] = \
-                    tmp_sim_df.iloc[0]['Allele']
+                tmp_sim_df.iloc[1, tmp_sim_df.columns.get_loc('allele')] = \
+                    tmp_sim_df.iloc[0]['allele']
         elif zygo == 'heter':
-            tmp_sim_df = tmp_sim_df.sort_values(by='Allele')
+            tmp_sim_df = tmp_sim_df.sort_values(by='allele')
         else:
-            tmp_sim_df.loc[:, 'Allele'] = '-9'
-        tmp_sim_df = tmp_sim_df.drop(columns='Zygosity')
+            tmp_sim_df.loc[:, 'allele'] = '-9'
+        tmp_sim_df = tmp_sim_df.drop(columns='zygosity')
         tmp_sim_df = tmp_sim_df.pivot_table(
-            index='Sample',
-            columns=tmp_sim_df.groupby('Sample').cumcount(),
-            values='Allele',
+            index='sample',
+            columns=tmp_sim_df.groupby('sample').cumcount(),
+            values='allele',
             aggfunc='first'
         ).reset_index()
-        tmp_sim_df.columns = ['Sample', f'{mar}_allele1', f'{mar}_allele2']
+        tmp_sim_df.columns = ['sample', f'{mar}_allele1', f'{mar}_allele2']
         final_sam_cur_mh_sim_dict[sam] = tmp_sim_df
     return final_sam_cur_mh_dict, final_sam_cur_mh_sim_dict
 
@@ -810,8 +841,8 @@ def init_sam_mar_ml(mars, samples):
 
 def training_each_model_clf(df, micro_type):
     if micro_type == "snp":
-        X_tot = df.drop(['Locus', 'Zygosity'], axis = 1)
-        y = df['Zygosity']
+        X_tot = df.drop(['locus', 'zygosity'], axis = 1)
+        y = df['zygosity']
         X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = 0.2, random_state = 42, stratify=y)
         clf = GradientBoostingClassifier(random_state = 42)
         clf.fit(X_train, y_train)

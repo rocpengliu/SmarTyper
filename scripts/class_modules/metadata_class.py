@@ -159,16 +159,23 @@ class MetaDataClass:
                         snpos = sorted(snpos)
                         if len(snpos) != 0:
                             mar_ref.set_orisnppos(sorted(snpos))
-                            if mh:
-                                trimmedsnpos = []
-                                if mar_ref.get_trimr() != 0:
-                                    trimmedsnpos=[pos for pos in snpos if pos <= (len(mar_ref.get_ori_dna_ref()) - mar_ref.get_trimr())]
-                                if mar_ref.get_triml() != 0:
-                                    trimmedsnpos=[(pos - mar_ref.get_triml()) for pos in trimmedsnpos if (pos >= mar_ref.get_triml())]
-                                if len(trimmedsnpos) != 0:
-                                    mar_ref.set_snppos(trimmedsnpos)
-                            else:
-                                mar_ref.set_snppos(sorted(snpos))
+                            trimmedsnpos = []
+                            if mar_ref.get_trimr() != 0:
+                                trimmedsnpos=[pos for pos in snpos if pos <= (len(mar_ref.get_ori_dna_ref()) - mar_ref.get_trimr())]
+                            if mar_ref.get_triml() != 0:
+                                trimmedsnpos=[(pos - mar_ref.get_triml()) for pos in trimmedsnpos if (pos >= mar_ref.get_triml())]
+                            if len(trimmedsnpos) != 0:
+                                mar_ref.set_snppos(trimmedsnpos)
+                            # if mh:
+                            #     trimmedsnpos = []
+                            #     if mar_ref.get_trimr() != 0:
+                            #         trimmedsnpos=[pos for pos in snpos if pos <= (len(mar_ref.get_ori_dna_ref()) - mar_ref.get_trimr())]
+                            #     if mar_ref.get_triml() != 0:
+                            #         trimmedsnpos=[(pos - mar_ref.get_triml()) for pos in trimmedsnpos if (pos >= mar_ref.get_triml())]
+                            #     if len(trimmedsnpos) != 0:
+                            #         mar_ref.set_snppos(trimmedsnpos)
+                            # else:
+                            #     mar_ref.set_snppos(sorted(snpos))
                     #pdb.set_trace()
                     if mh:
                         if str(row['codingpos']).replace(' ', '') != '0':
@@ -208,8 +215,8 @@ class MetaDataClass:
             raise ValueError(f"microhap table is empty!")
         else:
             self.set_cur_microhap_df(tmp_df)
-            samples_list = sorted(tmp_df['Sample'].unique())
-            mar_list = sorted(tmp_df['Locus'].unique())
+            samples_list = sorted(tmp_df['sample'].unique())
+            mar_list = sorted(tmp_df['locus'].unique())
             self.set_cur_mh_samples_list(sorted(set((self.get_cur_mh_samples_list() or []) + samples_list)))
             self.set_cur_mh_markers_list(sorted(set((self.get_cur_mh_markers_list() or []) + mar_list)))
 
@@ -237,7 +244,7 @@ class MetaDataClass:
             raise ValueError(f"pre-microhap table is empty")
         else:
             self.set_pre_microhap_df(tmp_df)
-            mar_list = sorted(tmp_df['Locus'].unique())
+            mar_list = sorted(tmp_df['locus'].unique())
             self.set_pre_mh_markers_list(mar_list)
             if self.get_pre_mh_markers_list() < self.get_ref_markers_list():
                 modern_messagebox.showerror(None, "Invalid Input", f"pre microhap file: {fpath} contains new markers which are not in the ref loci table")

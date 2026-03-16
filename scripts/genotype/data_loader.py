@@ -64,7 +64,7 @@ def create_body(parent, frame):
     
     row = 0
     analtype_var = tk.StringVar(value="snp")
-    ctk.CTkLabel(top_panel, text="Anal type: ", font = bfont, text_color="white").grid(row=row,column=0,padx=body_frame.padx,pady=(1,1),sticky="e")
+    ctk.CTkLabel(top_panel, text="Analysis type: ", font = bfont, text_color="white").grid(row=row,column=0,padx=body_frame.padx,pady=(1,1),sticky="e")
     ctk.CTkRadioButton(top_panel, text="Snp", font=bmfont, value="snp", variable=analtype_var).grid(row=row, column=2, pady=(1,1), padx=(20,80), sticky="ew")  # Stick to right side of cell
     ctk.CTkRadioButton(top_panel, text="Sat", font=bmfont, value="sat", variable=analtype_var).grid(row=row, column=2, pady=(1,1), padx=(80,0), sticky="ew")  
     analtype_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_analtype(analtype_var.get()))

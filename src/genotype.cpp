@@ -231,13 +231,11 @@ std::string LocSnp2::getHaploStr(bool snp2){
     if(snp2) {
         if (!status.first.second) {
             if (genoStr3 == "homo"){
-                for (const auto &it : ssnpsMap)
-                {
-                    snpStr += it.second.snp1;
+                for (const auto &it : ssnpsMap) {
+                    snpStr += it.second.snp2;
                 }
             } else {
-                for (const auto &it : ssnpsMap)
-                {
+                for (const auto &it : ssnpsMap) {
                     snpStr += it.second.snp2;
                 }
             }
@@ -246,9 +244,22 @@ std::string LocSnp2::getHaploStr(bool snp2){
     } else {
         if(!status.first.first){
             for(const auto & it : ssnpsMap){
-                snpStr += it.second.snp1;
+                if(genoStr3 == "homo"){
+                    snpStr += it.second.snp2;
+                } else {
+                    snpStr += it.second.snp1;
+                }
             }
         }
+    }
+    return snpStr;
+}
+
+std::string LocSnp2::getHaploStr(int index){
+    std::string snpStr = "";
+    if(seqVarVec.empty() || seqVarVec.at(index).indel || index >= seqVarVec.size()) return snpStr;
+    for(const auto & it : seqVarVec.at(index).snpSet){
+        snpStr += seqVarVec.at(index).seq[it];
     }
     return snpStr;
 }
@@ -265,13 +276,16 @@ int LocSnp2::getNumSnps(){
     return num;
 }
 
-std::string LocSnp2::getHaploStr(int index){
-    std::string snpStr = "";
-    if(seqVarVec.empty() || seqVarVec.at(index).indel || index >= seqVarVec.size()) return snpStr;
-    for(const auto & it : seqVarVec.at(index).snpSet){
-        snpStr += seqVarVec.at(index).seq[it];
+std::string LocSnp2::getNumDouMut(int idx){
+    std::string numStr = "0|0";
+    if(seqVarVec.empty()) return numStr;
+    if(seqVarVec.size() == 1){
+        numStr = std::to_string(seqVarVec.at(0).snpSet.size()) + "|" + std::to_string(getNumSnps());
+    } else {
+        numStr = std::to_string(seqVarVec.at(idx).snpSet.size()) + "|" + std::to_string(getNumSnps());
     }
-    return snpStr;
+    
+    return numStr;
 }
 
 std::string LocSnp2::getSnpStr(bool snp2){
@@ -321,6 +335,7 @@ std::string LocSnp2::getSnpStr(int index) {
 int LocSnp2::getHaploReads(bool haplo2){
     int num = 0;
     if(totHaploReads == 0) return num;
+    
     if (genoStr3 == "homo") {
         if(haplo2){
             if (seqVarVec.size() > 1){
@@ -379,7 +394,7 @@ double LocSnp2::getHaploReadsPer(bool haplo2){
 
 double LocSnp2::getReadsVarPer(int index){
     if(totReads == 0 || seqVarVec.at(index).numReads == 0) return 0.00;
-    return getPer(seqVarVec.at(index).numReads, totReads);
+    return getPer(seqVarVec.at(index).numReads, totReads, false);
 }
 
 std::string LocSnp2::getRatioStr() { 

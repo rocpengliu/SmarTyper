@@ -1,10 +1,12 @@
 import argparse
-from seqtyper_core import run_seqtyper_wrapper
+import threading
+import time
+from seqtyper_core import run_seqtyper_wrapper, get_seqtyper_output
 
 def main():
-    print(f"let's go")
+    print(f"seq2type python version")
     # disable_help=True because -h is used for --html in seqtyper, not help
-    parser = argparse.ArgumentParser(description='seqtyper for genotyping', add_help=False)
+    parser = argparse.ArgumentParser(description='seq2type for genotyping', add_help=False)
 
     # Basic I/O
     parser.add_argument('--var', type=str, default='', help='genetic variance, must be either microsatellite/ssr or snp')
@@ -43,11 +45,11 @@ def main():
     parser.add_argument('--maxVarRatio', type=float, default=1.5, help='ratio of two heter alleles, default: 1.5')
     
     # SNP parameters
-    parser.add_argument('--hmProH', type=float, default=0.84, help='homo threshold when one true SNP, default: 0.84')
-    parser.add_argument('--hmProL', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.78')
-    parser.add_argument('--htProH', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.83')
-    parser.add_argument('--htProL', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.79')
-    parser.add_argument('--htPro3', type=float, default=0.8, help='heter threshold for read2/read3 proportion, default: 0.8')
+    parser.add_argument('--ssProH', type=float, default=0.84, help='homo threshold when one true SNP, default: 0.84')
+    parser.add_argument('--ssProL', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.78')
+    parser.add_argument('--msProH', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.83')
+    parser.add_argument('--msProL', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.79')
+    parser.add_argument('--sPro3', type=float, default=0.8, help='heter threshold for read2/read3 proportion, default: 0.8')
     parser.add_argument('--minSeqsProSnp', type=float, default=0.10, help='minimum proportion reads against largest peak for SNP genotype, default: 0.1 (10%%)')
     parser.add_argument('--minReads4Filter', type=int, default=50, help='minimum reads for filtering read variant, default: 50')
     parser.add_argument('--maxRows4Align', type=int, default=6, help='maximum rows for alignment table, must be > 2 rows. default: 6')
@@ -67,7 +69,7 @@ def main():
     # Reporting
     parser.add_argument('-j', '--json', type=str, default='seq2sat.json', help='the json format report file name')
     parser.add_argument('--html', type=str, default='seq2sat.html', help='the html format report file name')
-    parser.add_argument('-R', '--report_title', type=str, default='seq2sat report', help='report title')
+    parser.add_argument('-R', '--report_title', type=str, default='seq2type report', help='report title')
     parser.add_argument('--help', action='store_true', help='show this help message and exit')
 
     # Threading
@@ -191,11 +193,11 @@ def main():
         'hlRatio1': '--hlRatio1',
         'hlRatio2': '--hlRatio2',
         'maxVarRatio': '--maxVarRatio',
-        'hmProH': '--hmProH',
-        'hmProL': '--hmProL',
-        'htProH': '--htProH',
-        'htProL': '--htProL',
-        'htPro3': '--htPro3',
+        'ssProH': '--ssProH',
+        'ssProL': '--ssProL',
+        'msProH': '--msProH',
+        'msProL': '--msProL',
+        'sPro3': '--sPro3',
         'minSeqsProSnp': '--minSeqsProSnp',
         'minReads4Filter': '--minReads4Filter',
         'maxRows4Align': '--maxRows4Align',
@@ -299,11 +301,45 @@ def main():
     args_list.insert(0, 'seqtyper')
 
     # Print the argument list for debugging
-    print(f"Arguments passed to C++ function: {args_list}")
+    print(f"Arguments passed to C++ function: {args_list}\n")
 
     try:
-        # Call the Cython-wrapped function
-        run_seqtyper_wrapper(args_list)
+        # Event to signal when execution is complete
+        execution_complete = threading.Event()
+        
+        # Thread to run the C++ function
+        def run_cpp():
+            run_seqtyper_wrapper(args_list)
+            execution_complete.set()
+        
+        # Start the C++ execution in a separate thread
+        cpp_thread = threading.Thread(target=run_cpp, daemon=False)
+        cpp_thread.start()
+        
+        # Thread to capture and display output
+        def capture_output_thread():
+            while not execution_complete.is_set():
+                output = get_seqtyper_output()
+                if output:
+                    print(output, end='', flush=True)
+                else:
+                    time.sleep(0.05)
+        
+        output_thread = threading.Thread(target=capture_output_thread, daemon=True)
+        output_thread.start()
+        
+        # Wait for the C++ execution to complete
+        cpp_thread.join()
+        
+        # Ensure all remaining output is captured and printed
+        time.sleep(0.1)  # Brief delay to allow final output
+        while True:
+            output = get_seqtyper_output()
+            if output:
+                print(output, end='', flush=True)
+            else:
+                break
+                
     except Exception as e:
         print(f"Error running seq2type: {e}")
 

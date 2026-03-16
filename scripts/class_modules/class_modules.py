@@ -256,11 +256,12 @@ class GenotypeClass:
         is_pro_fig = self.get_parameter().is_pro_figure()
         output_folder_path = self.get_parameter().get_outputdir()
         sam_microhap_dict = self.get_microhap().get_sam_microhaps_dir()
+        sam_ml_dict = self.get_microhap().get_sam_mar_ml_dict()
+        sam_mar_snp_dict = self.get_microhap().get_sam_mar_snp_dict()
         n_threads = self.get_parameter().get_thread()
         #n_threads = self.get_parameter().get_thread()
         num_sam = 0
         with ProcessPoolExecutor(max_workers=n_threads) as executor:
-            sam_ml_dict = self.get_microhap().get_sam_mar_ml_dir()
             futures = {executor.submit(output_all_fig_tab, 
                                        is_pro_fig,
                                        output_folder_path,
@@ -268,21 +269,22 @@ class GenotypeClass:
                                        sam,
                                        sam_microhap_dict.get(sam, {}), 
                                        sam_ml_dict.get(sam, {}), 
+                                       sam_mar_snp_dict.get(sam, {}),
                                        'snp'): sam for sam in samples}
             for future in as_completed(futures):
                 sam = futures[future]
                 try:
                     res = future.result()
                     if res:
-                        sam_ml_dict[sam] = res
+                        #sam_ml_dict[sam] = res
                         num_sam += 1
                         if num_sam % 10 == 0:
                             print(f'Finished processing {num_sam} out of {len(samples)} samples...')
                             if log_func is not None:
                                 log_func(f'Finished processing {num_sam} out of {len(samples)} samples...')
                     else:
-                        if sam in sam_ml_dict:
-                            del sam_ml_dict[sam]
+                        # if sam in sam_ml_dict:
+                        #     del sam_ml_dict[sam]
                         print(f'Failed to process sample: {sam}')
                         if log_func is not None:
                             log_func(f"Failed to process sample: {sam}!")

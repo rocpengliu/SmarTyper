@@ -58,7 +58,7 @@ def create_body(parent, frame):
 
     row = 0
     analtype_var = tk.StringVar(value="snp")
-    ctk.CTkLabel(body_frame.top_panel, text="Anal type: ", font = bfont, text_color="white").grid(row=row,column=0,padx=body_frame.padx,pady=(1,1),sticky="e")
+    ctk.CTkLabel(body_frame.top_panel, text="Analysis type: ", font = bfont, text_color="white").grid(row=row,column=0,padx=body_frame.padx,pady=(1,1),sticky="e")
     ctk.CTkRadioButton(body_frame.top_panel, text="Snp", font=bmfont, value="snp", variable=analtype_var,
                        fg_color=COLORS['success'], hover_color=COLORS['accent']).grid(row=row, column=2, pady=(1,1), padx=(20,80), sticky="ew")  # Stick to right side of cell
     ctk.CTkRadioButton(body_frame.top_panel, text="Sat", font=bmfont, value="sat", variable=analtype_var,
@@ -136,9 +136,10 @@ def run_pool(genotype_class, body_frame):
             log_msg("Model training failed. Please check the input files and try again.")
             body_frame.res_queue.put(("error", go))
     except Exception as e:
-        body_frame.after(0, lambda: showerror(body_frame, "Error", f"An error occurred during model training: {str(e)}"))
-        log_msg(f"An error occurred during model training: {str(e)}")
-        body_frame.res_queue.put((str(e), False))
+        error_msg = str(e)
+        body_frame.after(0, lambda: showerror(body_frame, "Error", f"An error occurred during model training: {error_msg}"))
+        log_msg(f"An error occurred during model training: {error_msg}")
+        body_frame.res_queue.put((error_msg, False))
         return
     
 def check_res_run(frame, body_frame, genotype_class, btn):

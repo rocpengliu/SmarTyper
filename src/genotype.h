@@ -232,6 +232,7 @@ public:
     std::string getHaploStr(bool snp2 = false);
     std::string getHaploStr(int index); // must > 1 for homo or 2 for heter
     int getNumSnps();//get the number of snps of the top2 reads
+    std::string getNumDouMut(int idx); //double number of mutations num snp against ref | num snp to top 2 eg. 1|2, idx must be 0 or 1
     std::string getSnpStr(bool snp2 = false);
     std::string getSnpStr(int index);
     int getHaploReads(bool haplop2 = false);

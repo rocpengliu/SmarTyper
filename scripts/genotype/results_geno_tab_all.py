@@ -77,19 +77,19 @@ def populate_geno_tab(parent, tree):
     for idx,row in sam_df.iterrows():
         tree.insert('','end',
                     values=(str(idx),
-                    str(row['Sample']),
-                    str(row['Locus']),
-                    str(row['Allele']),
-                    row['BaseChange'],
-                    str(row['NumReads']),
-                    str(row['AlleleReadsPer']),
-                    str(row['VarRatio']),
-                    str(row['TotalReads']),
-                    str(row['ReadsPer']),
-                    row['Conclusive'],
-                    row['Zygosity'],
-                    row['Indel'],
-                    row['Sequence']))
+                    str(row['sample']),
+                    str(row['locus']),
+                    str(row['allele']),
+                    str(row['readt']),
+                    str(row['read']),
+                    str(row['rprop']),
+                    str(row['mprop']),
+                    str(row['sprop']),
+                    str(row['mut']),
+                    str(row['indel']),
+                    str(row['zygosity']),
+                    str(row['baseChange']),
+                    str(row['seq'])))
     
     # Then calculate and set column widths based on all inserted data
     for col in tree['columns']:

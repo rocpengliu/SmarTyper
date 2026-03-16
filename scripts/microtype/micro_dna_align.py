@@ -13,6 +13,7 @@ import copy
 import os
 import pandas as pd
 from ..utils import modern_messagebox
+from .micro_tree import create_phy_fig
 
 matplotlib.use("TkAgg")
 
@@ -147,8 +148,30 @@ def create_fig(ref_mar_refmt, working_splicer_ref_compre, cur_compre_mt, fig_fra
     base_freq_df = working_splicer_ref_compre.get_dna_base_freq_df()
     if base_freq_df.shape[0] == 0:
         return
-    index_list = sorted(set(working_splicer_ref_compre.get_target_dna_snp_pos_list() + working_splicer_ref_compre.get_tot_dna_snp_pos_list()))
     base_freq_df.reset_index(drop=True, inplace=True)
+    index_list = sorted(set(working_splicer_ref_compre.get_target_dna_snp_pos_list() + working_splicer_ref_compre.get_tot_dna_snp_pos_list()))
+    index_list = [idx for idx in index_list if idx < base_freq_df.shape[0]]
+    # original_index_count = len(index_list)
+    # # Prevent out-of-bounds iloc and tolerate occasional 1-based SNP positions.
+    # n_rows = base_freq_df.shape[0]
+    # direct_valid = sorted({idx for idx in index_list if isinstance(idx, int) and 0 <= idx < n_rows})
+    # minus_one_valid = sorted({idx - 1 for idx in index_list if isinstance(idx, int) and 0 <= (idx - 1) < n_rows})
+    # if len(minus_one_valid) > len(direct_valid):
+    #     index_list = minus_one_valid
+    #     print_time(
+    #         f"Adjusted SNP index list from 1-based to 0-based for {cur_compre_mt.get_label(False)}; "
+    #         f"using {len(index_list)} of {original_index_count} positions"
+    #     )
+    # else:
+    #     index_list = direct_valid
+    #     if len(index_list) < original_index_count:
+    #         print_time(
+    #             f"Dropped {original_index_count - len(index_list)} out-of-range SNP positions "
+    #             f"for {cur_compre_mt.get_label(False)}"
+    #         )
+
+    # if len(index_list) == 0:
+    #     return
 
     #base_freq_df = base_freq_df[~base_freq_df.isin([1.0]).any(axis=1)]
     base_freq_df=base_freq_df.iloc[index_list]
@@ -229,6 +252,7 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
     target_snppos = working_splicer_ref_compre.get_target_dna_snp_pos_list()
     #print(f"target_snppos1: {target_snppos}")
     target_snppos = [pos + ref_mar_refmt.get_triml() for pos in target_snppos]
+    target_snppos = [pos for pos in target_snppos if pos < (len(refseq) - ref_mar_refmt.get_trimr())]
     #print(f"target_snppos2: {target_snppos}")
     ref_label = working_splicer_ref_compre.get_label()
     max_label_len = max(len(ref_label), working_splicer_ref_compre.cal_longest_compre_var_label())
@@ -285,6 +309,7 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
 
     padding = '*' * (max_label_len - len(ref_label))
     seq_widget.insert(f'{line_num}.0', f'{padding}{ref_label}: ' + refseq + '\n')
+    ref_line_seq = f'{padding}{ref_label}: ' + refseq
 
     snp_pos = working_splicer_ref_compre.get_tot_dna_snp_pos_list()
     snp_pos = [pos + ref_mar_refmt.get_triml() for pos in snp_pos]
@@ -317,24 +342,32 @@ def create_align_tbl(working_splicer_ref_compre, ref_mar_refmt, ref_compre_mt, c
                           f'{ref_mar_refmt.get_triml() * "*"}' +
                           f'{compre_var.get_seq()}' +
                           f'{ref_mar_refmt.get_trimr() * "*"}' + '\n')
-        if len(compre_var.get_indel_pos_list()) == 0:
-            pos_list = copy.copy(sorted(compre_var.get_snp_pos_list()))
-            pos_list = [pos + ref_mar_refmt.get_triml() for pos in pos_list ]
-            if len(pos_list) != 0:
-                pos_list = [n + max_label_len + 2 for n in pos_list]
-                union2 = sorted(uniq_snp_pos + [n for n in pos_list if n not in uniq_snp_pos])
-                if len(union2) > 0:
-                    for pos in union2:
-                        if pos in uniq_snp_pos:
-                            seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-                        else:
-                            seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        cur_line_seq = padding + f'{compre_var.get_id()}: ' + f'{ref_mar_refmt.get_triml() * "*"}' +f'{compre_var.get_seq()}' + f'{ref_mar_refmt.get_trimr() * "*"}'
+        for pos in union_snp_pos:
+            if ref_line_seq[pos] == cur_line_seq[pos]:
+                seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
             else:
-                pos_list = [n + max_label_len + 2 for n in target_snppos]
-                for pos in pos_list:
-                    seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-        else:
-            seq_widget.tag_add('gray_highlight', f'{idx+line_num}.0', f'{idx+line_num}.{max_label_len}')
+                seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+            
+        # if len(compre_var.get_indel_pos_list()) == 0:
+        #     pos_list = copy.copy(sorted(compre_var.get_snp_pos_list()))
+        #     pos_list = [pos + ref_mar_refmt.get_triml() for pos in pos_list ]
+        #     if len(pos_list) != 0:
+        #         pos_list = [n + max_label_len + 2 for n in pos_list]
+        #         union2 = sorted(uniq_snp_pos + [n for n in pos_list if n not in uniq_snp_pos])
+        #         if len(union2) > 0:
+        #             for pos in union2:
+        #                 if pos in uniq_snp_pos or ref_line_seq[pos] == target_line_seq[pos]:
+        #                     seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        #                 else:
+        #                     seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        #     else:
+        #         pos_list = [n + max_label_len + 2 for n in target_snppos]
+        #         for pos in pos_list:
+        #             if  ref_line_seq[pos] == target_line_seq[pos]:
+        #                 seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        # else:
+        #     seq_widget.tag_add('gray_highlight', f'{idx+line_num}.0', f'{idx+line_num}.{max_label_len}')
     seq_widget.configure(state='disabled')
 
 def on_mouse_wheel(event, canvas):

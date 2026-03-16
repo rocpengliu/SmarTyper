@@ -295,6 +295,7 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
     
     padding = '*' * (max_label_len - len(ref_label))
     seq_widget.insert(f'{line_num}.0', f'{padding}{ref_label}: ' + refseq + '\n')
+    ref_line_seq = padding + f'{ref_label}: ' + refseq
 
     snp_pos = working_splicer_cur_compre.get_tot_aa_snp_pos_list()
     uniq_snp_pos = [elem for elem in target_snppos if elem not in snp_pos]#for green
@@ -323,23 +324,29 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
         label_len = len(compre_var.get_id())
         padding = '*' * (max_label_len - label_len)
         seq_widget.insert(f'{idx+line_num}.0', padding + f'{compre_var.get_id()}: ' + f'{compre_var.get_seq()}' + '\n')
-        if len(compre_var.get_indel_pos_list()) == 0:
-            pos_list = copy.copy(sorted(compre_var.get_snp_pos_list()))
-            if len(pos_list) != 0:
-                pos_list = [n + max_label_len + 2 for n in pos_list]
-                union2 = sorted(uniq_snp_pos + [n for n in pos_list if n not in uniq_snp_pos])
-                if len(union2) > 0:
-                    for pos in union2:
-                        if pos in uniq_snp_pos:
-                            seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-                        else:
-                            seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        cur_line_seq = padding + f'{compre_var.get_id()}: ' + f'{compre_var.get_seq()}'
+        for pos in union_snp_pos:
+            if ref_line_seq[pos] == cur_line_seq[pos]:
+                seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
             else:
-                pos_list = [n + max_label_len + 2 for n in target_snppos]
-                for pos in pos_list:
-                    seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-        else:
-            seq_widget.tag_add('gray_highlight', f'{idx+line_num}.0', f'{idx+line_num}.{max_label_len}')
+                seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        # if len(compre_var.get_indel_pos_list()) == 0:
+        #     pos_list = copy.copy(sorted(compre_var.get_snp_pos_list()))
+        #     if len(pos_list) != 0:
+        #         pos_list = [n + max_label_len + 2 for n in pos_list]
+        #         union2 = sorted(uniq_snp_pos + [n for n in pos_list if n not in uniq_snp_pos])
+        #         if len(union2) > 0:
+        #             for pos in union2:
+        #                 if pos in uniq_snp_pos:
+        #                     seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        #                 else:
+        #                     seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        #     else:
+        #         pos_list = [n + max_label_len + 2 for n in target_snppos]
+        #         for pos in pos_list:
+        #             seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
+        # else:
+        #     seq_widget.tag_add('gray_highlight', f'{idx+line_num}.0', f'{idx+line_num}.{max_label_len}')
     seq_widget.configure(state='disabled')
 
 def on_mouse_wheel(event, canvas):

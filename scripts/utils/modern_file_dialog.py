@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 import os
 from pathlib import Path
+from . import modern_messagebox
 
 # Modern color palette
 COLORS = {
@@ -200,6 +201,19 @@ class ModernFileDialog(ctk.CTkToplevel):
                                    hover_color=COLORS['card_hover'],
                                    command=self.cancel)
         cancel_btn.pack(side=tk.RIGHT, padx=5)
+
+        if self.mode == "directory":
+            new_folder_btn = ctk.CTkButton(
+                button_frame,
+                text="New Folder",
+                width=120,
+                height=40,
+                corner_radius=8,
+                fg_color=COLORS['accent'],
+                hover_color=COLORS['secondary'],
+                command=self.create_new_folder,
+            )
+            new_folder_btn.pack(side=tk.RIGHT, padx=5)
         
         select_text = "Select" if self.mode == "directory" else "Open"
         self.select_btn = ctk.CTkButton(button_frame, text=select_text, width=120, height=40,
@@ -318,6 +332,125 @@ class ModernFileDialog(ctk.CTkToplevel):
                 self.update_file_list()
         except Exception:
             self.path_var.set(str(self.current_path))
+
+    def create_new_folder(self):
+        folder_name = self.prompt_new_folder_name()
+
+        if folder_name is None:
+            return
+
+        folder_name = folder_name.strip()
+        if not folder_name:
+            modern_messagebox.showwarning(None, "Invalid Name", "Folder name cannot be empty.")
+            return
+
+        if any(ch in folder_name for ch in ('/', '\\')):
+            modern_messagebox.showwarning(None, "Invalid Name", "Use a folder name, not a path.")
+            return
+
+        new_dir = self.current_path / folder_name
+        try:
+            new_dir.mkdir(parents=False, exist_ok=False)
+            self.update_file_list()
+            self.selected_var.set(folder_name)
+        except FileExistsError:
+            modern_messagebox.showwarning(None, "Already Exists", f"Folder '{folder_name}' already exists.")
+        except Exception as e:
+            modern_messagebox.showerror(None, "Create Folder Failed", f"Unable to create folder: {e}")
+
+    def prompt_new_folder_name(self):
+        dialog = ctk.CTkToplevel(self)
+        dialog.title("Create New Folder")
+        dialog.geometry("420x150")
+        dialog.configure(fg_color=COLORS['background'])
+        dialog.transient(self)
+        dialog.resizable(False, False)
+
+        self._position_child_dialog(dialog)
+
+        result = {"value": None}
+        name_var = tk.StringVar()
+
+        frame = ctk.CTkFrame(dialog, fg_color=COLORS['card'], corner_radius=12)
+        frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=12)
+
+        ctk.CTkLabel(
+            frame,
+            text="Enter new folder name:",
+            text_color=COLORS['text_primary'],
+            font=("Segoe UI", 12, "bold"),
+        ).pack(anchor="w", padx=16, pady=(16, 8))
+
+        entry = ctk.CTkEntry(
+            frame,
+            textvariable=name_var,
+            height=30,
+            corner_radius=8,
+            border_width=2,
+            border_color=COLORS['border'],
+        )
+        entry.pack(fill=tk.X, padx=16, pady=(0, 12))
+
+        button_row = ctk.CTkFrame(frame, fg_color="transparent")
+        button_row.pack(fill=tk.X, padx=16, pady=(0, 12))
+
+        def on_cancel():
+            dialog.destroy()
+
+        def on_create(event=None):
+            result["value"] = name_var.get()
+            dialog.destroy()
+
+        ctk.CTkButton(
+            button_row,
+            text="Cancel",
+            width=90,
+            height=34,
+            corner_radius=8,
+            fg_color=COLORS['border'],
+            hover_color=COLORS['card_hover'],
+            command=on_cancel,
+        ).pack(side=tk.RIGHT, padx=(8, 0))
+
+        ctk.CTkButton(
+            button_row,
+            text="Create",
+            width=90,
+            height=34,
+            corner_radius=8,
+            fg_color=COLORS['primary'],
+            hover_color=COLORS['secondary'],
+            command=on_create,
+        ).pack(side=tk.RIGHT)
+
+        dialog.bind("<Return>", on_create)
+        dialog.bind("<Escape>", lambda event: on_cancel())
+        dialog.protocol("WM_DELETE_WINDOW", on_cancel)
+
+        dialog.after(50, lambda: (dialog.grab_set(), entry.focus_set()))
+        self.wait_window(dialog)
+        return result["value"]
+
+    def _position_child_dialog(self, dialog):
+        self.update_idletasks()
+        dialog.update_idletasks()
+
+        parent_x = self.winfo_rootx()
+        parent_y = self.winfo_rooty()
+        parent_width = self.winfo_width()
+        parent_height = self.winfo_height()
+        dialog_width = dialog.winfo_width()
+        dialog_height = dialog.winfo_height()
+
+        x = parent_x + (parent_width - dialog_width) // 2
+        y = parent_y + (parent_height - dialog_height) // 2
+
+        screen_width = dialog.winfo_screenwidth()
+        screen_height = dialog.winfo_screenheight()
+        x = max(0, min(x, screen_width - dialog_width))
+        y = max(0, min(y, screen_height - dialog_height))
+
+        dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
     
     def select(self):
         selected = self.selected_var.get()

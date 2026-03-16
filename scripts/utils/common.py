@@ -20,15 +20,24 @@ seq_font = ("Courier", 9)
 pnbuttonfont = ("Segoe UI", 13, "bold")
 confirm_button_font = ("Segoe UI", 16, "bold")
 
-micro_microhap_df_columns=['Sample','Locus','Allele','BaseChange','NumReads',
-                     'AlleleReadsPer','VarRatio','TotalReads',
-                     'ReadsPer','Conclusive','Zygosity','Indel','Sequence', 'id']
-micro_micohap_df_empty_row=['nan','nan',0,'nan',0,0,'nan',0,0,'N','inconclusive','nan','nan', 'nan']
+micro_ml_df_columns = ['sample','locus','readt','read1','read2','read3','rprop1','rprop2','rprop3','mprop1','mprop2	prop','mut','indel','zygosity']
 
-micro_amplicon_df_columns=['Sample','Locus','NumReads','TotalReads','ReadRatio','BaseChange','Length','Sequence', 'id']
+#sample	locus	allele	readt	read	rprop	mprop	sprop	mut	indel	conclusive	zygosity	baseChange	seq
+# micro_microhap_df_columns=['Sample','Locus','Allele','BaseChange','NumReads',
+#                      'AlleleReadsPer','VarRatio','TotalReads',
+#                      'ReadsPer','Conclusive','Zygosity','Indel','Sequence', 'id']
+micro_microhap_df_columns=['sample','locus','allele', 'readt', 'read', 'rprop', 'mprop', 'sprop', 'mut', 
+                           'indel', 'zygosity', 'baseChange', 'seq', 'id']
+micro_microhap_df_empty_row=['nan','nan',0,0,0,0,0,0,'0|0','N','inconclusive','nan', 'nan', 'nan']
+# micro_microhap_df_empty_row=['nan','nan',0,'nan',0,0,'nan',0,0,'N','inconclusive','nan','nan', 'nan']
+
+#sample	locus	readt	reads	prop	baseChange	len	seq
+
+micro_amplicon_df_columns=['sample','locus','readt','reads','prop','baseChange','len','seq', 'id']
 micro_amplicon_df_empty_row=['nan','nan',0,0,0,'nan',0,'nan','nan']
 
-ml_mh_df_columns = ['Locus', 'TotRead', 'Read1', 'Read2', 'Read3', 'NumMut1', 'NumMut2', 'Prop1', 'Prop2', 'Prop3', 'MhProp1', 'MhProp2', 'Indel', 'Zygosity']
+#sample	locus	readt	read1	read2	read3	rprop1	rprop2	rprop3	mprop1	mprop2	sprop	mut	indel	zygosity	conclusive	basechange	seq1	seq2	seq3
+ml_mh_df_columns = ['sample', 'locus', 'readt', 'read1', 'read2', 'read3', 'rprop1', 'rprop2', 'rprop3', 'mprop1', 'mprop2', 'sprop', 'mut', 'indel', 'zygosity']
 
 color_bars={"dgreen":(0.0, 0.39, 0.0, 1.0),
             "orange":(1.0, 0.65, 0.0, 1.0),

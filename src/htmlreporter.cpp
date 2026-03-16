@@ -73,7 +73,8 @@ void HtmlReporter::outputRow(ofstream& ofs, LocSnp2& locSnp, bool align = true, 
                     bc = "gray";
                 } else {
                     hap = locSnp.getHaploStr();
-                    snpsStr = locSnp.getSnpStr();
+                    //snpsStr = locSnp.getSnpStr();
+                    snpsStr = locSnp.getSnpStr(ii);
                     bc = "olive";
                     if (zygosity == "heter" || zygosity == "homo"){
                         go = true;
@@ -97,7 +98,8 @@ void HtmlReporter::outputRow(ofstream& ofs, LocSnp2& locSnp, bool align = true, 
                         bc = "gray";
                     } else {
                         hap = locSnp.getHaploStr(true);
-                        snpsStr = locSnp.getSnpStr(true);
+                        //snpsStr = locSnp.getSnpStr(true);
+                        snpsStr = locSnp.getSnpStr(ii);
                         bc = "olive";
                         if (zygosity=="heter"){
                             go = true;
@@ -144,7 +146,7 @@ void HtmlReporter::outputRow(ofstream& ofs, LocSnp2& locSnp, bool align = true, 
             ofs << "<td>" + std::to_string(i) + "</td>" + //ID
                     "<td>" + std::to_string(it.first + locSnp.ft.length()) + "</td>" + //Position
                     "<td bgcolor='" + bc + "'>" + //Genotype
-                    "<font color='" + fc + "'>" + it.second.snp1 + "|" + it.second.snp2 + "</font></td>" +
+                    "<font color='" + fc + "'>" + it.second.snp1 + "|" + (locSnp.genoStr3 == "homo" ? it.second.snp1: it.second.snp2) + "</font></td>" +
                     "<td bgcolor='" + bc + "'>" + //Putative Genotype
                     "<font color='" + fc + "'>" + (locSnp.genoStr3 != "inconclusive" ? "yes" : "inconclusive") + "</font></td>" +
                     "<td>" + std::to_string(locSnp.getHaploReads()) + "</td>" +
@@ -776,7 +778,7 @@ void HtmlReporter::reportSnpAlignmentTable(ofstream& ofs, std::string & divName,
     ofs << "<div class='sub_section_tips'><font color='red'>Target heter SNPs are highlighted red, </font> <font color='green'>while target homo SNPs are highlighted green, </font> <font color='orange'>new potential SNPs are orange, </font><font color='gray'>sequence artifacts (errors) are gray!</font></div>\n";
     ofs << "<pre overflow: scroll>\n";
     ofs << "<table class='summary_table' style='width:100%'>\n";
-    ofs << "<tr style='background:#cccccc'> <td>ID</td><td>Marker</td><td>SNV</td><td>Haplotype</td><td>N. of Reads</td><td>Haplotype Ratio</td><td>Zygosity</td><td>Variant Ratio</td><td>Reads(%)</td><td>Total Reads</td><td>Length</td><td align='center'>Sequence</td></tr>\n";
+    ofs << "<tr style='background:#cccccc'> <td>ID</td><td>Marker</td><td>SNV</td><td>Haplotype</td><td>N. of Reads</td><td>Haplotype Proportion</td><td>Zygosity</td><td>Variant Proportion</td><td>Read Proportion</td><td>Total Reads</td><td>Length</td><td align='center'>Sequence</td></tr>\n";
 
     ofs << "<tr style='color:blue'>";
     ofs << "<td>0</td>" <<
@@ -841,7 +843,7 @@ void HtmlReporter::reportSnpAlignmentTable(ofstream& ofs, std::string & divName,
         json_str += "type:'scatter', mode: 'markers', marker:{color: 'red'}, textposition: 'auto'";
         json_str += "}];\n";
         json_str += "var layout = {xaxis:{title:'Position', automargin: true},";
-        json_str += "yaxis:{title:'Error rate (%)', automargin: true},";
+        json_str += "yaxis:{title:'Error rate', automargin: true},";
         json_str += "shapes: [";
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
@@ -945,10 +947,10 @@ void HtmlReporter::reportSnpTablePlot(ofstream& ofs, std::string & divName, LocS
     ofs << "<div class='figurefull' id='plot_" + divName + "'></div>\n";
 
     ofs << "<div class='sub_section_tips'><font color='red'> Heter target loci are in red</font>, <font color='green'> homo target loci are in green</font>, <font color='orange'> while new heter (including homo against reference) loci are in orange</font></div>\n";
-    ofs << "<div class='sub_section_tips'><span style='background-color: purple;'><font color='white'>Caution: if there are at least 2 SNPs (heter), the SNPs are still regarded as true SNPs even if the Reads ratio is between purple and yellow!</font></span></div>\n";
+    ofs << "<div class='sub_section_tips'><span style='background-color: purple;'><font color='white'>Caution: if there are at least 2 SNPs (heter), the SNPs are still regarded as true SNPs even if the Reads proportion is between purple and yellow!</font></span></div>\n";
     ofs << "<pre overflow: scroll>\n";
     ofs << "<table class='summary_table' style='width:40%'>\n";
-    ofs << "<tr style='background:#cccccc'> <td>ID</td><td>Position</td><td>Genotype</td><td>Putative Genotype</td><td>N. of reads1</td><td>N. of reads2</td><td>Reads ratio</td><td>Total reads</td></tr>\n";
+    ofs << "<tr style='background:#cccccc'> <td>ID</td><td>Position</td><td>Genotype</td><td>Putative Genotype</td><td>N. of read1</td><td>N. of read2</td><td>Read Proportion</td><td>Total reads</td></tr>\n";
 
     outputRow(ofs, locSnp, false);
 

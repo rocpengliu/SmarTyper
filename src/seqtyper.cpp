@@ -127,11 +127,11 @@ void run_seqtyper(int argc, char* argv[]){
     cmd.add<double>("maxVarRatio", 0, "ratio of two heter alleles based on variations either in flanking regions or MRA, the ideal is 1, default: 1.5", false, 1.5);
     
     //for snp;
-    cmd.add<double>("hmProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= hmProH when there is only one true SNP, must be > hmProL and coupled with hmProL. default: 0.84", false, 0.84);
-    cmd.add<double>("hmProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= hmProL when there is only one true SNP, must be < hmProH and coupled with hmProH. default: 0.78", false, 0.78);
-    cmd.add<double>("htProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= htProH when there are at least two true SNPs, must be > htProL and coupled with htProL. default: 0.83", false, 0.83);
-    cmd.add<double>("htProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= htProL when there are at least two true SNPs, must be < htProH and coupled with htProH. default: 0.79", false, 0.79);
-    cmd.add<double>("htPro3", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= htPro3. default: 0.8", false, 0.8);
+    cmd.add<double>("ssProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= ssProH when there is only one true SNP, must be > ssProL and coupled with ssProL. default: 0.84", false, 0.84);
+    cmd.add<double>("ssProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= ssProL when there is only one true SNP, must be < ssProH and coupled with ssProH. default: 0.78", false, 0.78);
+    cmd.add<double>("msProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= msProH when there are at least two true SNPs, must be > msProL and coupled with msProL. default: 0.83", false, 0.83);
+    cmd.add<double>("msProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= msProL when there are at least two true SNPs, must be < msProH and coupled with msProH. default: 0.79", false, 0.79);
+    cmd.add<double>("sPro3", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= sPro3. default: 0.8", false, 0.8);
     cmd.add<double>("minSeqsProSnp", 0, "minimum proportion reads against largest peak for a genotype, default: 0.1 (10%)", false, 0.10);
     cmd.add<int>("minReads4Filter", 0, "minimum reads for filtering read variant. if the maximum reads of haplotype is more than this, the low abundance read variants will be filtered, otherwise will be kept. This is used for the shallow sequencing. default: 50", false, 50);
     cmd.add<int>("maxRows4Align", 0, "maximum rows for alignment table, must be > 2 rows. default: 6", false, 6);
@@ -274,11 +274,11 @@ void run_seqtyper(int argc, char* argv[]){
     if (opt->var == "snp" || opt->sexFile != "") {
         opt->mLocSnps.mLocSnpOptions.minSeqs = cmd.get<int>("minSeqs");
         opt->mLocSnps.mLocSnpOptions.minSeqsPer = cmd.get<double>("minSeqsProSnp");
-        opt->mLocSnps.mLocSnpOptions.hmProH = cmd.get<double>("hmProH");
-        opt->mLocSnps.mLocSnpOptions.hmProL = cmd.get<double>("hmProL");
-        opt->mLocSnps.mLocSnpOptions.htProH = cmd.get<double>("htProH");
-        opt->mLocSnps.mLocSnpOptions.htProL = cmd.get<double>("htProL");
-        opt->mLocSnps.mLocSnpOptions.htPro3 = cmd.get<double>("htPro3");
+        opt->mLocSnps.mLocSnpOptions.hmProH = cmd.get<double>("ssProH");
+        opt->mLocSnps.mLocSnpOptions.hmProL = cmd.get<double>("ssProL");
+        opt->mLocSnps.mLocSnpOptions.htProH = cmd.get<double>("msProH");
+        opt->mLocSnps.mLocSnpOptions.htProL = cmd.get<double>("msProL");
+        opt->mLocSnps.mLocSnpOptions.htPro3 = cmd.get<double>("sPro3");
         opt->mLocSnps.mLocSnpOptions.minReads4Filter = cmd.get<int>("minReads4Filter");
         opt->mLocSnps.mLocSnpOptions.maxRows4Align = cmd.get<int>("maxRows4Align");
         opt->noSnpPlot = cmd.exist("noSnpPlot");
@@ -306,7 +306,7 @@ void run_seqtyper(int argc, char* argv[]){
     opt->inputFromSTDIN = cmd.exist("stdin");
     opt->outputToSTDOUT = cmd.exist("stdout");
     opt->interleavedInput = cmd.exist("interleaved_in");
-    opt->verbose = cmd.exist("verbose");
+    //opt->verbose = cmd.exist("verbose");
     opt->debug = cmd.exist("debug");
 
     // adapter cutting

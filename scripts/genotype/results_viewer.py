@@ -70,22 +70,24 @@ def create_top_panel(parent, body_frame):
     top_panel.button_child_refs = {}
     
     row = 0
-    ctk.CTkLabel(top_panel, text="Sample or Marker:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,3), sticky="e")
+    ctk.CTkLabel(top_panel, text="Sample or Locus:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,3), sticky="e")
 
     top_panel.res_type = ctk.StringVar(value=genoclass.get_res_param().get_res_type())
-    ctk.CTkRadioButton(top_panel, text="sample", variable=top_panel.res_type, value="sample", font=brfont,
+    top_panel.sam_radio = ctk.CTkRadioButton(top_panel, text="sample", variable=top_panel.res_type, value="sample", font=brfont,
         command=lambda: [
             update_combox(genoclass, top_panel, "sample"),
             display_page(body_frame.bottom_panel, genoclass),
             top_panel.highlight_buttons(top_panel, "Geno Combo")
-        ]).grid(row=row, column=1, pady=(1,3), padx=(20, 80), sticky="w")
+        ])
+    top_panel.sam_radio.grid(row=row, column=1, pady=(1,3), padx=(20, 80), sticky="w")
     
-    ctk.CTkRadioButton(top_panel, text="marker", variable=top_panel.res_type, value="marker", font=brfont,
+    top_panel.mar_radio = ctk.CTkRadioButton(top_panel, text="locus", variable=top_panel.res_type, value="marker", font=brfont,
         command=lambda: [
             update_combox(genoclass, top_panel, "marker"),
             display_page(body_frame.bottom_panel, genoclass),
             top_panel.highlight_buttons(top_panel, "Geno Combo")
-        ]).grid(row=row, column=1, pady=(1,3), padx=(80, 0), sticky="e")
+        ])
+    top_panel.mar_radio.grid(row=row, column=1, pady=(1,3), padx=(80, 0), sticky="e")
 
     top_panel.res_type.trace_add("write", lambda *args: genoclass.get_res_param().set_res_type(top_panel.res_type.get()))
 
@@ -194,6 +196,9 @@ def update_combox_from_others(parent):
         if top_panel is None:
             print(f"Error: 'top_panel' is not initialized.")
             return
+        top_panel.res_type.set("sample")
+        if hasattr(top_panel, 'sam_radio') and top_panel.sam_radio is not None:
+            top_panel.sam_radio.invoke()
         genoclass.get_res_param().set_res_type("sample")
         top_panel.options = genoclass.get_metadata().get_samples_list() if genoclass.get_metadata().get_samples_list() != [] else []
         top_panel.combobox.configure(values=top_panel.options)
@@ -251,7 +256,7 @@ def create_bottom_panel(parent, body_frame):
     bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
     bottom_panel.grid(row=1, column=0, sticky="news", padx=(0,0), pady=(0,0))
     bottom_panel.grid_rowconfigure(0, weight=1)
-    bottom_panel.grid_rowconfigure(1,weight=0)#for the page flib page
+    bottom_panel.grid_rowconfigure(1, weight=0)#for the page flib page
     bottom_panel.grid_columnconfigure(0, weight=1)
     return bottom_panel
 

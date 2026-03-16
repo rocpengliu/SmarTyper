@@ -18,6 +18,7 @@ class RefMicrotype:
         self._trimr=0
         self._snppos=[]
         self._orisnppos=[]
+        self._newsnppos=[] #//for snp output, if homo, should be empty
         self._sappos=[] # sap is single aa polymorphism, this is only valid for _aa_ref, see _aa_ref
         self._codingpos=[] # must start with 0, if the full length should be 0:(len-1); but after the spliting, it should become 0:len 
                             #"2:20, 30:50, 50:70, 80:90, 100:120|2:20, 80:90, 100:120|50:70, 80:90, 100:120" to [[(2, 20), (30, 50), (50,70), (80,90), (100,120)], [(2, 20), (70, 80)], [(3, 30), (90, 120)]]
@@ -50,6 +51,14 @@ class RefMicrotype:
         self._final_mar_pre_sim_microhap_nested_dict = {}
         
         self._has_new_mh = False
+    
+    def get_new_snp_pos(self):
+        return self._newsnppos
+    def set_new_snp_pos(self, newsnppos):
+        try:
+            self._newsnppos = sorted(newsnppos)
+        except ValueError as e:
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
     
     def get_sappos(self):
         return self._sappos

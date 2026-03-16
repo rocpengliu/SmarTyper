@@ -58,7 +58,7 @@ def load_pdf_from_here(genoclass,canvas,fig_type):
     elif genoclass.get_res_param().get_res_type() == "marker":
         sam_mar=genoclass.get_res_param().get_marker()
         if fig_type=="distri":
-            suffix="_marker_reads_distribution.pdf"
+            suffix="_locus_reads_distribution.pdf"
         else:
             return
     else:

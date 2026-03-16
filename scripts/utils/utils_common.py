@@ -6,11 +6,13 @@ from tkinter import filedialog
 import customtkinter as ctk
 import pandas as pd
 from matplotlib.backends.backend_pdf import PdfPages
+from .modern_file_dialog import modern_file_dialog
 from PIL import Image, ImageTk
 import math
 import threading
 import datetime
 import pprint
+import traceback
 
 matplotlib_lock = threading.Lock()
 thread_lock = threading.Lock()
@@ -101,7 +103,6 @@ def get_com_prefix(fl1, fl2):
     return com_prefix
 
 def infile_browser(entry_widget, filetype, button_widget=None):
-    from .modern_file_dialog import modern_file_dialog
     cur_dir = entry_widget.get() or '.'
     if not os.path.exists(cur_dir):
         cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
@@ -126,7 +127,6 @@ def infile_browser(entry_widget, filetype, button_widget=None):
         print(f"[DEBUG] No file selected or dialog cancelled.")
 
 def indir_browser(entry_widget, filetype, button_widget=None):
-    from .modern_file_dialog import modern_file_dialog
     cur_dir = entry_widget.get() or '.'
     if not os.path.exists(cur_dir):
         cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
@@ -141,7 +141,6 @@ def indir_browser(entry_widget, filetype, button_widget=None):
         entry_widget.insert(0, filename)
 
 def outfile_browser(entry_widget, ext = False, button_widget=None):
-    from .modern_file_dialog import modern_file_dialog
     try:
         cur_dir = entry_widget.get() or '.'
         if not os.path.exists(cur_dir):
@@ -157,10 +156,7 @@ def outfile_browser(entry_widget, ext = False, button_widget=None):
             entry_widget.insert(0, filename)
     except Exception as e:
         print(f"Error in outfile_browser: {e}")
-        import traceback
         traceback.print_exc()
-        # Fallback to standard dialog
-        from tkinter import filedialog
         filename = filedialog.askdirectory(initialdir=cur_dir, title="Select Output Directory")
         if filename:
             entry_widget.delete(0, 'end')

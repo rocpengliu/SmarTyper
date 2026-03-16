@@ -26,7 +26,7 @@ Options::Options(){
     overlapRequire = 30;
     overlapDiffLimit = 5;
     overlapDiffPercentLimit = 20;
-    verbose = false;
+    verbose = true;
     seqLen1 = 151;
     seqLen2 = 151;
     mergerOverlappedPE = true;
@@ -304,13 +304,13 @@ bool Options::validate() {
     }
 
     if(mLocSnps.mLocSnpOptions.minSeqsPer > 1 || mLocSnps.mLocSnpOptions.minSeqsPer <= 0) error_exit("--minSeqsProSnp must be < 100 and > 0");
-    if(mLocSnps.mLocSnpOptions.hmProH <= 0 || mLocSnps.mLocSnpOptions.hmProH >= 1) error_exit("--hmProH must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.hmProL <= 0 || mLocSnps.mLocSnpOptions.hmProL >= 1) error_exit("--hmProL must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.htProH <= 0 || mLocSnps.mLocSnpOptions.htProH >= 1) error_exit("--htProH must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.htProL <= 0 || mLocSnps.mLocSnpOptions.htProL >= 1) error_exit("--htProL must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.hmProL > mLocSnps.mLocSnpOptions.hmProH) error_exit("--hmProL should be smaller than --hmProH");
-    if(mLocSnps.mLocSnpOptions.htProL > mLocSnps.mLocSnpOptions.htProH) error_exit("--htProL should be smaller than --htProH");
-    if(mLocSnps.mLocSnpOptions.htPro3 <= 0 || mLocSnps.mLocSnpOptions.htPro3 >= 1) error_exit("--htPro3 must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.hmProH <= 0 || mLocSnps.mLocSnpOptions.hmProH >= 1) error_exit("--ssProH must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.hmProL <= 0 || mLocSnps.mLocSnpOptions.hmProL >= 1) error_exit("--ssProL must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.htProH <= 0 || mLocSnps.mLocSnpOptions.htProH >= 1) error_exit("--msProH must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.htProL <= 0 || mLocSnps.mLocSnpOptions.htProL >= 1) error_exit("--msProL must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.hmProL > mLocSnps.mLocSnpOptions.hmProH) error_exit("--ssProL should be smaller than --ssProH");
+    if(mLocSnps.mLocSnpOptions.htProL > mLocSnps.mLocSnpOptions.htProH) error_exit("--msProL should be smaller than --msProH");
+    if(mLocSnps.mLocSnpOptions.htPro3 <= 0 || mLocSnps.mLocSnpOptions.htPro3 >= 1) error_exit("--sPro3 must be between 0 and 1");
     if (locFile.empty()) {
         error_exit("locus file is empty, please provide a valid file!");
     } else {

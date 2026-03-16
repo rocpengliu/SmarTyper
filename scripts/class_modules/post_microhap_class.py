@@ -121,15 +121,15 @@ class PostMicrohapClass:
             modern_messagebox.showerror(None, "File Not Found", f"{fpath} is not a file")
             raise ValueError(f"{fpath} is not a file")
         tmp_df = (pd.read_csv(fpath, delimiter = '\t')
-                        .pipe(lambda df : df.rename(columns={df.columns[0]:'Locus'}))
-                        .pipe(lambda df: df.assign(Sample=sam)))
-        tmp_df = tmp_df.reindex(columns=['Sample'] + [col for col in tmp_df.columns if col != 'Sample'])
+                        .pipe(lambda df : df.rename(columns={df.columns[0]:'locus'}))
+                        .pipe(lambda df: df.assign(sample=sam)))
+        tmp_df = tmp_df.reindex(columns=['sample'] + [col for col in tmp_df.columns if col != 'sample'])
         mar_dict={}
         if tmp_df.shape[0] !=0:
-            markers=tmp_df['Locus'].unique()
+            markers=tmp_df['locus'].unique()
             if len(markers) > 0:
                 for mar in markers:
-                    mar_dict[mar] = tmp_df[tmp_df['Locus']==mar]
+                    mar_dict[mar] = tmp_df[tmp_df['locus']==mar]
         return mar_dict
 
     def populate_one_microhap_dict(self, parameter_class, metadata_class, cur = True, log_func = None)->bool:
@@ -140,15 +140,15 @@ class PostMicrohapClass:
             log_func(f"Populating {'current' if cur else 'pre'} microhap dictionary...")
         parent_mh_df = metadata_class.get_cur_microhap_df() if cur else metadata_class.get_pre_microhap_df()
         if parent_mh_df is not None and parent_mh_df.shape[0] > 0:
-            markers = sorted(parent_mh_df['Locus'].unique())
-            samples = sorted(parent_mh_df['Sample'].unique()) if cur else []
+            markers = sorted(parent_mh_df['locus'].unique())
+            samples = sorted(parent_mh_df['sample'].unique()) if cur else []
             mar_df_dict = {}
             num_mars = 0
             with ProcessPoolExecutor(max_workers=n_threads, mp_context=ctx) as executor:
                 futures={executor.submit(populate_mar_sam_microhap,
                                          mar, 
                                          samples, 
-                                         parent_mh_df[parent_mh_df['Locus']==mar].reset_index(drop=True), 
+                                         parent_mh_df[parent_mh_df['locus']==mar].reset_index(drop=True), 
                                          cur): mar for mar in markers}
                 for future in as_completed(futures):
                     mar = futures[future]
@@ -195,20 +195,20 @@ class PostMicrohapClass:
                         max_id = 0
                         start_1 = False
                         if tmp_pre_mar_mh_df is not None:
-                            pre_mar_mh_seqs_set = set(tmp_pre_mar_mh_df['Seq'].unique())
-                            max_id = tmp_pre_mar_mh_df['ID'].max()
+                            pre_mar_mh_seqs_set = set(tmp_pre_mar_mh_df['seq'].unique())
+                            max_id = tmp_pre_mar_mh_df['id'].max()
                             start_1 = True
-                        cur_mar_mh_seqs_set = set(tmp_cur_mar_mh_df['Seq'].unique())
+                        cur_mar_mh_seqs_set = set(tmp_cur_mar_mh_df['seq'].unique())
                         new_mar_mh_seqs_list = sorted(cur_mar_mh_seqs_set.difference(pre_mar_mh_seqs_set))
                         if len(new_mar_mh_seqs_list) != 0:
-                            tmp_df = pd.DataFrame({'Locus':[mar]*len(new_mar_mh_seqs_list),
-                                                    'Label':[f'mh_{i + (max_id + 1 if start_1 else max_id)}' for i in range(len(new_mar_mh_seqs_list))],
-                                                    'Seq':list(new_mar_mh_seqs_list),
-                                                    'ID': [i + (max_id + 1 if start_1 else max_id) for i in range(len(new_mar_mh_seqs_list))]
+                            tmp_df = pd.DataFrame({'locus':[mar]*len(new_mar_mh_seqs_list),
+                                                    'label':[f'mh_{i + (max_id + 1 if start_1 else max_id)}' for i in range(len(new_mar_mh_seqs_list))],
+                                                    'seq':list(new_mar_mh_seqs_list),
+                                                    'id': [i + (max_id + 1 if start_1 else max_id) for i in range(len(new_mar_mh_seqs_list))]
                                                     })
                             mar_microhap_df = pd.concat([tmp_pre_mar_mh_df, tmp_df], ignore_index=True)
                             tmp_mar_ref.set_mar_microhap_df(mar_microhap_df)
-                            tmp_mar_ref.set_cur_mar_microhap_df(mar_microhap_df[mar_microhap_df['Seq'].isin(cur_mar_mh_seqs_set)].reset_index(drop=True))
+                            tmp_mar_ref.set_cur_mar_microhap_df(mar_microhap_df[mar_microhap_df['seq'].isin(cur_mar_mh_seqs_set)].reset_index(drop=True))
                             tmp_mar_ref.set_has_new_mh(True)
                         else:
                             tmp_mar_ref.set_mar_microhap_df(tmp_pre_mar_mh_df)
@@ -242,7 +242,7 @@ class PostMicrohapClass:
     def output_mh_lookup_table(self, parameter_class, mh_lookup_table_dir):
         mh_lookup_table = pd.concat(mh_lookup_table_dir.values(), ignore_index = True)
         if mh_lookup_table is not None and mh_lookup_table.shape[0] > 0:
-            mh_lookup_table = mh_lookup_table.sort_values(['Locus', 'ID']).reset_index(drop=True)
+            mh_lookup_table = mh_lookup_table.sort_values(['locus', 'id']).reset_index(drop=True)
             mh_lookup_table.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_mh_lookup_table.txt"), sep = '\t', index = False)
     def do_translate(self, mar_mh_df, ref_refMicrotype):
         if len(ref_refMicrotype.get_codingpos()) != 0:
@@ -315,15 +315,15 @@ class PostMicrohapClass:
             for mar, mar_value in self.get_loc_ref_dict().items():
                 mh_lookup_table_dict = (
                     mar_value.get_mar_microhap_df()
-                    .set_index('Seq')['Label']
+                    .set_index('seq')['label']
                     .to_dict()
                 )
                 if not mh_lookup_table_dict:
                     continue
-                cur_mar_mh_df = cur_mh_df[cur_mh_df['Locus'] == mar].copy()
+                cur_mar_mh_df = cur_mh_df[cur_mh_df['locus'] == mar].copy()
                 if cur_mar_mh_df.empty:
                     continue
-                cur_mar_mh_df['Allele'] = (cur_mar_mh_df['Sequence'].map(mh_lookup_table_dict).fillna('-9'))
+                cur_mar_mh_df['allele'] = (cur_mar_mh_df['seq'].map(mh_lookup_table_dict).fillna('-9'))
                 # 🔑 serialize explicitly
                 records = cur_mar_mh_df.to_dict(orient='records')
                 future = executor.submit(populate_each_mar_mh_dict, mar, records)
@@ -395,7 +395,7 @@ class PostMicrohapClass:
     def output_final_microhap_table(self, parameter_class, final_cur_mh_dict, final_cur_sim_mh_dict):
         if final_cur_mh_dict.values():
             self._final_microhap_df = pd.concat(final_cur_mh_dict.values(), ignore_index = True)
-            self._final_microhap_df = self._final_microhap_df.sort_values(by=['Sample', 'Locus']).reset_index(drop=True)
+            self._final_microhap_df = self._final_microhap_df.sort_values(by=['sample', 'locus']).reset_index(drop=True)
         else:
             self._final_microhap_df = pd.DataFrame()
         if self._final_microhap_df.shape[0] > 0:
@@ -406,7 +406,7 @@ class PostMicrohapClass:
             if i == 0:
                 final_cur_sim_mh_df_list.append(df)
             else:
-                final_cur_sim_mh_df_list.append(df.drop(columns='Sample'))
+                final_cur_sim_mh_df_list.append(df.drop(columns='sample'))
         if final_cur_sim_mh_df_list:
             self._final_microhap_df_simple = pd.concat(final_cur_sim_mh_df_list, axis = 1)
         else:

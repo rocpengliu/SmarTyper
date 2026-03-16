@@ -5,7 +5,7 @@ import matplotlib
 import os
 from .micro_dna_align import display_dna_seq_align
 from .micro_aa_align import display_aa_seq_align
-from .micro_table_fig import update_com_tab, update_sim_tab
+from .micro_table_fig import update_com_tab, update_sim_tab, update_sim_fig
 from .micro_all_table_fig import display_all_mh_com_table, display_all_mh_sim_table
 from .micro_tree import display_phylotre
 from ..utils.common import child_button_size, pnbuttonfont, fig_font, header_font, bmbfont, brfont, bfont
@@ -69,7 +69,7 @@ def create_top_panel(parent, body_frame):
     top_panel.dim_hover = COLORS["secondary"]
 
     row = 0
-    ctk.CTkLabel(top_panel, text="Marker:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,3), sticky="e")
+    ctk.CTkLabel(top_panel, text="Locus:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,3), sticky="e")
 
     top_panel.options = []
     selected_option = tk.StringVar(value="")
@@ -243,6 +243,14 @@ def create_microhap_fig_tbl_panel(top_panel, bottom_panel, genoclass):
                                 update_sim_tab(genoclass, fig_tab_bottom_panel)])
     sing_simple_btn.grid(row=0, column=1, padx=5, pady=5, sticky="w")
     bottom_panel.child_btn_refs["sing_simple"] = sing_simple_btn
+    
+    sing_fig_btn = ctk.CTkButton(fig_tab_top_panel, text="figure", font=fig_font,
+                  width=child_button_size['width'], height=child_button_size['height'],
+                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_fig"),
+                                update_sim_fig(fig_tab_bottom_panel, genoclass, 'dna')])
+    sing_fig_btn.grid(row=0, column=2, padx=5, pady=5, sticky="w")
+    bottom_panel.child_btn_refs["sing_fig"] = sing_fig_btn
 
     # Add a frame to act as the resize handle
     resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")

@@ -73,7 +73,7 @@ def load_pdf_from_here(genoclass,canvas):
     if genoclass.get_res_param().get_res_type() == "sample":
         sam_mar = genoclass.get_res_param().get_sample()+"_sample"
     elif genoclass.get_res_param().get_res_type() == "marker":
-        sam_mar = genoclass.get_res_param().get_marker()+"_marker"
+        sam_mar = genoclass.get_res_param().get_marker()+"_locus"
     else:
         return
     pdf_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"{sam_mar}_genotype.pdf")
