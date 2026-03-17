@@ -18,6 +18,40 @@ matplotlib_lock = threading.Lock()
 thread_lock = threading.Lock()
 print_lock = threading.Lock()
 run_update_lock = threading.Lock()
+last_browse_dir = None
+
+
+def _get_initial_browse_dir(entry_widget):
+    """Resolve the best initial directory for file/directory dialogs."""
+    global last_browse_dir
+    current_value = (entry_widget.get() or '').strip()
+
+    if current_value:
+        if os.path.isfile(current_value):
+            current_value = os.path.dirname(current_value)
+        elif not os.path.exists(current_value):
+            current_value = os.path.dirname(current_value)
+
+        if current_value and os.path.isdir(current_value):
+            return current_value
+
+    with thread_lock:
+        if last_browse_dir and os.path.isdir(last_browse_dir):
+            return last_browse_dir
+
+    return '.'
+
+
+def _remember_browse_dir(path, is_file=False):
+    """Remember the most recent browse directory for subsequent dialogs."""
+    global last_browse_dir
+    if not path:
+        return
+
+    resolved_dir = os.path.dirname(path) if is_file else path
+    if resolved_dir and os.path.isdir(resolved_dir):
+        with thread_lock:
+            last_browse_dir = resolved_dir
 
 def print_time(var_name):
     with print_lock:
@@ -103,9 +137,7 @@ def get_com_prefix(fl1, fl2):
     return com_prefix
 
 def infile_browser(entry_widget, filetype, button_widget=None):
-    cur_dir = entry_widget.get() or '.'
-    if not os.path.exists(cur_dir):
-        cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
+    cur_dir = _get_initial_browse_dir(entry_widget)
     try:
         filename = modern_file_dialog(entry_widget.winfo_toplevel(), 
                                    title="Select File", 
@@ -123,13 +155,12 @@ def infile_browser(entry_widget, filetype, button_widget=None):
     if filename:
         entry_widget.delete(0, 'end')
         entry_widget.insert(0, filename)
+        _remember_browse_dir(filename, is_file=True)
     else:
         print(f"[DEBUG] No file selected or dialog cancelled.")
 
 def indir_browser(entry_widget, filetype, button_widget=None):
-    cur_dir = entry_widget.get() or '.'
-    if not os.path.exists(cur_dir):
-        cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
+    cur_dir = _get_initial_browse_dir(entry_widget)
     filename = modern_file_dialog(entry_widget.winfo_toplevel(),
                                    title="Select Directory",
                                    mode="directory",
@@ -139,12 +170,11 @@ def indir_browser(entry_widget, filetype, button_widget=None):
     if filename:
         entry_widget.delete(0, 'end')
         entry_widget.insert(0, filename)
+        _remember_browse_dir(filename)
 
 def outfile_browser(entry_widget, ext = False, button_widget=None):
     try:
-        cur_dir = entry_widget.get() or '.'
-        if not os.path.exists(cur_dir):
-            cur_dir = os.path.dirname(cur_dir) if os.path.dirname(cur_dir) else '.'
+        cur_dir = _get_initial_browse_dir(entry_widget)
         filename = modern_file_dialog(entry_widget.winfo_toplevel(),
                                        title="Select Output Directory",
                                        mode="directory",
@@ -154,6 +184,7 @@ def outfile_browser(entry_widget, ext = False, button_widget=None):
         if filename:
             entry_widget.delete(0, 'end')
             entry_widget.insert(0, filename)
+            _remember_browse_dir(filename)
     except Exception as e:
         print(f"Error in outfile_browser: {e}")
         traceback.print_exc()
@@ -161,6 +192,7 @@ def outfile_browser(entry_widget, ext = False, button_widget=None):
         if filename:
             entry_widget.delete(0, 'end')
             entry_widget.insert(0, filename)
+            _remember_browse_dir(filename)
 
 def update_state(in1_entry, in2_entry, in2_button):
     if in1_entry.get():  # If entry1 is not empty
