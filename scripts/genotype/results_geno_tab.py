@@ -88,7 +88,7 @@ def populate_geno_tab(parent, tree):
                     str(row['indel']),
                     str(row['zygosity']),
                     str(row['baseChange']),
-                    str(row['seq'])))
+                    str(row['mh_seq'])))
     
     # Then calculate and set column widths based on all inserted data
     for col in tree['columns']:

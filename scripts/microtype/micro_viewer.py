@@ -90,23 +90,41 @@ def create_top_panel(parent, body_frame):
     align_btn.grid(row=row, column=0, padx=20, pady=(15,1), sticky='w')
     top_panel.button_refs["micro_align"] = align_btn
 
-    # microtype table (parent/child)
-    table_btn = ctk.CTkButton(top_panel, text="microtype table (single)", font=bmbfont,
+    # microhap table (parent/child)
+    table_btn_hap = ctk.CTkButton(top_panel, text="microhap table (single)", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-        command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micro_table", "sing_compre"),
+        command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "microhap_table", "sing_compre_hap"),
                          create_microhap_fig_tbl_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
-    table_btn.grid(row=row, column=1, padx=20, pady=(15,1), sticky='w')
-    top_panel.button_refs["micro_table"] = table_btn
-
-    # microtype table (all) (parent/child)
-    table_all_btn = ctk.CTkButton(top_panel, text="microtype table (all)", font=bmbfont,
+    table_btn_hap.grid(row=row, column=1, padx=20, pady=(15,1), sticky='w')
+    top_panel.button_refs["microhap_table"] = table_btn_hap
+    
+    # micropep table (parent/child)
+    table_btn_pep = ctk.CTkButton(top_panel, text="micropep table (single)", font=bmbfont,
         width=child_button_size['width'], height=child_button_size['height'],
         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-        command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micro_table_all", "all_compre"),
+        command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micropep_table", "sing_compre_pep"),
+                         create_micropep_fig_tbl_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
+    table_btn_pep.grid(row=row, column=2, padx=20, pady=(15,1), sticky='w')
+    top_panel.button_refs["micropep_table"] = table_btn_pep
+    
+    # microhap table (all) (parent/child)
+    table_all_btn_hap = ctk.CTkButton(top_panel, text="microhap table (all)", font=bmbfont,
+        width=child_button_size['width'], height=child_button_size['height'],
+        fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+        command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "microhap_table_all", "all_compre_hap"),
                          create_all_microhap_fig_tbl_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
-    table_all_btn.grid(row=row, column=2, padx=20, pady=(15,1), sticky='w')
-    top_panel.button_refs["micro_table_all"] = table_all_btn
+    table_all_btn_hap.grid(row=row, column=3, padx=20, pady=(15,1), sticky='w')
+    top_panel.button_refs["microhap_table_all"] = table_all_btn_hap
+
+    # micropep table (all) (parent/child)
+    table_all_btn_pep = ctk.CTkButton(top_panel, text="micropep table (all)", font=bmbfont,
+        width=child_button_size['width'], height=child_button_size['height'],
+        fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+        command=lambda: [highlight_par_buttons(body_frame.top_panel, body_frame.bottom_panel, "micropep_table_all", "all_compre"),
+                         create_all_micropep_fig_tbl_panel(body_frame.top_panel, body_frame.bottom_panel, genoclass)])
+    table_all_btn_pep.grid(row=row, column=4, padx=20, pady=(15,1), sticky='w')
+    top_panel.button_refs["micropep_table_all"] = table_all_btn_pep
 
     # Highlight the first parent and its child by default
     #top_panel.highlight_par_buttons = lambda top_panel, bottom_panel, parent_name, child_name=None: highlight_par_buttons(top_panel, bottom_panel, parent_name, child_name)
@@ -231,26 +249,26 @@ def create_microhap_fig_tbl_panel(top_panel, bottom_panel, genoclass):
     sing_compre_btn = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font,
                   width=child_button_size['width'], height=child_button_size['height'],
                   fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_compre"),
-                                 update_com_tab(genoclass, fig_tab_bottom_panel)])
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_compre_hap"),
+                                 update_com_tab(genoclass, fig_tab_bottom_panel, dna = True)])
     sing_compre_btn.grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
-    bottom_panel.child_btn_refs["sing_compre"] = sing_compre_btn
+    bottom_panel.child_btn_refs["sing_compre_hap"] = sing_compre_btn
 
     sing_simple_btn = ctk.CTkButton(fig_tab_top_panel, text="simple", font=fig_font,
                   width=child_button_size['width'], height=child_button_size['height'],
                   fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_simple"),
-                                update_sim_tab(genoclass, fig_tab_bottom_panel)])
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_simple_hap"),
+                                update_sim_tab(genoclass, fig_tab_bottom_panel, dna = True)])
     sing_simple_btn.grid(row=0, column=1, padx=5, pady=5, sticky="w")
-    bottom_panel.child_btn_refs["sing_simple"] = sing_simple_btn
+    bottom_panel.child_btn_refs["sing_simple_hap"] = sing_simple_btn
     
     sing_fig_btn = ctk.CTkButton(fig_tab_top_panel, text="figure", font=fig_font,
                   width=child_button_size['width'], height=child_button_size['height'],
                   fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_fig"),
-                                update_sim_fig(fig_tab_bottom_panel, genoclass, 'dna')])
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_fig_hap"),
+                                update_sim_fig(fig_tab_bottom_panel, genoclass, dna = True)])
     sing_fig_btn.grid(row=0, column=2, padx=5, pady=5, sticky="w")
-    bottom_panel.child_btn_refs["sing_fig"] = sing_fig_btn
+    bottom_panel.child_btn_refs["sing_fig_hap"] = sing_fig_btn
 
     # Add a frame to act as the resize handle
     resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")
@@ -262,8 +280,68 @@ def create_microhap_fig_tbl_panel(top_panel, bottom_panel, genoclass):
     resize_handle.bind("<B1-Motion>", lambda event: perform_resize(event, state, fig_tab_bottom_panel))  # Perform resizing during mouse drag
     
         # Highlight the first child by default
-    highlight_children_button(top_panel, bottom_panel, "sing_compre")
-    update_com_tab(genoclass, fig_tab_bottom_panel)
+    highlight_children_button(top_panel, bottom_panel, "sing_compre_hap")
+    update_com_tab(genoclass, fig_tab_bottom_panel, dna = True)
+    
+def create_micropep_fig_tbl_panel(top_panel, bottom_panel, genoclass):
+    for widget in bottom_panel.winfo_children():
+        widget.destroy()
+    bottom_panel.child_btn_refs.clear()
+    # Configure bottom_panel to expand
+    for rid in range(bottom_panel.grid_size()[1]):
+        bottom_panel.grid_rowconfigure(rid, weight=0)
+    for cid in range(bottom_panel.grid_size()[0]):
+        bottom_panel.grid_columnconfigure(cid, weight=0)
+    bottom_panel.grid(row=1, column=0, sticky="nsew", padx=(0,0), pady=(0,0))
+    bottom_panel.grid_rowconfigure(0, weight=0)
+    bottom_panel.grid_rowconfigure(1, weight=1)
+    bottom_panel.grid_columnconfigure(0, weight=1)
+    
+    fig_tab_top_panel = ctk.CTkFrame(bottom_panel, bg_color="#3b3b3b")
+    fig_tab_top_panel.grid(row=0, column=0, sticky='ew')  # Ensure horizontal expansion
+
+    fig_tab_bottom_panel = ctk.CTkFrame(bottom_panel, bg_color="#3b3b3b")
+    fig_tab_bottom_panel.grid(row=1, column=0, sticky="nsew", padx=5, pady=0)  # Ensure both horizontal and vertical expansion
+
+    fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)  # Ensure vertical expansion
+    fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)  # Ensure horizontal expansion
+
+    sing_compre_btn = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font,
+                  width=child_button_size['width'], height=child_button_size['height'],
+                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_compre_pep"),
+                                 update_com_tab(genoclass, fig_tab_bottom_panel, dna=False)])
+    sing_compre_btn.grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
+    bottom_panel.child_btn_refs["sing_compre_pep"] = sing_compre_btn
+
+    sing_simple_btn = ctk.CTkButton(fig_tab_top_panel, text="simple", font=fig_font,
+                  width=child_button_size['width'], height=child_button_size['height'],
+                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_simple_pep"),
+                                update_sim_tab(genoclass, fig_tab_bottom_panel, dna=False)])
+    sing_simple_btn.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+    bottom_panel.child_btn_refs["sing_simple_pep"] = sing_simple_btn
+    
+    sing_fig_btn = ctk.CTkButton(fig_tab_top_panel, text="figure", font=fig_font,
+                  width=child_button_size['width'], height=child_button_size['height'],
+                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "sing_fig_pep"),
+                                update_sim_fig(fig_tab_bottom_panel, genoclass, dna=False)])
+    sing_fig_btn.grid(row=0, column=2, padx=5, pady=5, sticky="w")
+    bottom_panel.child_btn_refs["sing_fig_pep"] = sing_fig_btn
+
+    # Add a frame to act as the resize handle
+    resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")
+    resize_handle.grid(row=2, column=1, sticky="se", padx=(0, 5), pady=(0, 5))  # Place in the bottom-right corner
+
+    # Bind mouse events to the resize handle
+    state = {'initial_x': 0, 'initial_y': 0}
+    resize_handle.bind("<ButtonPress-1>", lambda event: start_resize(event, state))  # Start resizing on mouse press
+    resize_handle.bind("<B1-Motion>", lambda event: perform_resize(event, state, fig_tab_bottom_panel))  # Perform resizing during mouse drag
+    
+        # Highlight the first child by default
+    highlight_children_button(top_panel, bottom_panel, "sing_compre_pep")
+    update_com_tab(genoclass, fig_tab_bottom_panel, dna=False)
 
 def create_all_microhap_fig_tbl_panel(top_panel,bottom_panel, genoclass):
     for widget in bottom_panel.winfo_children():
@@ -290,17 +368,17 @@ def create_all_microhap_fig_tbl_panel(top_panel,bottom_panel, genoclass):
 
     compre_all_btn = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
                 fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                command=lambda: [highlight_children_button(top_panel, bottom_panel, "all_compre"),
-                                 display_all_mh_com_table(fig_tab_bottom_panel, genoclass)])
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "all_compre_hap"),
+                                 display_all_mh_com_table(fig_tab_bottom_panel, genoclass, dna = True)])
     compre_all_btn.grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
-    bottom_panel.child_btn_refs["all_compre"] = compre_all_btn
+    bottom_panel.child_btn_refs["all_compre_hap"] = compre_all_btn
 
     sing_all_btn = ctk.CTkButton(fig_tab_top_panel, text="simple", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
                 fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                command=lambda: [highlight_children_button(top_panel, bottom_panel, "all_simple"),
-                                 display_all_mh_sim_table(fig_tab_bottom_panel, genoclass)])
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "all_simple_hap"),
+                                 display_all_mh_sim_table(fig_tab_bottom_panel, genoclass, dna = True)])
     sing_all_btn.grid(row=0, column=1, padx=5, pady=5, sticky="w")
-    bottom_panel.child_btn_refs["all_simple"] = sing_all_btn
+    bottom_panel.child_btn_refs["all_simple_hap"] = sing_all_btn
     
      # Add a frame to act as the resize handle
     resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")
@@ -312,8 +390,58 @@ def create_all_microhap_fig_tbl_panel(top_panel,bottom_panel, genoclass):
     resize_handle.bind("<B1-Motion>", lambda event: perform_resize(event, state, fig_tab_bottom_panel))  # Perform resizing during mouse drag
     
         # Highlight the first child by default
-    highlight_children_button(top_panel, bottom_panel, "all_compre")
-    display_all_mh_com_table(fig_tab_bottom_panel, genoclass)
+    highlight_children_button(top_panel, bottom_panel, "all_compre_hap")
+    display_all_mh_com_table(fig_tab_bottom_panel, genoclass, dna = True)
+    
+def create_all_micropep_fig_tbl_panel(top_panel,bottom_panel, genoclass):
+    for widget in bottom_panel.winfo_children():
+        widget.destroy()
+    bottom_panel.child_btn_refs.clear()
+    for rid in range(bottom_panel.grid_size()[1]):
+        bottom_panel.grid_rowconfigure(rid, weight=0)
+    for cid in range(bottom_panel.grid_size()[0]):
+        bottom_panel.grid_columnconfigure(cid, weight=0)
+        
+    bottom_panel.grid(row=1, column=0, sticky="news", padx=(2,2), pady=(2,2))
+    bottom_panel.grid_rowconfigure(0, weight=0)
+    bottom_panel.grid_rowconfigure(1, weight=1)
+    bottom_panel.grid_columnconfigure(0, weight=1)
+    
+    fig_tab_top_panel = ctk.CTkFrame(bottom_panel, fg_color="transparent")
+    fig_tab_top_panel.grid(row=0, column=0, sticky='ew')
+    
+    fig_tab_bottom_panel=ctk.CTkFrame(bottom_panel, fg_color="transparent")
+    fig_tab_bottom_panel.grid(row=1, column=0, sticky="news")
+    fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)
+    fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)
+    fig_tab_bottom_panel.PAGE_SIZE = 100
+
+    compre_all_btn = ctk.CTkButton(fig_tab_top_panel, text="comprehensive", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "all_compre_pep"),
+                                 display_all_mh_com_table(fig_tab_bottom_panel, genoclass, dna = False)])
+    compre_all_btn.grid(row=0, column=0, padx=(50,5), pady=5, sticky="e")
+    bottom_panel.child_btn_refs["all_compre_pep"] = compre_all_btn
+
+    sing_all_btn = ctk.CTkButton(fig_tab_top_panel, text="simple", font=fig_font, width=child_button_size['width'], height=child_button_size['height'],
+                fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+                command=lambda: [highlight_children_button(top_panel, bottom_panel, "all_simple_pep"),
+                                 display_all_mh_sim_table(fig_tab_bottom_panel, genoclass, dna = False)])
+    sing_all_btn.grid(row=0, column=1, padx=5, pady=5, sticky="w")
+    bottom_panel.child_btn_refs["all_simple_pep"] = sing_all_btn
+    
+     # Add a frame to act as the resize handle
+    resize_handle = tk.Frame(fig_tab_bottom_panel, cursor="bottom_right_corner", bg="#3b3b3b")
+    resize_handle.grid(row=2, column=1, sticky="se", padx=(0, 5), pady=(0, 5))  # Place in the bottom-right corner
+
+    state = {'initial_x': 0, 'initial_y': 0}
+    # Bind mouse events to the resize handle
+    resize_handle.bind("<ButtonPress-1>", lambda event: start_resize(event, state))  # Start resizing on mouse press
+    resize_handle.bind("<B1-Motion>", lambda event: perform_resize(event, state, fig_tab_bottom_panel))  # Perform resizing during mouse drag
+    
+        # Highlight the first child by default
+    highlight_children_button(top_panel, bottom_panel, "all_compre_pep")
+    display_all_mh_com_table(fig_tab_bottom_panel, genoclass, dna = False)
 
 def create_microhap_align_panel(top_panel, bottom_panel, genoclass):
     for widget in bottom_panel.winfo_children():

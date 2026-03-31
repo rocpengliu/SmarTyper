@@ -22,18 +22,14 @@ confirm_button_font = ("Segoe UI", 16, "bold")
 
 micro_ml_df_columns = ['sample','locus','readt','read1','read2','read3','rprop1','rprop2','rprop3','mprop1','mprop2	prop','mut','indel','zygosity']
 
-#sample	locus	allele	readt	read	rprop	mprop	sprop	mut	indel	conclusive	zygosity	baseChange	seq
-# micro_microhap_df_columns=['Sample','Locus','Allele','BaseChange','NumReads',
-#                      'AlleleReadsPer','VarRatio','TotalReads',
-#                      'ReadsPer','Conclusive','Zygosity','Indel','Sequence', 'id']
-micro_microhap_df_columns=['sample','locus','allele', 'readt', 'read', 'rprop', 'mprop', 'sprop', 'mut', 
-                           'indel', 'zygosity', 'baseChange', 'seq', 'id']
+micro_microhap_df_columns=['sample','locus','allele', 'readt', 'read', 'rprop', 'mprop', 'sprop', 'mut', 'indel', 'zygosity', 'baseChange', 'mh_seq', 'id']
 micro_microhap_df_empty_row=['nan','nan',0,0,0,0,0,0,'0|0','N','inconclusive','nan', 'nan', 'nan']
-# micro_microhap_df_empty_row=['nan','nan',0,'nan',0,0,'nan',0,0,'N','inconclusive','nan','nan', 'nan']
 
-#sample	locus	readt	reads	prop	baseChange	len	seq
+micro_micropep_df_columns=['sample','locus','allele', 'readt', 'read', 'rprop', 'mprop', 'zygosity', 'baseChange', 'mp_seq', 'id']
+micro_micropep_df_empty_row=['nan','nan',0,0,0,0,0,'inconclusive','nan', 'nan', 'nan']
 
-micro_amplicon_df_columns=['sample','locus','readt','reads','prop','baseChange','len','seq', 'id']
+
+micro_amplicon_df_columns=['sample','locus','readt','reads','prop','baseChange','len','mh_seq', 'id']
 micro_amplicon_df_empty_row=['nan','nan',0,0,0,'nan',0,'nan','nan']
 
 #sample	locus	readt	read1	read2	read3	rprop1	rprop2	rprop3	mprop1	mprop2	sprop	mut	indel	zygosity	conclusive	basechange	seq1	seq2	seq3

@@ -535,7 +535,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
         loginfo("Starting to write haplotype table!");
 
     //*fout2 << "#Locus\tAllele\tBaseChange\tNumReads\tAlleleReadsPer\tVarRatio\tTotalReads\tReadsPer\tConclusive\tZygosity\tIndel\tSequence\n";
-    *fout2 << "sample\tlocus\tallele\treadt\tread\trprop\tmprop\tsprop\tmut\tindel\tzygosity\tbaseChange\tseq\n";
+    *fout2 << "sample\tlocus\tallele\treadt\tread\trprop\tmprop\tsprop\tmut\tindel\tzygosity\tbaseChange\tmh_seq\n";
 
 
     std::string foutName2_2 = mOptions->prefix + "_sample_ml.txt";
@@ -562,7 +562,7 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
     if (mOptions->verbose)
         loginfo("Starting to write amplicon table!");
     //*fout3 << "#Locus\tNumReads\tTotalReads\tReadRatio\tBaseChange\tLength\tSequence\n";
-    *fout3 << "sample\tlocus\treadt\treads\tprop\tbaseChange\tlen\tseq\n";
+    *fout3 << "sample\tlocus\treadt\treads\tprop\tbaseChange\tlen\tmh_seq\n";
     std::string foutName4 = mOptions->prefix + "_sample_error_rate.txt";
     std::ofstream *fout4 = new std::ofstream();
     fout4->open(foutName4.c_str(), std::ofstream::out);

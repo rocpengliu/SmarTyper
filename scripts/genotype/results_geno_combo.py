@@ -371,7 +371,7 @@ def create_fig_tab_combo(canvas,genotab,start_index,end_index,figures_frame, loc
         for line_num, (index, row) in enumerate(tbl.iterrows(), start=2):
             padded_index = f"{index:02}"
             padded_seq = ("*" * genoclass.get_post_microhap().get_loc_ref_dict().get(marker).get_triml() \
-                            + row['seq'] \
+                            + row['mh_seq'] \
                             + "*" * genoclass.get_post_microhap().get_loc_ref_dict().get(marker).get_trimr())
             
             seq_widget.insert(f"{line_num}.0", padded_index + ": " + padded_seq + "\n")

@@ -17,43 +17,6 @@ from Bio import Phylo
 matplotlib.use("TkAgg")
 
 def display_phylotre(genotab, genoclass):
-    mar = genoclass.get_post_microhap().get_selected_marker()
-    if mar == "":
-        return
-    ref_mar_refmt = genoclass.get_post_microhap().get_loc_ref_dict().get(mar, None)
-    if ref_mar_refmt is None:
-        return
-
-    genotab.tot_pages = len(ref_mar_refmt.get_children_microtype_dict())
-    if 'splicer' in ref_mar_refmt.get_children_microtype_dict():
-        genotab.tot_pages -= 1 # must remove the splicer page,
-    if genotab.page_num < 0:
-        genotab.page_num = 0
-        return
-    elif genotab.page_num >= genotab.tot_pages:
-        genotab.page_num = genotab.tot_pages -1
-        return
-    
-    cur_compre_mt = ref_mar_refmt.get_children_microtype_dict().get(f"splicer_{genotab.page_num}", None)#CompreMicrotypeClass
-    if cur_compre_mt is None:
-        return
-    title_label = cur_compre_mt.get_label(False)
-    if ref_mar_refmt.get_has_splicer():
-        dna_working_splicer_ref_compre = ref_mar_refmt.get_children_microtype_dict().get("splicer", None)
-        if dna_working_splicer_ref_compre is None:
-            return
-        if ref_mar_refmt.is_overlapped_gene():
-            aa_working_splicer_ref_compre = ref_mar_refmt.get_children_microtype_dict().get(f"splicer_{genotab.page_num}", None)
-        else:
-            aa_working_splicer_ref_compre = ref_mar_refmt.get_children_microtype_dict().get("splicer_0", None)
-        if aa_working_splicer_ref_compre is None:
-            return
-    else:
-        dna_working_splicer_ref_compre = ref_mar_refmt.get_children_microtype_dict().get("splicer_0", None)
-        aa_working_splicer_ref_compre = None
-        if dna_working_splicer_ref_compre is None:
-            return
-
     for widget in genotab.winfo_children():
         widget.destroy()
     for rid in range(genotab.grid_size()[1]):
@@ -64,6 +27,13 @@ def display_phylotre(genotab, genoclass):
     genotab.grid_rowconfigure(0, weight=1)
     genotab.grid_rowconfigure(1,weight=0)
     genotab.grid_columnconfigure(0, weight=1)
+    
+    mar = genoclass.get_post_microhap().get_selected_marker()
+    if mar == "":
+        return
+    ref_mar_refmt = genoclass.get_post_microhap().get_loc_ref_dict().get(mar, None)
+    if ref_mar_refmt is None:
+        return
 
     # Canvas
     canvas = tk.Canvas(genotab, bg='white')
@@ -92,24 +62,24 @@ def display_phylotre(genotab, genoclass):
     fig_frame.grid_rowconfigure(0,weight=1)
     fig_frame.grid_columnconfigure(0,weight=1)
     fig_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=(2,2))
-    create_phy_fig(title_label, ref_mar_refmt, dna_working_splicer_ref_compre, aa_working_splicer_ref_compre, fig_frame, genoclass)
+    create_phy_fig(ref_mar_refmt, fig_frame)
     
-    page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
-    page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
+    # page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
+    # page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
     
-    genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=bmbfont,
-                                         width=child_button_size['width'], height=child_button_size['height'],
-                                         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                                         corner_radius=10,
-                                         command=lambda:change_page(-1, genotab, genoclass))
-    genotab.previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
-    #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
-    genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=bmbfont,
-                                     width=child_button_size['width'], height=child_button_size['height'],
-                                     fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                                     corner_radius=10,
-                                     command=lambda:change_page(1, genotab, genoclass))
-    genotab.next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(2,2))
+    # genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=bmbfont,
+    #                                      width=child_button_size['width'], height=child_button_size['height'],
+    #                                      fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+    #                                      corner_radius=10,
+    #                                      command=lambda:change_page(-1, genotab, genoclass))
+    # genotab.previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
+    # #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
+    # genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=bmbfont,
+    #                                  width=child_button_size['width'], height=child_button_size['height'],
+    #                                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
+    #                                  corner_radius=10,
+    #                                  command=lambda:change_page(1, genotab, genoclass))
+    # genotab.next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(2,2))
     
     # Ensure scroll_frame expands and fills the canvas upon resize
     canvas.bind("<Configure>", lambda event: on_canvas_configure(canvas, event))
@@ -151,22 +121,22 @@ def change_page(page, genotab, genoclass, change = True):
     if change:
         display_phylotre(genotab, genoclass)
 
-def create_phy_fig(title_label, ref_mar_refmt, dna_working_splicer_ref_compre, aa_working_splicer_ref_compre, fig_frame, genoclass):
-    if ref_mar_refmt.get_has_splicer():
+def create_phy_fig(ref_mar_refmt, fig_frame):
+    if ref_mar_refmt.get_has_exon():
         fig, (ax1, ax2)=plt.subplots(1, 2, figsize=(20, 10))
-        Phylo.draw(dna_working_splicer_ref_compre.get_dna_tre(), do_show=False, axes = ax1)
+        Phylo.draw(ref_mar_refmt.get_cur_dna_tre(), do_show=False, axes = ax1)
         ax1.set_title("DNA tree")
         ax1.set_ylabel("microtype")
-        Phylo.draw(aa_working_splicer_ref_compre.get_aa_tre(), do_show=False, axes = ax2)
+        Phylo.draw(ref_mar_refmt.get_cur_aa_tre(), do_show=False, axes = ax2)
         ax2.set_title("AA tree")
         ax2.set_ylabel("microtype")
-        fig.suptitle(f"Phylogenetic Trees {title_label}", fontsize=16)
+        fig.suptitle(f"Phylogenetic Trees {ref_mar_refmt.get_locus()}", fontsize=16)
     else:
-        fig, (ax1)=plt.subplots(1,figsize=(15, 10))
-        Phylo.draw(dna_working_splicer_ref_compre.get_dna_tre(), do_show=False, axes = ax1)
+        fig, ax1=plt.subplots(1,figsize=(15, 10))
+        Phylo.draw(ref_mar_refmt.get_cur_dna_tre(), do_show=False, axes = ax1)
         ax1.set_title("DNA tree")
         ax1.set_ylabel("microtype")
-        fig.suptitle(f"Phylogenetic Tree {title_label}", fontsize=16)
+        fig.suptitle(f"Phylogenetic Tree {ref_mar_refmt.get_locus()}", fontsize=16)
     plt.subplots_adjust(left=0.15, right=0.95, top=0.9, bottom=0.1)
     fig_canvas = FigureCanvasTkAgg(fig, master=fig_frame)
     fig_canvas.draw()

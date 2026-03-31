@@ -150,7 +150,7 @@ class MicroHapClass:
                                      'prop': float,
                                      'baseChange': str,
                                      'len': int,
-                                     'seq': str
+                                     'mh_seq': str
                                  })
         else:
             print_time(f"Warning: Sample {sample} {type} file not found")
@@ -209,7 +209,7 @@ class MicroHapClass:
                                      'indel': str,
                                      'zygosity': str,
                                      'baseChange': str,
-                                     'seq': str
+                                     'mh_seq': str
                                  })
         else:
             print_time(f"Warning: Sample {sample} mh file not found")
@@ -217,7 +217,7 @@ class MicroHapClass:
             mar_ref = post_microhap_class.get_loc_ref_dict().get(mar, None)
             ref_seq = ""
             if mar_ref is not None:
-                ref_seq = mar_ref.get_dna_ref()
+                ref_seq = mar_ref.get_cur_dna_ref()
             if os.path.isfile(file):
                 tmp = tmp_df.query(f'locus == "{mar}"')
                 if tmp is None or tmp.empty:
@@ -241,8 +241,8 @@ class MicroHapClass:
                     snpstr_ref0 = ""
                     snpstr_ref1 = ""
                     #snpstr_ref2=""
-                    ref1 = tmp.at[0, 'seq']
-                    ref2 = tmp.at[1, 'seq'] if tmp.shape[0] > 1 else ""
+                    ref1 = tmp.at[0, 'mh_seq']
+                    ref2 = tmp.at[1, 'mh_seq'] if tmp.shape[0] > 1 else ""
                     _, _, snpstr_ref0 = do_pairwise_alignment(ref1, ref_seq, mar_ref.get_triml(), True)
                     if ref2 != "":
                         _, _, snpstr_ref1 = do_pairwise_alignment(ref2, ref_seq, mar_ref.get_triml(), True)

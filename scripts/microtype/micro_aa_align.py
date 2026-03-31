@@ -6,55 +6,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
 import logomaker
 from ..utils.utils_common import print_time
-from ..utils.common import child_button_size, bmbfont, seq_font
-from ..utils.colors import COLORS
-import pdb
-import copy
+from ..utils.common import seq_font
+from ..utils.colors import COLORS, aa_color_palette
 import os
-import pandas as pd
 from ..utils import modern_messagebox
 
 matplotlib.use("TkAgg")
 
 def display_aa_seq_align(genotab, genoclass):
-    mar = genoclass.get_post_microhap().get_selected_marker()
-    if mar == "":
-        return
-    ref_mar_refmt = genoclass.get_post_microhap().get_loc_ref_dict().get(mar, None)
-    if ref_mar_refmt is None:
-        return
-    
-    if genoclass.get_post_microhap().get_dna_or_aa() != 'aa':
-        return
-    else:
-        if not ref_mar_refmt.get_has_splicer():
-            return
-
-    genotab.tot_pages = len(ref_mar_refmt.get_children_microtype_dict())
-    if 'splicer' in ref_mar_refmt.get_children_microtype_dict():
-        genotab.tot_pages -= 1 # must remove the splicer page,
-    if genotab.page_num < 0:
-        genotab.page_num = 0
-        return
-    elif genotab.page_num >= genotab.tot_pages:
-        genotab.page_num = genotab.tot_pages -1
-        return
-
-    splicer=f'splicer_{genotab.page_num}'
-    ref_compre_mt = ref_mar_refmt.get_ref_microtype_dict().get(splicer, None)
-    if ref_compre_mt is None:
-        return
-    cur_compre_mt = ref_mar_refmt.get_children_microtype_dict().get(splicer, None)#CompreMicrotypeClass
-    if cur_compre_mt is None:
-        return
-
-    working_splicer_cur_compre = cur_compre_mt if ref_mar_refmt.is_overlapped_gene() else ref_mar_refmt.get_children_microtype_dict().get('splicer_0', None)
-    if working_splicer_cur_compre is None:
-        return
-    working_splicer_ref_compre = ref_compre_mt if ref_mar_refmt.is_overlapped_gene() else ref_mar_refmt.get_ref_microtype_dict().get('splicer_0', None)
-    if working_splicer_ref_compre is None:
-        return
-
     for widget in genotab.winfo_children():
         widget.destroy()
     for rid in range(genotab.grid_size()[1]):
@@ -65,6 +24,19 @@ def display_aa_seq_align(genotab, genoclass):
     genotab.grid_rowconfigure(0, weight=1)
     genotab.grid_rowconfigure(1,weight=0)
     genotab.grid_columnconfigure(0, weight=1)
+    
+    mar = genoclass.get_post_microhap().get_selected_marker()
+    if mar == "":
+        return
+    ref_mar_refmt = genoclass.get_post_microhap().get_loc_ref_dict().get(mar, None)
+    if ref_mar_refmt is None:
+        return
+    
+    if genoclass.get_post_microhap().get_dna_or_aa() != 'aa':
+        return
+    else:
+        if not ref_mar_refmt.get_has_exon():
+            return
 
     # Canvas
     canvas = tk.Canvas(genotab, bg='white')
@@ -81,7 +53,7 @@ def display_aa_seq_align(genotab, genoclass):
 
     # Scrollable frame
     scroll_frame = ctk.CTkFrame(canvas, fg_color="white")  # Initial size
-    scroll_frame.grid(row=0, column=0, sticky="news", padx = 2, pady= 2)
+    scroll_frame.grid(row=0, column=0, sticky="news", padx = 5, pady= 2)
     canvas.create_window((0, 0), window=scroll_frame, anchor="nw", tags="inner_frame")
 
     # Configure weights for the scroll_frame's grid to make contents expand
@@ -92,32 +64,18 @@ def display_aa_seq_align(genotab, genoclass):
     fig_frame = ctk.CTkFrame(scroll_frame, fg_color='white')
     fig_frame.grid_rowconfigure(0,weight=1)
     fig_frame.grid_columnconfigure(0,weight=1)
-    fig_frame.grid(row=0, column=0, sticky="nws", padx=5, pady=(2,2))
-    create_fig(working_splicer_cur_compre, ref_compre_mt, cur_compre_mt, fig_frame, genoclass)
+    fig_frame.grid(row=0, column=0, sticky="nws", padx=5, pady=(10,15))
+    create_fig(ref_mar_refmt, fig_frame, genoclass)
 
     # Frames for content
     tbl_frame = ctk.CTkFrame(scroll_frame, fg_color='white')
     tbl_frame.grid_rowconfigure(0, weight=1)  # Configure the tbl_frame to expand vertically
     tbl_frame.grid_columnconfigure(0, weight=1)
-    tbl_frame.grid(row=1, column=0, sticky="news", padx=5, pady=(2,2))
-    create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref_mar_refmt, ref_compre_mt, cur_compre_mt, tbl_frame)
+    tbl_frame.grid(row=1, column=0, sticky="news", padx=5, pady=(5,2))
+    create_align_tbl(ref_mar_refmt, tbl_frame)
     
-    page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
-    page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
-    
-    genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=bmbfont,
-                                         width=child_button_size['width'], height=child_button_size['height'],
-                                         fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                                         corner_radius=10,
-                                         command=lambda:change_page(-1, genotab, genoclass))
-    genotab.previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
-    #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
-    genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=bmbfont,
-                                     width=child_button_size['width'], height=child_button_size['height'],
-                                     fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-                                     corner_radius=10,
-                                     command=lambda:change_page(1, genotab, genoclass))
-    genotab.next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(2,2))
+    # page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
+    # page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
 
     # Ensure scroll_frame expands and fills the canvas upon resize
     canvas.bind("<Configure>", lambda event: on_canvas_configure(canvas, event))
@@ -152,12 +110,22 @@ def on_canvas_configure(canvas, event):
     canvas.itemconfig('inner_frame', width=canvas_width, height=canvas_height)
     canvas.configure(scrollregion=canvas.bbox("all"))
     
-def create_fig(working_splicer_cur_compre, ref_compre_mt, cur_compre_mt, fig_frame, genoclass):
+def create_fig(ref_mar_refmt, fig_frame, genoclass):
     #pdb.set_trace()
-    base_freq_df = working_splicer_cur_compre.get_aa_base_freq_df()
+    if not ref_mar_refmt.get_has_exon():
+        return
+    base_freq_df = ref_mar_refmt.get_aa_base_freq_df()
+    if (
+        base_freq_df.shape[0] > 0 and (
+            any(len(str(col)) != 1 for col in base_freq_df.columns) or base_freq_df.to_numpy().sum() == 0
+        )
+    ):
+        # Backward compatibility for previously saved sessions with invalid logo matrices.
+        ref_mar_refmt.generate_base_freq_df(dna=False)
+        base_freq_df = ref_mar_refmt.get_aa_base_freq_df()
     if base_freq_df.shape[0] == 0:
         return
-    index_list = sorted(set(working_splicer_cur_compre.get_target_aa_snp_pos_list() + working_splicer_cur_compre.get_tot_aa_snp_pos_list()))
+    index_list = sorted(set(ref_mar_refmt.get_tot_sap_pos()))
     base_freq_df.reset_index(drop=True, inplace=True)
 
     #base_freq_df = base_freq_df[~base_freq_df.isin([1.0]).any(axis=1)]
@@ -180,7 +148,11 @@ def create_fig(working_splicer_cur_compre, ref_compre_mt, cur_compre_mt, fig_fra
     fig=plt.Figure(figsize=(tot_fig_width, fig_height))
     ax=fig.add_subplot(111)
 
-    logo = logomaker.Logo(base_freq_df, ax=ax)
+    # Use an explicit protein color map so AA letters are colored consistently across Logomaker versions.
+    aa_color_scheme = {
+        str(col): aa_color_palette.get(str(col).upper(), "#7f7f7f") for col in base_freq_df.columns
+    }
+    logo = logomaker.Logo(base_freq_df, ax=ax, color_scheme=aa_color_scheme)
 
      # Set x-ticks to match the positions of the DataFrame rows
     tick_positions = range(len(base_freq_df))
@@ -192,23 +164,23 @@ def create_fig(working_splicer_cur_compre, ref_compre_mt, cur_compre_mt, fig_fra
     logo.ax.set_ylim(0, logo.ax.get_ylim()[1] * 1.2)  # Increase y-axis limit
     #logo.fig.set_size_inches(50, 10)  # Width, Height in inches
     logo.ax.set_ylabel('Base freq', labelpad=10)
-    logo.ax.set_title(f'{cur_compre_mt.get_label(False)}')
+    logo.ax.set_title(f'{ref_mar_refmt.get_locus()} micropep sequence logo', pad=8)
     # Optionally adjust layout for more space
-    plt.subplots_adjust(left=0.2, right=0.9, top=0.8, bottom=0.2)
+    plt.subplots_adjust(left=0.2, right=0.9, top=0.9, bottom=0.2)
     fig_canvas = FigureCanvasTkAgg(logo.fig, master=fig_frame)
     fig_canvas.draw()
     fig_widget = fig_canvas.get_tk_widget()
     fig_widget.grid(row=0, column=0, sticky="nsew", padx=(30,0))  # Ensure full expansion
     
-    output_path = os.path.join(genoclass.get_parameter().get_post_microhap_output_dir(), f'{cur_compre_mt.get_label(False)}_aa_seq_logo.pdf')
-    print_time(f"saving seq logo fig for {cur_compre_mt.get_mar()}")
+    output_path = os.path.join(genoclass.get_parameter().get_post_microhap_output_dir(), f'{ref_mar_refmt.get_locus()}_aa_seq_logo.pdf')
+    print_time(f"saving seq logo fig for {ref_mar_refmt.get_locus()}")
     try:
         logo.fig.savefig(output_path, bbox_inches='tight', transparent=True)
     except Exception as e:
-            print(f"Error saving seq logo fig for {cur_compre_mt.get_mar()}: {e}")
+            print(f"Error saving seq logo fig for {ref_mar_refmt.get_locus()}: {e}")
     plt.close(logo.fig)
     
-def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref_mar_refmt, ref_compre_mt, cur_compre_mt, tbl_frame):
+def create_align_tbl(ref_mar_refmt, tbl_frame):
     #pdb.set_trace()
     v_scrollbar_seq=ttk.Scrollbar(tbl_frame, orient="vertical")
     v_scrollbar_seq.grid(row=0, column=1, sticky="ns")
@@ -228,18 +200,17 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
     seq_widget.tag_configure('teal_highlight', background='teal', foreground='white')
     seq_widget.tag_configure('blue_text', foreground='blue')
     seq_widget.tag_configure('purple_text', foreground='purple')
-
-    exon_list = []
-    if not ref_mar_refmt.is_overlapped_gene():
-        exon_list = ref_mar_refmt.get_splicer_exon_list_dict().get(ref_compre_mt.get_splicer())
-        if (exon_list is None) or (not exon_list):
-            modern_messagebox.showerror(None, "Error", f'No exon list for splicer {ref_compre_mt.get_splicer()}')
-            raise ValueError(f'No exon list for splicer {ref_compre_mt.get_splicer()}')
+    
+    if not ref_mar_refmt.get_has_exon():
+        return
+    exon_list = ref_mar_refmt.get_cur_aa_exon_pos()
+    if (exon_list is None) or (not exon_list):
+        modern_messagebox.showerror(None, "Error", f'No exon list for splicer {ref_mar_refmt.get_cur_exon_pos()}')
+        raise ValueError(f'No exon list for splicer {ref_mar_refmt.get_cur_exon_pos()}')
     print_time(f'exon_list is {exon_list}')
-    refseq = working_splicer_cur_compre.get_ref_aa_seq() if ref_mar_refmt.is_overlapped_gene() else ref_mar_refmt.get_aa_ref()
-    target_snppos = working_splicer_cur_compre.get_target_aa_snp_pos_list()
-    ref_label = working_splicer_cur_compre.get_label()
-    max_label_len = max(len(ref_label), working_splicer_cur_compre.cal_longest_compre_var_label())
+    refseq = ref_mar_refmt.get_cur_aa_ref()
+    ref_label = ref_mar_refmt.get_locus() + "_ref"
+    max_label_len = max(len(ref_label), len(ref_mar_refmt.get_longest_label_nm(dna=False)))
     seq_len = len(refseq)
     line_num = 1
 
@@ -247,17 +218,14 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
     break_padding += ('+' * seq_len)
     seq_widget.insert(f'{line_num}.0', break_padding + '\n')
 
-    cur_exon_start_end_pos_list = working_splicer_ref_compre.extract_aa_exon_start_end_pos_list_in_splicer()
-    if exon_list:
-        cur_exon_start_end_pos_list = [cur_exon_start_end_pos_list[i] for i in exon_list]
-    print_time(f'cur_exon_start_end_pos_list is {cur_exon_start_end_pos_list}')
-    for idx, pos_tuple in enumerate(cur_exon_start_end_pos_list):
+    print_time(f'cur_exon_start_end_pos_list is {exon_list}')
+    for idx, pos_tuple in enumerate(exon_list):
         start, end = pos_tuple
         start += (max_label_len + 2)
         end += (max_label_len + 2)
         exon_len = end - start
         
-        exon = str(exon_list[idx]) if exon_list else str(idx)
+        exon = str(exon_list[idx])
         if exon_len < len(exon):
             exon = 'E'
         elif exon_len < (len(exon) + 1):
@@ -296,57 +264,40 @@ def create_align_tbl(working_splicer_ref_compre, working_splicer_cur_compre, ref
     padding = '*' * (max_label_len - len(ref_label))
     seq_widget.insert(f'{line_num}.0', f'{padding}{ref_label}: ' + refseq + '\n')
     ref_line_seq = padding + f'{ref_label}: ' + refseq
-
-    snp_pos = working_splicer_cur_compre.get_tot_aa_snp_pos_list()
-    uniq_snp_pos = [elem for elem in target_snppos if elem not in snp_pos]#for green
-    union_snp_pos = uniq_snp_pos + snp_pos
-    union_snp_pos = sorted(union_snp_pos)
-    if len(union_snp_pos) != 0:
-        union_snp_pos = [n + max_label_len + 2 for n in union_snp_pos]
-        uniq_snp_pos = [n + max_label_len + 2 for n in uniq_snp_pos]
+    
+    tot_sap_pos = ref_mar_refmt.get_tot_sap_pos()
+    sap_pos = ref_mar_refmt.get_cur_sap_pos()
+    new_sap_pos = [pos for pos in sap_pos if pos not in tot_sap_pos]
+    
+    if len(tot_sap_pos) != 0:
+        tot_sap_pos = [n + max_label_len + 2 for n in tot_sap_pos]
+        new_sap_pos = [n + max_label_len + 2 for n in new_sap_pos]
         start_idx_of_line = 0
-        for char_idx in union_snp_pos:
+        for char_idx in tot_sap_pos:
             if start_idx_of_line < char_idx:
                 seq_widget.tag_add('blue_text', f'{line_num}.{start_idx_of_line}', f'{line_num}.{char_idx}')
             start_idx_of_line = char_idx + 1
         if start_idx_of_line < seq_len + 2 + max_label_len:
             seq_widget.tag_add('blue_text', f'{line_num}.{start_idx_of_line}', f'{line_num}.end')
-        for char_idx in union_snp_pos:
-            if char_idx in uniq_snp_pos:
-                seq_widget.tag_add('green_highlight', f'{line_num}.{char_idx}', f'{line_num}.{char_idx + 1}')
-            else:
+        for char_idx in tot_sap_pos:
+            if char_idx in new_sap_pos:
                 seq_widget.tag_add('red_highlight', f'{line_num}.{char_idx}', f'{line_num}.{char_idx + 1}')
+            else:
+                seq_widget.tag_add('green_highlight', f'{line_num}.{char_idx}', f'{line_num}.{char_idx + 1}')
     else:
         seq_widget.tag_add('blue_text', f'{line_num}.0', f'{line_num}.end')
     line_num += 1
-    for idx, compre_var in enumerate(working_splicer_cur_compre.get_aa_mp_dict().values()):
+    for idx, combo_mt in enumerate(ref_mar_refmt.get_children_microtype_dict().values()):
         #pdb.set_trace()
-        label_len = len(compre_var.get_id())
+        label_len = len(combo_mt.get_micropep().get_mt())
         padding = '*' * (max_label_len - label_len)
-        seq_widget.insert(f'{idx+line_num}.0', padding + f'{compre_var.get_id()}: ' + f'{compre_var.get_seq()}' + '\n')
-        cur_line_seq = padding + f'{compre_var.get_id()}: ' + f'{compre_var.get_seq()}'
-        for pos in union_snp_pos:
+        seq_widget.insert(f'{idx+line_num}.0', padding + f'{combo_mt.get_micropep().get_mt()}: ' + f'{combo_mt.get_micropep().get_seq()}' + '\n')
+        cur_line_seq = padding + f'{combo_mt.get_micropep().get_mt()}: ' + f'{combo_mt.get_micropep().get_seq()}'
+        for pos in tot_sap_pos:
             if ref_line_seq[pos] == cur_line_seq[pos]:
                 seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
             else:
                 seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-        # if len(compre_var.get_indel_pos_list()) == 0:
-        #     pos_list = copy.copy(sorted(compre_var.get_snp_pos_list()))
-        #     if len(pos_list) != 0:
-        #         pos_list = [n + max_label_len + 2 for n in pos_list]
-        #         union2 = sorted(uniq_snp_pos + [n for n in pos_list if n not in uniq_snp_pos])
-        #         if len(union2) > 0:
-        #             for pos in union2:
-        #                 if pos in uniq_snp_pos:
-        #                     seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-        #                 else:
-        #                     seq_widget.tag_add('red_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-        #     else:
-        #         pos_list = [n + max_label_len + 2 for n in target_snppos]
-        #         for pos in pos_list:
-        #             seq_widget.tag_add('green_highlight', f'{idx+line_num}.{pos}', f'{idx+line_num}.{pos+1}')
-        # else:
-        #     seq_widget.tag_add('gray_highlight', f'{idx+line_num}.0', f'{idx+line_num}.{max_label_len}')
     seq_widget.configure(state='disabled')
 
 def on_mouse_wheel(event, canvas):

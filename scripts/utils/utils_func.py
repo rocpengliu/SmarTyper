@@ -19,6 +19,7 @@ import numpy as np
 import pdb
 import copy
 from .modern_messagebox import ModernMessageBox
+from scripts.class_modules.microtype_class import ComboMicroType
 
 def load_pdf(file_path, canvas):
     try:
@@ -267,6 +268,7 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
     # with matplotlib_lock:
+    mt_label = "mh" if micotype == 'microhap' else "mp"
     try:
         with PdfPages(pdf_file_path) as pdf:
             tot_pages = 0
@@ -289,9 +291,9 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
                     if subset is None or len(subset) == 0:
                         subset = pd.DataFrame(
                             {
-                                "id": [f"mh_0", f"mh_1"],
+                                "id": [f"{mt_label}_-9", f"{mt_label}_-99"],
                                 "read": [0, 0],
-                                "allele": [1, 2],
+                                "allele": [f"{mt_label}_-9", f"{mt_label}_-99"],
                                 "zygosity": ["nan", "nan"],
                             }
                         )
@@ -301,7 +303,7 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
                     elif zygo == "homo":
                         colors[0] = "darkgreen"
                     try:
-                        ax.bar(x=subset["id"], height=subset["read"], color=colors)
+                        ax.bar(x=subset["allele"], height=subset["read"], color=colors)
                         ax.set_xticks(range(len(subset)))
                         ax.set_xticklabels(subset["allele"].astype(str))
                         ax.set_title(
@@ -334,12 +336,13 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
     #print(f"finished to output genotype plots for {selected_marker}")
     return True
 
-def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_dict, selected_sample, anal_type = 'snp') -> bool:
+def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_dict, selected_sample, microtype = "microhap", anal_type = 'snp') -> bool:
     #print(f"Starting to process marker: {selected_marker}")
-    pdf_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_microhap_genotype.pdf")
+    pdf_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_{microtype}_genotype.pdf")
     nrows, ncols = 8, 5
     max_plots_per_page = nrows * ncols
     # with matplotlib_lock:
+    mt = "mh" if microtype == "microhap" else "mp"
     try:
         with PdfPages(pdf_file_path) as pdf:
             tot_pages = 0
@@ -362,9 +365,9 @@ def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_di
                     if subset is None or len(subset) == 0:
                         subset = pd.DataFrame(
                             {
-                                "id": [f"mh_0", f"mh_1"],
+                                "id": [f"{mt}_-9", f"{mt}_-99"],
                                 "read": [0, 0],
-                                "allele": [1, 2],
+                                "allele": [f"{mt}_-9", f"{mt}_-99"],
                                 "zygosity": ["nan", "nan"],
                             }
                         )
@@ -374,7 +377,7 @@ def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_di
                     elif zygo == "homo":
                         colors[0] = "darkgreen"
                     try:
-                        ax.bar(x=subset["id"], height=subset["read"], color=colors)
+                        ax.bar(x=subset["allele"], height=subset["read"], color=colors)
                         ax.set_xticks(range(len(subset)))
                         ax.set_xticklabels(subset["allele"].astype(str))
                         ax.set_title(
@@ -578,8 +581,21 @@ def generate_page(i, num_pages, sorted_data, bars_per_page, bars_per_subplot, nu
             fig.text(0.5,0.01,f'page{i+1}',ha='center',fontsize=8)
         return i, fig
 
+def get_exon_start_end_pos_from_dna_exon_pos(exon_pos_list:list)->list:
+    if exon_pos_list is None or len(exon_pos_list)==0:
+        return []
+    exon_start_end_pos_list=[]
+    start_pos = 0
+    end_pos = 0
+    for start, end in exon_pos_list:
+        exon_len = (end - start) // 3
+        end_pos += exon_len
+        start_pos = end_pos - exon_len
+        exon_start_end_pos_list.append((start_pos, end_pos))
+    return exon_start_end_pos_list
+
 def trans_dna(dna:str, exon_pos_list:list)->list:
-    if len(dna)==0 or dna is None or len(exon_pos_list)==0:
+    if dna is None or len(dna)==0 or exon_pos_list is None or len(exon_pos_list)==0:
         return[]
     return [trans_single_dna(dna, plst) for plst in exon_pos_list]
 
@@ -602,11 +618,19 @@ def trans_single_dna(dna:str, exon_pos:list):
 def split_codingpos(pos_str:str)->list:
     if len(pos_str.replace(" ", "")) == 0 or pos_str.replace(' ', '') == '0':
         return None
-    nested_list  = [[tuple(map(int, p2.split(':'))) for p2 in p1.split(',')] for p1 in pos_str.replace(' ', '').split('|')]
-    nested_list = [[(x, y+1) for x, y in inter_tuple] for inter_tuple in nested_list]
+    nested_list = [tuple(map(int, p.split(':'))) for p in pos_str.replace(' ', '').split(',')]
+    nested_list = [(x, y + 1) for x, y in nested_list]
+    for x, y in nested_list:
+        exon_len  = y - x
+        if exon_len < 3:
+            ModernMessageBox.showerror(None, "Invalid Input", f"Exon length must be at least 3: {x}:{y}")
+            raise ValueError(f"Exon length must be at least 3: {x}:{y}")
+        elif exon_len % 3 != 0:
+            ModernMessageBox.showerror(None, "Invalid Input", f"Exon length must be a multiple of 3: {x}:{y}")
+            raise ValueError(f"Exon length must be a multiple of 3: {x}:{y}")
     print(f"splitted coding positions is {nested_list}")
     try:
-        if all(isinstance(item, tuple) and all(isinstance(i, int) for i in item) for sublist in nested_list for item in sublist):
+        if all(isinstance(item, tuple) and all(isinstance(i, int) for i in item) for item in nested_list):
             return nested_list
         else:
             ModernMessageBox.showerror(None, "Invalid Input", f"Invalid coding positions string: {pos_str}")
@@ -677,6 +701,60 @@ def get_trimr_pos(out_lst, trimrpos):
             new_pos.append((in_lst[0], new_end))
     return new_pos
 
+def get_trimmed_codingpos(codingpos, triml, trimr, dnalen):
+    new_codingpos = []
+    if triml == 0 and trimr == 0:
+        return codingpos
+    if trimr != 0:
+        trimrpos = dnalen - trimr
+        for exon_pos in codingpos:
+            if trimrpos >= exon_pos[1]:
+                new_codingpos.append(exon_pos)
+            elif trimrpos >= exon_pos[0] and trimrpos < exon_pos[1]:
+                cut_len = exon_pos[1] - trimrpos
+                if cut_len % 3 == 0:
+                    if exon_pos[0] + 2 < trimrpos:
+                        new_codingpos.append((exon_pos[0], trimrpos))
+                elif cut_len % 3 == 1:
+                    if exon_pos[0] + 3 <= trimrpos - 2:
+                        new_codingpos.append((exon_pos[0], trimrpos - 2))
+                elif cut_len % 3 == 2:
+                    if exon_pos[0] + 3 <= trimrpos - 1:
+                        new_codingpos.append((exon_pos[0], trimrpos - 1))
+                break
+        codingpos = new_codingpos
+    if triml != 0:
+        new_codingpos = []
+        trimlpos = triml
+        for exon_pos in codingpos:
+            if trimlpos >= exon_pos[1]:
+                pass
+            elif trimlpos >= exon_pos[0] and trimlpos < exon_pos[1]:
+                cut_len = triml - exon_pos[0]
+                new_start = 0
+                if cut_len % 3 == 0:
+                    new_start = triml
+                    if new_start + 2 < exon_pos[1]:
+                        new_codingpos.append((new_start, exon_pos[1]))
+                    else:
+                        pass
+                elif cut_len % 3 == 1:
+                    new_start = triml + 2
+                    if new_start + 2 < exon_pos[1]:
+                        new_codingpos.append((new_start, exon_pos[1]))
+                    else:
+                        pass
+                elif cut_len % 3 == 2:
+                    new_start = triml + 1
+                    if new_start + 2 < exon_pos[1]:
+                        new_codingpos.append((new_start, exon_pos[1]))
+                    else:
+                        pass
+            else:
+                new_codingpos.append(exon_pos)
+        new_codingpos = [(exon_pos[0] - triml, exon_pos[1] - triml) for exon_pos in new_codingpos]
+    return new_codingpos
+        
 def get_new_codingpos(codingpos, triml, trimr, dnalen):
     new_codingpos = []
     if triml == 0 and trimr == 0:
@@ -748,13 +826,35 @@ def get_splicer_exon_list_map(nested_list):
             splicer_exon_map[f'splicer_{idx}'] = exon_list
     return splicer_exon_map
 
+def extract_sap_pos_from_snp_pos_list(snp_pos_list, exon_pos_list):
+    ori_snp_pos_in_exon = []
+    for snp_pos in snp_pos_list:
+        for exon_pos in exon_pos_list:
+            if exon_pos[0] <= snp_pos < exon_pos[1]:
+                ori_snp_pos_in_exon.append(snp_pos)
+                break
+    intron_len = 0
+    cur_snp_pos_list = []
+    for idx, exon_pos in enumerate(exon_pos_list):
+        if idx == 0:
+            intron_len = exon_pos[0]
+        else:
+            prev_exon_pos = exon_pos_list[idx - 1]
+            intron_len += exon_pos[0] - prev_exon_pos[1]
+        for snp_pos in ori_snp_pos_in_exon:
+            if exon_pos[0] <= snp_pos < exon_pos[1]:
+                cur_snp_pos_list.append(snp_pos - intron_len)
+    
+    cur_sap_pos_list = [pos // 3 for pos in cur_snp_pos_list]        
+    return sorted(set(cur_sap_pos_list))
+
 def process_sample_for_pool(args):
     sam, vdic = args
     # No output_queue here! Only return results.
     return sam, pd.concat([df.dropna(axis=1, how='all') for df in vdic.values()], axis=0, ignore_index=True)
 
-def populate_mar_sam_microhap(mar, samples, mar_mh_df, cur = True)->pd.DataFrame:
-    tmp_df = pd.DataFrame(columns=['locus','label','seq', 'id'])
+def populate_mar_sam_microhap(mar, samples, mar_mh_df, ref_mt, cur = True)->pd.DataFrame:
+    tmp_df = pd.DataFrame(columns=['locus','mh_label','mh_seq', 'mh_id', 'mp_label', 'mp_seq', 'mp_id'])
     try:
         if cur:
             mar_sam_microhap=set()#microhap seqs
@@ -762,34 +862,110 @@ def populate_mar_sam_microhap(mar, samples, mar_mh_df, cur = True)->pd.DataFrame
                 mar_sam_microhap_df = mar_mh_df.loc[mar_mh_df['sample'] == sam]
                 zygo= mar_sam_microhap_df['zygosity'].iloc[0]
                 if zygo == "homo":
-                    mar_sam_microhap.add(mar_sam_microhap_df['seq'].iloc[0])
+                    mar_sam_microhap.add(mar_sam_microhap_df['mh_seq'].iloc[0])
                 elif zygo == "heter":
-                    mar_sam_microhap.add(mar_sam_microhap_df['seq'].iloc[0])
-                    mar_sam_microhap.add(mar_sam_microhap_df['seq'].iloc[1])
-            if mar_sam_microhap:
+                    mar_sam_microhap.add(mar_sam_microhap_df['mh_seq'].iloc[0])
+                    mar_sam_microhap.add(mar_sam_microhap_df['mh_seq'].iloc[1])
+            if mar_sam_microhap is not None and len(mar_sam_microhap) != 0:
                 mar_sam_microhap = sorted(mar_sam_microhap)
+            
+            mar_sam_micropep = []
+            mar_sam_micropep_label = []
+            mar_sam_micropep_id = []
             if len(mar_sam_microhap) !=0:
+                if ref_mt is not None and ref_mt.get_has_exon():
+                    for nt_seq in mar_sam_microhap:
+                        _, aa_seq = trans_single_dna(nt_seq, ref_mt.get_cur_exon_pos())
+                        mar_sam_micropep.append(aa_seq)
+                    uniq_peps = sorted(list(set(mar_sam_micropep)))
+                    for pep in mar_sam_micropep:
+                        mar_sam_micropep_id.append(uniq_peps.index(pep))
+                    mar_sam_micropep_label = [f'mp_{i}' for i in mar_sam_micropep_id]
+                else:
+                    mar_sam_micropep = [""] * len(mar_sam_microhap)
+                    mar_sam_micropep_label = [""] * len(mar_sam_microhap)
+                    mar_sam_micropep_id = [""] * len(mar_sam_microhap)
                 tmp_df=pd.DataFrame({
                                 'locus':[mar]*len(mar_sam_microhap),
-                                'label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
-                                'seq':mar_sam_microhap, 
-                                'id': [i for i in range(len(mar_sam_microhap))]})
-            else:
-                return tmp_df
+                                'mh_label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
+                                'mh_seq':mar_sam_microhap,
+                                'mh_id': [i for i in range(len(mar_sam_microhap))],
+                                'mp_label':mar_sam_micropep_label,
+                                'mp_seq':mar_sam_micropep,
+                                'mp_id':mar_sam_micropep_id})
         else:
             if mar_mh_df is None :
                 return tmp_df
             tmp_df = mar_mh_df.reset_index(drop=True)
-            tmp_df = tmp_df.drop_duplicates(subset='seq')
-            tmp_df.columns = ['locus','label','seq', 'id']
+            tmp_df = tmp_df.drop_duplicates(subset='mh_seq')
+            tmp_df.columns = ['locus','mh_label','mh_seq', 'mh_id', 'mp_label', 'mp_seq', 'mp_id']
         if tmp_df is None or len(tmp_df) == 0:
             return tmp_df
-        tmp_df = tmp_df.sort_values(by="id").reset_index(drop=True)
+        tmp_df = tmp_df.sort_values(by="mh_id").reset_index(drop=True)
     except Exception as e:
         print(f"Error in populate_mar_sam_microhap for marker {mar}: {e}", flush=True)
         traceback.print_exc()
         raise(e)
     return tmp_df
+def populate_each_mar_mp_dict(mar, records, mar_combo_mt) -> tuple:
+    final_sam_cur_mp_dict = {}
+    final_sam_cur_mp_sim_dict = {}
+    cur_mar_mp_df = pd.DataFrame.from_records(records)
+    if cur_mar_mp_df.empty:
+        return final_sam_cur_mp_dict, final_sam_cur_mp_sim_dict
+    for sam in sorted(cur_mar_mp_df['sample'].unique()):
+        tmp_df = cur_mar_mp_df[cur_mar_mp_df['sample'] == sam].reset_index(drop=True)
+        zygo = tmp_df['zygosity'].iloc[0]
+        if zygo == 'homo':
+            tmp_df.loc[0, 'baseChange'] = ""
+            if tmp_df.shape[0] > 1:
+                tmp_df.loc[1, 'mprop'] = 0
+                tmp_df.loc[1, 'baseChange'] = ""
+        else:
+            mh_seq1 = tmp_df['mh_seq'].iloc[0]
+            mh_seq2 = tmp_df['mh_seq'].iloc[1] if tmp_df.shape[0] > 1 else None
+
+            combo1 = mar_combo_mt.get(mh_seq1, None)
+            mp1 = combo1.get_micropep() if combo1 is not None else None
+            sap_str1 = mp1.get_var_nm_str() if mp1 is not None else ""
+
+            combo2 = mar_combo_mt.get(mh_seq2, None) if mh_seq2 is not None else None
+            mp2 = combo2.get_micropep() if combo2 is not None else None
+            sap_str2 = mp2.get_var_nm_str() if mp2 is not None else ""
+
+            if tmp_df.shape[0] > 1:
+                tmp_df['baseChange'] = [sap_str1, sap_str2]
+            else:
+                tmp_df['baseChange'] = [sap_str1]
+            if zygo == 'heter':
+                mp_seq1 = tmp_df['mp_seq'].iloc[0]
+                mp_seq2 = tmp_df['mp_seq'].iloc[1] if tmp_df.shape[0] > 1 else None
+                if mp_seq1 not in ("", None):
+                    read1 = tmp_df['read'].iloc[0]
+                    read2 = tmp_df['read'].iloc[1]
+                    rprop = round((read1 + read2) / tmp_df['readt'].iloc[0], 4)
+                    if mp_seq1 == mp_seq2:
+                        tmp_df['zygosity'] = ['homo', 'homo']
+                        tmp_df['read'] = [read1 + read2, 0]
+                        tmp_df['rprop'] = [rprop, 0]
+                        tmp_df['mprop'] = [1, 0]
+                    else:
+                        tmp_df.loc[1, 'mprop'] = 0
+                else:
+                    tmp_df['zygosity'] = ['inconclusive', 'inconclusive']
+        tmp_df.drop(columns=['mh_seq'], inplace=True)
+        final_sam_cur_mp_dict[sam] = tmp_df
+        tmp_sim_df = tmp_df[['sample', 'allele', 'zygosity']].copy()
+        sim_df = pd.DataFrame(columns=['sample', f'{mar}_allele1', f'{mar}_allele2'])
+        zygo = tmp_sim_df['zygosity'].iloc[0]
+        if zygo == 'homo':
+            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[0]]], columns=sim_df.columns)], ignore_index=True)
+        elif zygo == 'heter':
+            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[1]]], columns=sim_df.columns)], ignore_index=True)
+        else:
+            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, '-9', '-9']], columns=sim_df.columns)], ignore_index=True)
+        final_sam_cur_mp_sim_dict[sam] = sim_df
+    return final_sam_cur_mp_dict, final_sam_cur_mp_sim_dict
 
 def populate_each_mar_mh_dict(mar, records) -> tuple:
     final_sam_cur_mh_dict = {}
@@ -806,8 +982,7 @@ def populate_each_mar_mh_dict(mar, records) -> tuple:
             if tmp_sim_df.shape[0] == 1:
                 tmp_sim_df = pd.concat([tmp_sim_df, tmp_sim_df], ignore_index=True)
             else:
-                tmp_sim_df.iloc[1, tmp_sim_df.columns.get_loc('allele')] = \
-                    tmp_sim_df.iloc[0]['allele']
+                tmp_sim_df.iloc[1, tmp_sim_df.columns.get_loc('allele')] = tmp_sim_df.iloc[0]['allele']
         elif zygo == 'heter':
             tmp_sim_df = tmp_sim_df.sort_values(by='allele')
         else:

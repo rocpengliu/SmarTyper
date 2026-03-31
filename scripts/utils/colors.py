@@ -18,3 +18,11 @@ COLORS = {
     'workflow_rose': '#ff6f91',   # Warm rose pink for workflow
     'workflow_copper': '#b87333', # Warm copper for workflow
 }
+
+aa_color_palette = {
+        "A": "#8dd3c7", "R": "#fb8072", "N": "#80b1d3", "D": "#bebada", "C": "#fdb462",
+        "Q": "#b3de69", "E": "#fccde5", "G": "#d9d9d9", "H": "#bc80bd", "I": "#ccebc5",
+        "L": "#ffed6f", "K": "#e41a1c", "M": "#4daf4a", "F": "#377eb8", "P": "#ff7f00",
+        "S": "#984ea3", "T": "#a65628", "W": "#f781bf", "Y": "#999999", "V": "#66c2a5",
+        "*": "#000000", "X": "#7f7f7f", "-": "#bdbdbd"
+    }

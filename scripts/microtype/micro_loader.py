@@ -83,7 +83,7 @@ def create_body(parent, frame):
     loci_var.trace_add("write", lambda *args: (
         genotype_class.get_parameter().set_locifile(loci_var.get()),
         genotype_class.get_parameter().set_analtype('snp'),
-        genotype_class.get_metadata().read_locifile(genotype_class.get_parameter(), genotype_class.get_post_microhap(), True)
+        genotype_class.get_metadata().read_locifile2(genotype_class.get_parameter(), genotype_class.get_post_microhap(), True)
     ))
     loci_rev_var = ctk.BooleanVar(value=genotype_class.get_parameter().get_revcomloci())
     ctk.CTkCheckBox(body_frame.top_panel, text="reverse complement", variable = loci_rev_var, font =brfont, text_color="white").grid(row=row, column=3, padx=(0, 0),sticky="w")
@@ -181,26 +181,29 @@ def run_pool(genotype_class, body_frame):
         go1 = genotype_class.get_post_microhap().populate_microhap_dict(genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
         log_msg("-----------------------------------end step 2----------------------------------------\n\n")
         log_msg("----------------------------------start step 3---------------------------------------")
-        go2 = genotype_class.get_post_microhap().populate_final_mar_mh_df_dict( genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
+        go6 = genotype_class.get_post_microhap().perform_seq_alignment(genotype_class.get_parameter(), log_func = log_msg)
         log_msg("-----------------------------------end step 3----------------------------------------\n\n")
         log_msg("----------------------------------start step 4---------------------------------------")
-        go3 = genotype_class.generate_all_mar_microhaps_fig(log_func = log_msg)
+        go2 = genotype_class.get_post_microhap().populate_final_mar_mh_df_dict( genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
         log_msg("-----------------------------------end step 4----------------------------------------\n\n")
         log_msg("----------------------------------start step 5---------------------------------------")
-        go4 = genotype_class.generate_all_sam_microhaps_fig(log_func = log_msg)
+        go3 = genotype_class.get_post_microhap().populate_final_mar_mp_df_dict( genotype_class.get_parameter(), genotype_class.get_metadata(), log_func = log_msg)
         log_msg("-----------------------------------end step 5----------------------------------------\n\n")
         log_msg("----------------------------------start step 6---------------------------------------")
-        go5 = genotype_class.get_post_microhap().perform_seq_alignment(genotype_class.get_parameter(), log_func = log_msg)
+        go4 = genotype_class.generate_all_mar_microhaps_fig(log_func = log_msg)
         log_msg("-----------------------------------end step 6----------------------------------------\n\n")
         log_msg("----------------------------------start step 7---------------------------------------")
-        go6 = genotype_class.dump_session("microtype", log_func = log_msg)
+        go5 = genotype_class.generate_all_sam_microhaps_fig(log_func = log_msg)
         log_msg("-----------------------------------end step 7----------------------------------------\n\n")
-        go7 = go0 and go1 and go2 and go3 and go4 and go5 and go6
-        if go7:
-            body_frame.result_queue.put(('success', go7))
+        log_msg("----------------------------------start step 8---------------------------------------")
+        go7 = genotype_class.dump_session("microtype", log_func = log_msg)
+        log_msg("-----------------------------------end step 8----------------------------------------\n\n")
+        go8 = go0 and go1 and go2 and go3 and go4 and go5 and go6 and go7
+        if go8:
+            body_frame.result_queue.put(('success', go8))
             log_msg("Microhap processing completed successfully. Please click 'Next' to proceed.")
         else:
-            body_frame.result_queue.put(('failture', go7))
+            body_frame.result_queue.put(('failure', go8))
             log_msg("Microhap processing failed. Please check the input files and try again.")
     except Exception as e:
         traceback.print_exc()

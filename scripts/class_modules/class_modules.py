@@ -158,28 +158,51 @@ class GenotypeClass:
         markers = self.get_metadata().get_cur_mh_markers_list()
         with ProcessPoolExecutor(max_workers=n_threads) as executor:
             futures = {}
+            futures_mp = {}
             for sam in samples:
                 sam_mh_dict = {}
+                sam_mp_dict = {}
                 for mar in markers:
-                    mar_mh_dict = self.get_post_microhap().get_loc_ref_dict().get(mar, None)
-                    if mar_mh_dict is not None:
-                        sam_mh_df = mar_mh_dict.get_final_mar_cur_microhap_nested_dict().get(sam, None)
+                    mar_mh_ref = self.get_post_microhap().get_loc_ref_dict().get(mar, None)
+                    if mar_mh_ref is not None:
+                        sam_mh_df = mar_mh_ref.get_final_mar_cur_microhap_nested_dict().get(sam, None)
                         if sam_mh_df is None:
                             sam_mh_df =  pd.DataFrame(
                                 {
-                                    "id": [f"mh_0", f"mh_1"],
+                                    "id": [f"-9", f"-99"],
                                     "NumReads": [0, 0],
-                                    "Allele": [1, 2],
+                                    "Allele": ["mh_-9", "mh_-99"],
                                     "Zygosity": ["nan", "nan"]
                                 }
                             )
                         sam_mh_dict[mar] = sam_mh_df
+                        
+                        if mar_mh_ref.get_has_exon():
+                            sam_mp_df = mar_mh_ref.get_final_mar_cur_micropep_nested_dict().get(sam, None)
+                            if sam_mp_df is None:
+                                sam_mp_df =  pd.DataFrame(
+                                    {
+                                        "id": [f"-9", f"-99"],
+                                        "NumReads": [0, 0],
+                                        "Allele": ["mp_-9", "mp_-99"],
+                                        "Zygosity": ["nan", "nan"]
+                                    }
+                                )
+                            sam_mp_dict[mar] = sam_mp_df
                 future = executor.submit(produce_micro_fig_sam_mar_pdf_pool,
                                                     ouput_folder_path,
                                                     markers,
                                                     sam_mh_dict,
                                                     sam)
                 futures[future] = sam
+                
+                if len(sam_mp_dict) > 0:
+                    future_mp = executor.submit(produce_micro_fig_sam_mar_pdf_pool,
+                                                    ouput_folder_path,
+                                                    markers,
+                                                    sam_mp_dict,
+                                                    sam, 'micropep')
+                    futures_mp[future_mp] = sam
             for future in as_completed(futures):
                 sam = futures[future]
                 try:
@@ -197,9 +220,21 @@ class GenotypeClass:
                     print_time(f'Error processing sample: {sam}: {e}')
                     if log_func is not None:
                         log_func(f'Error processing sample: {sam}: {e}')
-        print_time('finished to generate microhaps figs for each sample!')
+            for future_mp in as_completed(futures_mp):
+                sam = futures_mp[future_mp]
+                try:
+                    res = future_mp.result()
+                    if not res:
+                        print(f'Failed to process sample: {sam} for micropep')
+                        if log_func is not None:
+                            log_func(f'Failed to process sample: {sam} for micropep!')
+                except Exception as e:
+                    print_time(f'Error processing sample: {sam} for micropep: {e}')
+                    if log_func is not None:
+                        log_func(f'Error processing sample: {sam} for micropep: {e}')
+        print_time('finished to generate microtypes figs for each sample!')
         if log_func is not None:
-            log_func(f'finished to generate microhaps figs for each sample!')
+            log_func(f'finished to generate microtypes figs for each sample!')
         return True
                         
     def generate_all_mar_microhaps_fig(self, log_func = None)->bool: # to generate figures with with mh names
@@ -214,6 +249,7 @@ class GenotypeClass:
         
         with ProcessPoolExecutor(max_workers=n_threads) as executor:
             futures = {}
+            futures_mp = {}
             for mar in markers:
                 mar_mh_dict = self.get_post_microhap().get_loc_ref_dict().get(mar, None)
                 if mar_mh_dict is not None:
@@ -224,6 +260,15 @@ class GenotypeClass:
                                              mar_mh_final_dict,
                                              mar)
                     futures[future] = mar
+                    if mar_mh_dict.get_has_exon():
+                        mar_mp_final_dict = mar_mh_dict.get_final_mar_cur_micropep_nested_dict()
+                        if mar_mp_final_dict is not None or len(mar_mp_final_dict) > 0:
+                            future_mp = executor.submit(produce_micro_fig_mar_sam_pdf_pool,
+                                                output_folder_path,
+                                                samples,
+                                                mar_mp_final_dict,
+                                                mar, 'micropep')
+                            futures_mp[future_mp] = mar
             for future in as_completed(futures):
                 mar = futures[future]
                 try:
@@ -241,9 +286,24 @@ class GenotypeClass:
                     print_time(f'Error processing marker: {mar}: {e}')
                     if log_func is not None:
                         log_func(f'Error processing marker: {mar}: {e}')
-        print_time('finished to generate microhaps figs for each marker!')
+            
+            if mar_mh_dict.get_has_exon():
+                for future_mp in as_completed(futures_mp):
+                    mar = futures_mp[future_mp]
+                    try:
+                        res = future_mp.result()
+                        if not res:
+                            print(f'Failed to process marker: {mar} for micropep')
+                            if log_func is not None:
+                                log_func(f'Failed to process marker: {mar} for micropep!')
+                    except Exception as e:
+                        print_time(f'Error processing marker: {mar} for micropep: {e}')
+                        if log_func is not None:
+                            log_func(f'Error processing marker: {mar} for micropep: {e}')
+        
+        print_time('finished to generate microtypes figs for each marker!')
         if log_func is not None:
-            log_func(f'finished to generate microhaps figs for each marker!')
+            log_func(f'finished to generate microtypes figs for each marker!')
         return True                   
                 
     def generate_all(self, log_func = None)->bool:

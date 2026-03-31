@@ -118,7 +118,7 @@ def create_body(parent, frame):
     loci_browse_btn.configure(command=lambda btn=loci_browse_btn: infile_browser(top_panel.loci_entry, "index", btn))
     loci_browse_btn.grid(row=row, column=1, pady=(1,1), sticky="w")
     loci_var.trace_add("write", lambda *args: (genotype_class.get_parameter().set_locifile(loci_var.get()), 
-                                               genotype_class.get_metadata().read_locifile(genotype_class.get_parameter(), genotype_class.get_post_microhap())))
+                                               genotype_class.get_metadata().read_locifile2(genotype_class.get_parameter(), genotype_class.get_post_microhap())))
     loci_rev_var = ctk.BooleanVar(value=genotype_class.get_parameter().get_revcomloci())
     ctk.CTkCheckBox(top_panel, text="reverse complement", variable = loci_rev_var, font =brfont, text_color="white").grid(row=row, column=3, padx=(0, 150),sticky="w")
     loci_rev_var.trace_add("write", lambda *args: genotype_class.get_parameter().set_revcom(loci_rev_var.get()))

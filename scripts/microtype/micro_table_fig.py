@@ -4,12 +4,12 @@ import customtkinter as ctk
 import tkinter.ttk as ttk
 import tkinter as tk
 import pandas as pd
-from ..utils.common import micro_microhap_df_columns
+from ..utils.common import micro_microhap_df_columns, micro_micropep_df_columns
 from ..utils.utils_common import print_time
 from ..utils.utils_func import load_pdf
 from ..utils.mouse import _on_mousewheel
 
-def update_com_tab(genoclass, fig_tab_bottom_panel):
+def update_com_tab(genoclass, fig_tab_bottom_panel, dna=True):
     print_time(f"starting to update_com_tab")
     for widget in fig_tab_bottom_panel.winfo_children():
         widget.destroy()
@@ -22,7 +22,7 @@ def update_com_tab(genoclass, fig_tab_bottom_panel):
     fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)  # Ensure vertical expansion
     fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)  # Ensure horizontal expansion
 
-    columns = ['id']+micro_microhap_df_columns[:-1]
+    columns = ['id']+(micro_microhap_df_columns[:-1] if dna else micro_micropep_df_columns[:-1])
 
     # Create a frame to contain the Treeview and Scrollbars
     frame = tk.Canvas(fig_tab_bottom_panel, bg="white")
@@ -47,8 +47,8 @@ def update_com_tab(genoclass, fig_tab_bottom_panel):
     # Define column headings and widths
     for col in columns:
         tree.heading(col, text=col)
-        tree.column(col, anchor=tk.CENTER, stretch=False)
-    populate_geno_com_tab(genoclass, tree)
+        tree.column(col, anchor=tk.CENTER, stretch=True)
+    populate_geno_com_tab(genoclass, tree, dna)
     
     # Auto-adjust column widths based on content
     for col in columns:
@@ -57,17 +57,39 @@ def update_com_tab(genoclass, fig_tab_bottom_panel):
             item_text = str(tree.set(item, col))
             text_width = len(item_text) * 8
             max_width = max(max_width, text_width)
-        tree.column(col, width=min(max_width + 20, 400))
+        tree.column(col, width=max_width + 20)
     print_time(f"finished to update_geno_tab")
 
-def populate_geno_com_tab(genoclass, tree):
+def populate_geno_com_tab(genoclass, tree, dna=True):
     mar = genoclass.get_post_microhap().get_selected_marker()
     loc_ref_dict = genoclass.get_post_microhap().get_loc_ref_dict().get(mar, None)
     if loc_ref_dict is None:
         return
-    mar_mh_com_df = pd.concat(loc_ref_dict.get_final_mar_cur_microhap_nested_dict(), ignore_index = True)
+    if not dna and not loc_ref_dict.get_has_exon():
+        return
+    mar_mh_com_df = pd.concat(loc_ref_dict.get_final_mar_cur_microhap_nested_dict() if dna else loc_ref_dict.get_final_mar_cur_micropep_nested_dict(), ignore_index = True)
+    if mar_mh_com_df.empty:
+        return
     for idx,row in mar_mh_com_df.iterrows():
-        tree.insert('','end',
+        if dna:
+            tree.insert('','end',
+                        values=(str(idx),
+                        str(row['sample']),
+                        str(row['locus']),
+                        str(row['allele']),
+                        str(row['readt']),
+                        str(row['read']),
+                        str(row['rprop']),
+                        str(row['mprop']),
+                        str(row['sprop']),
+                        str(row['mut']),
+                        str(row['indel']),
+                        str(row['zygosity']),
+                        str(row['baseChange']),
+                        str(row['mh_seq'])
+                        ))
+        else:
+            tree.insert('','end',
                     values=(str(idx),
                     str(row['sample']),
                     str(row['locus']),
@@ -76,15 +98,12 @@ def populate_geno_com_tab(genoclass, tree):
                     str(row['read']),
                     str(row['rprop']),
                     str(row['mprop']),
-                    str(row['sprop']),
-                    str(row['mut']),
-                    str(row['indel']),
                     str(row['zygosity']),
                     str(row['baseChange']),
-                    str(row['seq'])
+                    str(row['mp_seq'])
                     ))
 
-def update_sim_tab(genoclass, fig_tab_bottom_panel):
+def update_sim_tab(genoclass, fig_tab_bottom_panel, dna = True):
     print_time(f"starting to update_geno_tab")
     for widget in fig_tab_bottom_panel.winfo_children():
         widget.destroy()
@@ -97,7 +116,7 @@ def update_sim_tab(genoclass, fig_tab_bottom_panel):
     fig_tab_bottom_panel.grid_rowconfigure(0, weight=1)  # Ensure vertical expansion
     fig_tab_bottom_panel.grid_columnconfigure(0, weight=1)  # Ensure horizontal expansion
     
-    columns = ['id', 'sample', 'marker', 'allele1', 'allele2']
+    columns = ['id', 'sample', 'locus', 'allele1', 'allele2']
     
     # Create a frame to contain the Treeview and Scrollbars
     frame = tk.Canvas(fig_tab_bottom_panel, bg="white")
@@ -125,7 +144,7 @@ def update_sim_tab(genoclass, fig_tab_bottom_panel):
         tree.heading(col, text=col)
         tree.column(col, anchor=tk.CENTER, stretch=False)
 
-    populate_geno_sim_tab(genoclass, tree)
+    populate_geno_sim_tab(genoclass, tree, dna)
     
     # Auto-adjust column widths based on content
     for col in columns:
@@ -134,16 +153,20 @@ def update_sim_tab(genoclass, fig_tab_bottom_panel):
             item_text = str(tree.set(item, col))
             text_width = len(item_text) * 8
             max_width = max(max_width, text_width)
-        tree.column(col, width=min(max_width + 20, 400))
+        tree.column(col, width=max_width + 20)
 
     print_time(f"finished to update_geno_tab")
 
-def populate_geno_sim_tab(genoclass, tree):
+def populate_geno_sim_tab(genoclass, tree, dna=True):
     mar = genoclass.get_post_microhap().get_selected_marker()
     loc_ref_dict = genoclass.get_post_microhap().get_loc_ref_dict().get(mar, None)
     if loc_ref_dict is None:
         return
-    mar_mh_com_df = pd.concat(loc_ref_dict.get_final_mar_cur_sim_microhap_nested_dict(), ignore_index = True)
+    if not dna and not loc_ref_dict.get_has_exon():
+        return
+    mar_mh_com_df = pd.concat(loc_ref_dict.get_final_mar_cur_sim_microhap_nested_dict() if dna else loc_ref_dict.get_final_mar_cur_sim_micropep_nested_dict(), ignore_index = True)
+    if mar_mh_com_df.empty:
+        return
     mar_mh_com_df.columns=['sample', 'allele1', 'allele2']
     for idx,row in mar_mh_com_df.iterrows():
         tree.insert('','end',
@@ -154,7 +177,7 @@ def populate_geno_sim_tab(genoclass, tree):
                     str(row['allele2'])
                     ))
 
-def update_sim_fig(fig_tab_bottom_panel, genoclass, seq_type):
+def update_sim_fig(fig_tab_bottom_panel, genoclass, dna=True):
     print_time(f"starting to update_sim_fig")
     for widget in fig_tab_bottom_panel.winfo_children():
         widget.destroy()
@@ -206,7 +229,7 @@ def update_sim_fig(fig_tab_bottom_panel, genoclass, seq_type):
 
     # Load the PDF into the canvas
     marker = genoclass.get_post_microhap().get_selected_marker()
-    pdf_file_path = os.path.join(genoclass.get_parameter().get_post_microhap_output_dir(), f"{marker}_locus_microhap_genotype.pdf")
+    pdf_file_path = os.path.join(genoclass.get_parameter().get_post_microhap_output_dir(), f"{marker}_locus_{'microhap' if dna else 'micropep'}_genotype.pdf") 
     if os.path.exists(pdf_file_path):
         load_pdf(pdf_file_path, canvas)
     
