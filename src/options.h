@@ -336,14 +336,15 @@ public:
 };
 
 class MultiLocSnps{
-public:
-    MultiLocSnps(){
-        refLocMap.clear();
-    };
-    
-public:
-    std::map<std::string, LocSnp2> refLocMap;//change to pointer to reduce memory usage
-    LocSnpOptions mLocSnpOptions;
+    public:
+        MultiLocSnps(){
+            refLocMap.clear();
+        };
+        
+    public:
+        std::map<std::string, LocSnp2> refLocMap;//change to pointer to reduce memory usage
+        LocSnpOptions mLocSnpOptions;
+        std::map<std::string, std::vector<std::string>> markerGrpMap; // for these overlapped genes, the key must be the full reference, while values are its members.
 };
 
 enum varType {

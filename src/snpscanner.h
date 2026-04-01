@@ -30,6 +30,8 @@ public:
     virtual ~SnpScanner();
     
     std::string scanVar(Read* & r1);
+    std::string deepScanVar(Read* & r1);
+    void groupScanVar(Read* & r1);
     bool scanVar(Read* & r1, Read* & r2);
     //inline std::map<std::string, std::map<std::string, LocSnp>> getSubGenotypeMap(){return subGenotypeMap;};
     inline std::map<std::string, std::map<std::string, uint32>> getSubSeqsMap(){return subSeqsMap;};
@@ -51,6 +53,7 @@ private:
     //std::map<std::string, std::map<std::string, LocSnp>> subGenotypeMap;
     std::map<std::string, std::map<std::string, uint32>> subSeqsMap;
     LocSnp2* locSnpIt;
+    LocSnp2* locSnpItGrp;
     const char* fpData;
     int fpLength;
     const char* rpData;
@@ -61,7 +64,10 @@ private:
     int readLength;
     std::string readName;
     std::stringstream ss;
-    std::string returnedlocus;
+    //std::pair<std::string, std::string> returnedlocuspair;//first: locus name, read sequence;
+    std::string returnedloci;
+    std::map<std::string, MatchTrim> locMap;
+    std::string ori_read_seq;
 };
 
 #endif /* SNPSCANNER_H */

@@ -27,17 +27,16 @@ If you use Windows, installing and running SmarTyper through Windows Subsystem f
 #### Install system dependencies:
 ```bash
 sudo apt install python3-full python3-tk mafft
+pip3 install --break-system-packages setuptools Cython customtkinter biopython pillow matplotlib dill logomaker seaborn joblib scikit-learn
 ```
+Note: `--break-system-packages` may be required on newer Ubuntu releases when installing into the system Python environment.
 
 ### Step 2. Clone and set up SmarTyper
 
 ```bash
 git clone https://github.com/rocpengliu/SmarTyper.git
 cd SmarTyper
-pip3 install --break-system-packages setuptools Cython customtkinter biopython pillow matplotlib dill logomaker seaborn joblib scikit-learn
 ```
-
-Note: `--break-system-packages` may be required on newer Ubuntu releases when installing into the system Python environment.
 
 ### Step 3. Compile the C++ extension
 

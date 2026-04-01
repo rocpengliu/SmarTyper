@@ -247,9 +247,6 @@ void run_seqtyper(int argc, char* argv[]){
 
     Options * opt = new Options();
 
-    string seq2satProgPath = string(argv[0]);
-    string seq2satDir = dirname(seq2satProgPath);
-    
     // I/O
     opt->var = cmd.get<string>("var");
     opt->mEdOptions.mode = cmd.get<string>("mode");

@@ -618,8 +618,8 @@ def trans_single_dna(dna:str, exon_pos:list):
 def split_codingpos(pos_str:str)->list:
     if len(pos_str.replace(" ", "")) == 0 or pos_str.replace(' ', '') == '0':
         return None
-    nested_list = [tuple(map(int, p.split(':'))) for p in pos_str.replace(' ', '').split(',')]
-    nested_list = [(x, y + 1) for x, y in nested_list]
+    nested_list = [tuple(map(int, p.split(':'))) for p in pos_str.replace(' ', '').split('|')]
+    nested_list = [(x, y) for x, y in nested_list]
     for x, y in nested_list:
         exon_len  = y - x
         if exon_len < 3:

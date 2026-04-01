@@ -17,7 +17,10 @@ SnpScanner::SnpScanner(Options* opt) {
     rpLength = 0;
     ss.str();
     locSnpIt = nullptr;
-    returnedlocus = "";
+    locSnpItGrp = nullptr;
+    //returnedlocuspair = std::make_pair("", "");
+    returnedloci.clear();
+    ori_read_seq.clear();
 }
 
 SnpScanner::SnpScanner(const SnpScanner& orig) {
@@ -30,68 +33,123 @@ bool SnpScanner::scanVar(Read* & r1, Read* & r2) {
     return true;
 }
 
-std::string SnpScanner::scanVar(Read* & r1) {
-    ss.str("");
-    returnedlocus.clear();
-    readSeq = r1->mSeq.mStr.c_str();
-    readLength = r1->mSeq.mStr.length();
+std::string SnpScanner::deepScanVar(Read* & r1) {
+    ori_read_seq = r1->mSeq.mStr;
+    groupScanVar(r1);
+    if (returnedloci.empty()) {
+        return "";
+    }
+    auto children_it = mOptions->mLocSnps.markerGrpMap.find(returnedloci);
+    if (children_it == mOptions->mLocSnps.markerGrpMap.end()) {
+        return returnedloci;
+    }
+    readSeq = ori_read_seq.c_str();
+    readLength = ori_read_seq.length();
     readName = r1->mName;
-    std::map<std::string, MatchTrim> locMap;
-
-    for (auto & it : mOptions->mLocSnps.refLocMap) {
-        if (r1->mSeq.length() < (it.second.fp.length() + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length())) {
+    for(const auto & it : children_it->second){
+        if (it == returnedloci) {
+            continue;
+        }
+        locSnpIt = &(mOptions->mLocSnps.refLocMap[it]);
+        if (ori_read_seq.length() < (locSnpIt->ft.length() + locSnpIt->ref.length() + locSnpIt->rt.length())) {
             continue;
         }
         bool goRP = false;
         int trimF = 0;
-        int fpMismatches = (int) edit_distance(it.second.fp.mStr, r1->mSeq.mStr.substr(0, it.second.fp.length()));
-        fpData = it.second.fp.mStr.c_str();
-        fpLength = it.second.fp.length();
-        auto endBoolF = doPrimerAlignment(fpData, fpLength, mOptions->mSex.sexMarker, readSeq, readLength, r1->mName, true);
+        fpData = locSnpIt->fp.mStr.c_str();
+        fpLength = locSnpIt->fp.length();
+        MatchTrim mTrim;
+        auto endBoolF = doPrimerAlignment(fpData, fpLength, locSnpIt->name, readSeq, readLength, readName, true);
+        if (get<2>(endBoolF) && (get<1>(endBoolF) <= readLength)) {
+            if ((get<1>(endBoolF) + locSnpIt->ref.length() + locSnpIt->rt.length()) <= ori_read_seq.length()) {
+                trimF = get<1>(endBoolF);
+                goRP = true;
+                mTrim.totMismatches += get<0>(endBoolF);
+            }
+        }
+        if (goRP) {
+            rpData = locSnpIt->rp.mStr.c_str();
+            rpLength = locSnpIt->rp.length();
+            auto endBoolR = doPrimerAlignment(rpData, rpLength, locSnpIt->name, readSeq, readLength, readName, true);
+            if (get<2>(endBoolR) && (get<1>(endBoolR) <= ori_read_seq.length()) &&
+                    ((trimF + locSnpIt->ref.length() + locSnpIt->rt.length()) <= get<1>(endBoolR))) {
+                mTrim.totMismatches += get<0>(endBoolR);
+                mTrim.trimF = trimF;
+                mTrim.trimedRefLenth = get<1>(endBoolR) - trimF - locSnpIt->rp.mStr.length();
+                if (mTrim.totMismatches <= mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq && mTrim.trimedRefLenth > 0) {
+                        subSeqsMap[locSnpIt->name][ori_read_seq.substr(mTrim.trimF, mTrim.trimedRefLenth)]++;
+                }
+            }
+        }
+    }
+
+    return returnedloci;
+}
+
+void SnpScanner::groupScanVar(Read* & r1) {
+    ss.str("");
+    //returnedlocuspair = std::make_pair("", "");
+    returnedloci.clear();
+    readSeq = r1->mSeq.mStr.c_str();
+    readLength = r1->mSeq.mStr.length();
+    readName = r1->mName;
+    locMap.clear();
+
+    for (auto & it : mOptions->mLocSnps.markerGrpMap) {
+        locSnpItGrp = &(mOptions->mLocSnps.refLocMap[it.first]);
+        if (r1->mSeq.length() < (locSnpItGrp->fp.length() + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length())) {
+            continue;
+        }
+        bool goRP = false;
+        int trimF = 0;
+        int fpMismatches = (int) edit_distance(locSnpItGrp->fp.mStr, r1->mSeq.mStr.substr(0, locSnpItGrp->fp.length()));
+        fpData = locSnpItGrp->fp.mStr.c_str();
+        fpLength = locSnpItGrp->fp.length();
+        auto endBoolF = doPrimerAlignment(fpData, fpLength, locSnpItGrp->name, readSeq, readLength, r1->mName, true);
 
         if(std::min(fpMismatches, get<0>(endBoolF)) > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq) continue;
 
         if(get<0>(endBoolF) <= fpMismatches){
             fpMismatches =  get<0>(endBoolF);
             if (get<2>(endBoolF) && (get<1>(endBoolF) <= r1->length())) {
-                if ((get<1>(endBoolF) + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length()) <= r1->mSeq.length()) {
+                if ((get<1>(endBoolF) + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length()) <= r1->mSeq.length()) {
                     trimF = get<1>(endBoolF);
                     goRP = true;
                 }
             }
         } else {
-            trimF = it.second.fp.length();
+            trimF = locSnpItGrp->fp.length();
             goRP = true;
         }
 
         if (goRP) {
             MatchTrim mTrim;
-            int rpMismatches = (int) edit_distance(it.second.rp.mStr, r1->mSeq.mStr.substr(r1->mSeq.length() - it.second.rp.length()));
-            rpData = it.second.rp.mStr.c_str();
-            rpLength = it.second.rp.length();
-            auto endBoolR = doPrimerAlignment(rpData, rpLength, it.second.name, readSeq, readLength, r1->mName, true);
+            int rpMismatches = (int) edit_distance(locSnpItGrp->rp.mStr, r1->mSeq.mStr.substr(r1->mSeq.length() - locSnpItGrp->rp.length()));
+            rpData = locSnpItGrp->rp.mStr.c_str();
+            rpLength = locSnpItGrp->rp.length();
+            auto endBoolR = doPrimerAlignment(rpData, rpLength, locSnpItGrp->name, readSeq, readLength, r1->mName, true);
 
             if(std::min(rpMismatches, get<0>(endBoolR)) > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq) continue;
             
             if(get<0>(endBoolR) <= rpMismatches){
                 if (get<2>(endBoolR) && (get<1>(endBoolR) <= r1->mSeq.mStr.length()) &&
-                        ((trimF + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length()) <= get<1>(endBoolR))) {
+                        ((trimF + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length()) <= get<1>(endBoolR))) {
                     mTrim.totMismatches = fpMismatches + rpMismatches;
                     mTrim.trimF = trimF;
-                    mTrim.trimedRefLenth = get<1>(endBoolR) - trimF - it.second.rp.mStr.length();
-                    locMap[it.second.name] = mTrim;
+                    mTrim.trimedRefLenth = get<1>(endBoolR) - trimF - locSnpItGrp->rp.mStr.length();
+                    locMap[locSnpItGrp->name] = mTrim;
                 }
             } else {
                 mTrim.totMismatches = fpMismatches + rpMismatches;
                 mTrim.trimF = trimF;
-                mTrim.trimedRefLenth = r1->mSeq.length() - trimF - it.second.rp.mStr.length();
-                locMap[it.second.name] = mTrim;
+                mTrim.trimedRefLenth = r1->mSeq.length() - trimF - locSnpItGrp->rp.mStr.length();
+                locMap[locSnpItGrp->name] = mTrim;
             }
         }
     }
 
     if (locMap.empty()) {
-        return returnedlocus;
+        return;
     }
 
     std::string locName = "";
@@ -110,40 +168,154 @@ std::string SnpScanner::scanVar(Read* & r1) {
         for (const auto & it : locMap) {
             if (it.second.totMismatches == minValue) {
                 locName = it.first;
-                ss.str();
+                ss.str("");
                 break; //warning, what if there are multiple identical values
             }
         }
     }
 
     locSnpIt = &(mOptions->mLocSnps.refLocMap[locName]);
-
     if (r1->mSeq.length() < (locSnpIt->fp.length() + locSnpIt->ft.length() + locSnpIt->rt.length() + locSnpIt->rp.length())) {
     //if (r1->mSeq.length() < (locSnpIt->fp.length() + locSnpIt->ft.length() + locSnpIt->ref.length() + locSnpIt->rt.length() + locSnpIt->rp.length())) {
-        return returnedlocus;
+        return;
     } else {
         if (locMap[locName].trimF < r1->mSeq.length()) {
             r1->trimFront(locMap[locName].trimF);
             if (locMap[locName].trimedRefLenth <= r1->mSeq.length()) {
                 r1->resize(locMap[locName].trimedRefLenth);
             } else {
-                return returnedlocus;
+                return;
             }
         } else {
-            return returnedlocus;
+            return;
         }
     }
     locMap.clear();
 
     if (mOptions->debug) cCout("detected marker: " + locSnpIt->name, 'r');
     subSeqsMap[locSnpIt->name][r1->mSeq.mStr]++;
-    returnedlocus = locName;
+    //returnedlocuspair = std::make_pair(locSnpIt->name, r1->mSeq.mStr);
+    returnedloci = locSnpIt->name;
     if (mOptions->mEdOptions.printRes) {
         cCout(ss.str(), 'g');
     }
-    ss.str();
-    return returnedlocus;
+    ss.str("");
 }
+
+// std::string SnpScanner::scanVar(Read* & r1) {
+//     ss.str("");
+//     returnedlocus.clear();
+//     readSeq = r1->mSeq.mStr.c_str();
+//     readLength = r1->mSeq.mStr.length();
+//     readName = r1->mName;
+//     std::map<std::string, MatchTrim> locMap;
+
+//     for (auto & it : mOptions->mLocSnps.refLocMap) {
+//         if (r1->mSeq.length() < (it.second.fp.length() + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length())) {
+//             continue;
+//         }
+//         bool goRP = false;
+//         int trimF = 0;
+//         int fpMismatches = (int) edit_distance(it.second.fp.mStr, r1->mSeq.mStr.substr(0, it.second.fp.length()));
+//         fpData = it.second.fp.mStr.c_str();
+//         fpLength = it.second.fp.length();
+//         auto endBoolF = doPrimerAlignment(fpData, fpLength, mOptions->mSex.sexMarker, readSeq, readLength, r1->mName, true);
+
+//         if(std::min(fpMismatches, get<0>(endBoolF)) > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq) continue;
+
+//         if(get<0>(endBoolF) <= fpMismatches){
+//             fpMismatches =  get<0>(endBoolF);
+//             if (get<2>(endBoolF) && (get<1>(endBoolF) <= r1->length())) {
+//                 if ((get<1>(endBoolF) + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length()) <= r1->mSeq.length()) {
+//                     trimF = get<1>(endBoolF);
+//                     goRP = true;
+//                 }
+//             }
+//         } else {
+//             trimF = it.second.fp.length();
+//             goRP = true;
+//         }
+
+//         if (goRP) {
+//             MatchTrim mTrim;
+//             int rpMismatches = (int) edit_distance(it.second.rp.mStr, r1->mSeq.mStr.substr(r1->mSeq.length() - it.second.rp.length()));
+//             rpData = it.second.rp.mStr.c_str();
+//             rpLength = it.second.rp.length();
+//             auto endBoolR = doPrimerAlignment(rpData, rpLength, it.second.name, readSeq, readLength, r1->mName, true);
+
+//             if(std::min(rpMismatches, get<0>(endBoolR)) > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq) continue;
+            
+//             if(get<0>(endBoolR) <= rpMismatches){
+//                 if (get<2>(endBoolR) && (get<1>(endBoolR) <= r1->mSeq.mStr.length()) &&
+//                         ((trimF + it.second.ft.length() + it.second.ref.length() + it.second.rt.length() + it.second.rp.length()) <= get<1>(endBoolR))) {
+//                     mTrim.totMismatches = fpMismatches + rpMismatches;
+//                     mTrim.trimF = trimF;
+//                     mTrim.trimedRefLenth = get<1>(endBoolR) - trimF - it.second.rp.mStr.length();
+//                     locMap[it.second.name] = mTrim;
+//                 }
+//             } else {
+//                 mTrim.totMismatches = fpMismatches + rpMismatches;
+//                 mTrim.trimF = trimF;
+//                 mTrim.trimedRefLenth = r1->mSeq.length() - trimF - it.second.rp.mStr.length();
+//                 locMap[it.second.name] = mTrim;
+//             }
+//         }
+//     }
+
+//     if (locMap.empty()) {
+//         return returnedlocus;
+//     }
+
+//     std::string locName = "";
+//     if (locMap.size() == 1) {
+//         locName = locMap.begin()->first;
+//         //if(mOptions->debug) cCout("single value: " + locName, 'r');
+//     } else {
+//         std::vector<int> seqScoreVec;
+//         for (const auto & it : locMap) {
+//             seqScoreVec.push_back(it.second.totMismatches);
+//         }
+//         auto minValue = *std::min_element(seqScoreVec.begin(), seqScoreVec.end());
+//         //warning, what if there are multiple identical values
+//         seqScoreVec.clear();
+
+//         for (const auto & it : locMap) {
+//             if (it.second.totMismatches == minValue) {
+//                 locName = it.first;
+//                 ss.str();
+//                 break; //warning, what if there are multiple identical values
+//             }
+//         }
+//     }
+
+//     locSnpIt = &(mOptions->mLocSnps.refLocMap[locName]);
+
+//     if (r1->mSeq.length() < (locSnpIt->fp.length() + locSnpIt->ft.length() + locSnpIt->rt.length() + locSnpIt->rp.length())) {
+//     //if (r1->mSeq.length() < (locSnpIt->fp.length() + locSnpIt->ft.length() + locSnpIt->ref.length() + locSnpIt->rt.length() + locSnpIt->rp.length())) {
+//         return returnedlocus;
+//     } else {
+//         if (locMap[locName].trimF < r1->mSeq.length()) {
+//             r1->trimFront(locMap[locName].trimF);
+//             if (locMap[locName].trimedRefLenth <= r1->mSeq.length()) {
+//                 r1->resize(locMap[locName].trimedRefLenth);
+//             } else {
+//                 return returnedlocus;
+//             }
+//         } else {
+//             return returnedlocus;
+//         }
+//     }
+//     locMap.clear();
+
+//     if (mOptions->debug) cCout("detected marker: " + locSnpIt->name, 'r');
+//     subSeqsMap[locSnpIt->name][r1->mSeq.mStr]++;
+//     returnedlocus = locName;
+//     if (mOptions->mEdOptions.printRes) {
+//         cCout(ss.str(), 'g');
+//     }
+//     ss.str();
+//     return returnedlocus;
+// }
 
 std::pair<bool, std::map<int, std::pair<Sequence, Sequence>>> SnpScanner::doAlignment(Options * & mOptions, std::string readName, const char* & qData, int qLength, std::string targetName, const char* & tData, int tLength) {
     EdlibAlignResult result = edlibAlign(qData, qLength, tData, tLength,

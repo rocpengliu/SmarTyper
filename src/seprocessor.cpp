@@ -281,7 +281,6 @@ bool SingleEndProcessor::processSingleEnd(ReadPack* pack, ThreadConfig* config){
         config->addFilterResult(result, 1);
 
         if( r1 != NULL &&  result == PASS_FILTER) {
-
             locus.clear();
             bool goGeno = false;
             if (!mOptions->mSex.sexMarker.empty()) {
@@ -314,10 +313,10 @@ bool SingleEndProcessor::processSingleEnd(ReadPack* pack, ThreadConfig* config){
                         delete revReads;
                     }
                 } else {
-                    locus = config->getSnpScanner()->scanVar(r1);
+                    locus = config->getSnpScanner()->deepScanVar(r1);
                     if(locus.empty()){
                         Read* revReads = r1->reverseComplement();
-                        locus = config->getSnpScanner()->scanVar(revReads);
+                        locus = config->getSnpScanner()->deepScanVar(revReads);
                         delete revReads;
                     }
                 }

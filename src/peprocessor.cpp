@@ -386,10 +386,10 @@ bool PairEndProcessor::processPairEnd(ReadPairPack* pack, ThreadConfig* config){
                                     delete revReads;
                                 }
                             } else {
-                                locus = config->getSnpScanner()->scanVar(merged);
+                                locus = config->getSnpScanner()->deepScanVar(merged);
                                 if(locus.empty()){
                                     Read* revReads = merged->reverseComplement();
-                                    locus = config->getSnpScanner()->scanVar(revReads);
+                                    locus = config->getSnpScanner()->deepScanVar(revReads);
                                     delete revReads;
                                 }
                             }

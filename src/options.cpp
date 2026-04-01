@@ -475,6 +475,7 @@ void Options::readLocFile(){
         mLocSnps.refLocMap.clear();
         splitVec.reserve(8);
         std::vector<std::string> posVec;
+        std::map<std::string, std::map<std::string, int>> frPMarkerGrpMap;
         while(fileIn.getline(line, maxLine)) {
             readed = strlen(line);
             if(readed == 0) continue;
@@ -520,11 +521,55 @@ void Options::readLocFile(){
                 }
                 posVec.clear();
                 mLocSnps.refLocMap[tmpLocSnp.name] = tmpLocSnp;
+                frPMarkerGrpMap[std::string(tmpLocSnp.fp.mStr + tmpLocSnp.rp.mStr)][tmpLocSnp.name] = (tmpLocSnp.ft.length() + tmpLocSnp.ref.length() + tmpLocSnp.rt.length());
+
             } else {
                 error_exit("Your locus " + lineStr + " does not have 7 columns!");
             }
             splitVec.clear();
         }
+        mLocSnps.markerGrpMap.clear();
+        for(const auto & itt : frPMarkerGrpMap){
+            if (itt.second.size() > 1){
+                std::string max_ref = std::max_element(itt.second.begin(), itt.second.end(),
+                    [](const std::pair<std::string, int>& a, const std::pair<std::string, int>& b){
+                        return a.second < b.second;
+                    })->first;
+                
+                std::for_each(itt.second.begin(), itt.second.end(),
+                    [&max_ref, this](const std::pair<std::string, int>& p){
+                        if (p.first != max_ref){
+                            this->mLocSnps.markerGrpMap[max_ref].push_back(p.first);
+                        }
+                    });
+            } else {
+                mLocSnps.markerGrpMap[itt.second.begin()->first].push_back(itt.second.begin()->first);
+            }
+        }
+
+        if(!mLocSnps.markerGrpMap.empty()){
+            for(const auto & itt : mLocSnps.markerGrpMap){
+                const auto & max_ref = mLocSnps.refLocMap[itt.first];
+                std::string max_ref_seq = std::string(max_ref.fp.mStr + max_ref.ft.mStr + max_ref.ref.mStr + max_ref.rt.mStr + max_ref.rp.mStr);
+                for(const auto & it2 : itt.second){
+                    if (itt.first == it2) continue;
+                    auto & loc = mLocSnps.refLocMap[it2];
+                    std::string loc_seq = std::string(loc.ft.mStr + loc.ref.mStr + loc.rt.mStr);
+                    if (loc_seq.length() > max_ref_seq.length()) {
+                        error_exit("The reference sequence of " + it2 + " is longer than the reference sequence of " + itt.first + ", which is not allowed for marker grouping! Please check your locus file and make sure the reference sequence of the marker group is the longest one among its members.");
+                    }
+
+                   std::size_t pos = max_ref_seq.find(loc_seq);
+                   if (pos == std::string::npos) {
+                        error_exit("The reference sequence of " + it2 + " is not a substring of the reference sequence of " + itt.first + ", which is not allowed for marker grouping! Please check your locus file and make sure the reference sequence of the marker group contains the reference sequence of its members.");
+                   }
+                   std::size_t start = pos >= loc.fp.length() ? pos - loc.fp.length() : 0;
+                   loc.fp = Sequence(max_ref_seq.substr(start, (pos - start)));
+                   loc.rp = Sequence(max_ref_seq.substr(pos + loc.ref.mStr.length(), loc.rp.length()));
+                }
+            }
+        }
+
     } else {
         error_exit("You have to use --var to specify ssr or snp");
     }
