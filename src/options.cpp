@@ -519,7 +519,7 @@ void Options::readLocFile(){
                 }
             }
             for (auto & itt : posVec) {
-                if (itt == "NA") break;
+                if (itt == "NA" || itt == "") continue;
                 auto pos = std::stoi(itt);
                 if (pos > tmpLocSnp.trimPos.first && pos < (tmpLocSnp.trimPos.first + tmpLocSnp.ref.length())) {
                     pos -= tmpLocSnp.trimPos.first;

@@ -167,7 +167,7 @@ class MetaDataClass:
                         modern_messagebox.showerror(None, "Invalid Input", f"{row['locus']} trim length is too long")
                         raise ValueError(f"{row['locus']} trim length is too long")
                     if pd.notna(row['snppos']) and str(row['snppos']).replace(' ', '') not in ["0", "0.0", "na", "nan", ""]:
-                        snp_pos = [int(pos.strip()) for pos in str(row['snppos']).replace(" ", "").split('|')]
+                        snp_pos = [int(pos) for pos in str(row["snppos"]).replace(" ", "").split("|") if pos]
                         snp_pos = sorted(snp_pos)
                         if len(snp_pos) != 0:
                             mar_ref.set_ori_snp_pos(sorted(snp_pos))
@@ -183,7 +183,7 @@ class MetaDataClass:
                             mar_ref.set_tot_snp_pos(mar_ref.get_cur_snp_pos())
                     if mh:
                         ori_exon_pos = str(row['codingpos']).replace(' ', '')
-                        if ori_exon_pos != '0' or ori_exon_pos is not None or ori_exon_pos != '' or ori_exon_pos.lower() != 'na' or ori_exon_pos.lower() != 'nan':
+                        if ori_exon_pos != '0' and ori_exon_pos is not None and ori_exon_pos != '' and ori_exon_pos.lower() != 'na' and ori_exon_pos.lower() != 'nan':
                             ori_exon_pos = split_codingpos(ori_exon_pos)
                             if ori_exon_pos is not None and len(ori_exon_pos) != 0:
                                 mar_ref.set_is_mt(True)
