@@ -62,15 +62,15 @@ def create_body(frame):
     
         # Create left panel blended with background
     left_body = ctk.CTkFrame(body_frame, fg_color="transparent")
-    left_body.grid(row=0, column=0, columnspan=2, sticky="we", padx=5, pady=5)
+    left_body.grid(row=0, column=0, columnspan=2, sticky="nw", padx=5, pady=5)
 
     # Create middle panel blended with background
     middle_body = ctk.CTkFrame(body_frame, fg_color="transparent")
-    middle_body.grid(row=0, column=2, columnspan=2, sticky="we", padx=5, pady=5)
+    middle_body.grid(row=0, column=2, columnspan=2, sticky="nw", padx=5, pady=5)
 
     # Create right panel blended with background
     right_body = ctk.CTkFrame(body_frame, fg_color="transparent")
-    right_body.grid(row=0, column=4, columnspan=2, sticky="w", padx=5, pady=5)
+    right_body.grid(row=0, column=4, columnspan=2, sticky="nw", padx=5, pady=5)
     
     # Configure panels
     left_body.grid_columnconfigure('all', weight=1)
@@ -94,7 +94,7 @@ def create_body(frame):
     row += 1
     create_label_entry(body_frame, left_body, row, 0, "Primer mismatches:", str(param.get_maxMismatchesPSeq()), "maxMismatchesPSeq", param)
     row += 1
-    create_label_entry(body_frame, left_body, row, 0, "Min. reads:", str(param.get_minSeqs()), "minSeqs", param)
+    create_label_entry(body_frame, left_body, row, 0, "Min. reads 4 locus:", str(param.get_minReads4Locus()), "minReads4Locus", param)
     row += 1
     
     fig_var = ctk.BooleanVar(value=param.is_pro_figure())
@@ -109,39 +109,36 @@ def create_body(frame):
     row += 1
 
     if param.get_analtype() == "snp":
-        create_label_entry(body_frame, middle_body, row, 0, "ssProH:", str(param.get_ssProH()), "ssProH", param)
+        create_label_entry(body_frame, middle_body, row, 0, "smProp1H:", str(param.get_smProp1H()), "smProp1H", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "ssProL:", str(param.get_ssProL()), "ssProL", param)
+        create_label_entry(body_frame, middle_body, row, 0, "smProp1L:", str(param.get_smProp1L()), "smProp1L", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "msProH:", str(param.get_msProH()), "msProH", param)
+        create_label_entry(body_frame, middle_body, row, 0, "mmProp1H:", str(param.get_mmProp1H()), "mmProp1H", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "msProL:", str(param.get_msProL()), "msProL", param)
+        create_label_entry(body_frame, middle_body, row, 0, "mmProp1L:", str(param.get_mmProp1L()), "mmProp1L", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "sPro3:", str(param.get_sPro3()), "sPro3", param)
+        create_label_entry(body_frame, middle_body, row, 0, "mProp2:", str(param.get_mProp2()), "mProp2", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "minSeqsProSnp:", str(param.get_minSeqsProSnp()), "minSeqsProSnp", param)
+        # create_label_entry(body_frame, middle_body, row, 0, "sProp3:", str(param.get_sProp3()), "sProp3", param)
+        # row += 1
+        create_label_entry(body_frame, middle_body, row, 0, "Min. reads for allele:", str(param.get_minReads4Allele()), "minReads4Allele", param)
         row += 1
-        create_label_entry(body_frame, middle_body, row, 0, "minReads4Filter:", str(param.get_minReads4Filter()), "minReads4Filter", param)
-        row += 2
+        create_label_entry(body_frame, middle_body, row, 0, "Max. read variants for alignment:", str(param.get_maxRVs4Align()), "maxRVs4Align", param)
     else:
         pass
     
     row = 0
     ctk.CTkLabel(right_body, text="Sex identification options:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "ssProH:", str(param.get_ssProH()), "ssProH", param)
+    create_label_entry(body_frame, right_body, row, 0, "Primer mismatches:", str(param.get_maxMismatchesPSeqSex()), "maxMismatchesPSeqSex", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "ssProL:", str(param.get_ssProL()), "ssProL", param)
+    create_label_entry(body_frame, right_body, row, 0, "Ref. mismatches:", str(param.get_maxMismatchesRefSeqSex()), "maxMismatchesRefSeqSex", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "msProH:", str(param.get_msProH()), "msProH", param)
+    create_label_entry(body_frame, right_body, row, 0, "yxRatio:", str(param.get_yxRatio()), "yxRatio", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "msProL:", str(param.get_msProL()), "msProL", param)
+    create_label_entry(body_frame, right_body, row, 0, "Min. reads for sex allele:", str(param.get_minReadsSexAllele()), "minReadsSexAllele", param)
     row += 1
-    create_label_entry(body_frame, right_body, row, 0, "minSeqsProSnp:", str(param.get_minSeqsProSnp()), "minSeqsProSnp", param)
-    row += 1
-    create_label_entry(body_frame, right_body, row, 0, "minReads4Filter:", str(param.get_minReads4Filter()), "minReads4Filter", param)
-    row += 2
-    
+    create_label_entry(body_frame, right_body, row, 0, "Min. reads for sex variant:", str(param.get_minReadsSexVariant()), "minReadsSexVariant", param)
     return body_frame
 
 def create_footer(parent, frame):

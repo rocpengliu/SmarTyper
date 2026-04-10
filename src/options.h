@@ -301,27 +301,27 @@ public:
     LocSnpOptions(){
         maxMismatchesPSeq = 2;
         maxScorePrimer = -1;
-        minSeqs = 5;
-        minSeqsPer = 0.1;
-        hmProH = 0.84;
-        hmProL = 0.78;
-        htProH = 0.83;
-        htProL = 0.79;
-        htPro3 = 0.80;
+        minReads4Locus = 30;
+        smProp1H = 0.84;
+        smProp1L = 0.78;
+        mmProp1H = 0.83;
+        mmProp1L = 0.79;
+        mProp2 = 0.50;
+        //sProp3 = 0.0;
         hmPer = 0.0;
         //htJetter = 0.25;
-        minReads4Filter = 50;
-        maxRows4Align = 6;
+        minReads4Allele = 10;
+        maxRVs4Align = 6;
     };
 public:
     uint32 maxMismatchesPSeq;
     uint32 maxScorePrimer;
-    uint32 minSeqs;
-    double minSeqsPer;//against largest peak; 10/%
-    int minReads4Filter;
-    double hmProL, hmProH, htProL, htProH, htPro3;
+    uint32 minReads4Locus;//minimum reads for a locus.
+    //double minSeqsPer;//against largest peak; 10/%
+    int minReads4Allele;//minimum reads for a microtype, if homo, the read1, if heter, the read2
+    double smProp1L,smProp1H, mmProp1L, mmProp1H, mProp2;// sProp3;
     double hmPer; //the actual one, it is either hmPerL or hmPerH, depending on how many true snps there.
-    int maxRows4Align;
+    int maxRVs4Align;
 };
 
 class MultiLocVars{

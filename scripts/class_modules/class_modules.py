@@ -496,11 +496,11 @@ class GenotypeClass:
             if self.get_parameter().is_project_genotype_model() and not self.get_parameter().is_project_microtype_model():
                 print(f"Found genotype project file: {self.get_parameter().get_outputgenotypeproject()}")
                 input_path = self.get_parameter().get_outputgenotypeproject()
-                project = "genotype"
+                project = "genotyping"
             elif self.get_parameter().is_project_microtype_model() and not self.get_parameter().is_project_genotype_model():
                 print(f"Found microtype project file: {self.get_parameter().get_outputmicrotypeproject()}")
                 input_path = self.get_parameter().get_outputmicrotypeproject()
-                project = "microtype"
+                project = "microtyping"
             else:
                 print(f"No valid project file found in output directory:")
                 modern_messagebox.showerror(parent, "Project File Not Found", f"No valid project file found in output directory.")
@@ -519,12 +519,12 @@ class GenotypeClass:
             # Update current instance with loaded data
             self.__dict__.update(loaded_obj.__dict__)
             
-            if project == "genotype":
+            if project == "genotyping":
                 self.get_parameter().set_project_genotype_model(True)
                 self.get_parameter().set_project_microtype_model(False)
                 self.get_res_param().set_res_type("sample")
                 self.get_parameter().set_outputdir(os.path.dirname(input_path))
-            elif project == "microtype":
+            elif project == "microtyping":
                 self.get_parameter().set_project_microtype_model(True)
                 self.get_parameter().set_project_genotype_model(False)
                 self.get_parameter().set_post_microhap_output_dir(os.path.dirname(input_path))

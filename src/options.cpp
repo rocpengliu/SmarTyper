@@ -302,15 +302,20 @@ bool Options::validate() {
         }
 
     }
-
-    if(mLocSnps.mLocSnpOptions.minSeqsPer > 1 || mLocSnps.mLocSnpOptions.minSeqsPer <= 0) error_exit("--minSeqsProSnp must be < 100 and > 0");
-    if(mLocSnps.mLocSnpOptions.hmProH <= 0 || mLocSnps.mLocSnpOptions.hmProH >= 1) error_exit("--ssProH must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.hmProL <= 0 || mLocSnps.mLocSnpOptions.hmProL >= 1) error_exit("--ssProL must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.htProH <= 0 || mLocSnps.mLocSnpOptions.htProH >= 1) error_exit("--msProH must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.htProL <= 0 || mLocSnps.mLocSnpOptions.htProL >= 1) error_exit("--msProL must be between 0 and 1");
-    if(mLocSnps.mLocSnpOptions.hmProL > mLocSnps.mLocSnpOptions.hmProH) error_exit("--ssProL should be smaller than --ssProH");
-    if(mLocSnps.mLocSnpOptions.htProL > mLocSnps.mLocSnpOptions.htProH) error_exit("--msProL should be smaller than --msProH");
-    if(mLocSnps.mLocSnpOptions.htPro3 <= 0 || mLocSnps.mLocSnpOptions.htPro3 >= 1) error_exit("--sPro3 must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.minReads4Allele < 1)
+        error_exit("minimum reads for filtering an allele (--minReads4Allele) should be at least 1");
+    if(mLocSnps.mLocSnpOptions.minReads4Locus < 1 || mLocSnps.mLocSnpOptions.minReads4Locus < mLocSnps.mLocSnpOptions.minReads4Allele)
+        error_exit("minimum reads for filtering a locus (--minReads4Locus) should be at least 1");
+    if(mLocSnps.mLocSnpOptions.maxRVs4Align < 2)
+        error_exit("maximum number of read variants for alignment table (--maxRVs4Align) should be at least 2");
+    if(mLocSnps.mLocSnpOptions.smProp1H <= 0 || mLocSnps.mLocSnpOptions.smProp1H > 1) error_exit("--smProp1H must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.smProp1L <= 0 || mLocSnps.mLocSnpOptions.smProp1L >= 1) error_exit("--smProp1L must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.mmProp1H <= 0 || mLocSnps.mLocSnpOptions.mmProp1H > 1) error_exit("--mmProp1H must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.mmProp1L <= 0 || mLocSnps.mLocSnpOptions.mmProp1L >= 1) error_exit("--mmProp1L must be between 0 and 1");
+    if(mLocSnps.mLocSnpOptions.smProp1L > mLocSnps.mLocSnpOptions.smProp1H) error_exit("--smProp1L should be smaller than --smProp1H");
+    if(mLocSnps.mLocSnpOptions.mmProp1L > mLocSnps.mLocSnpOptions.mmProp1H) error_exit("--mmProp1L should be smaller than --mmProp1H");
+    if(mLocSnps.mLocSnpOptions.mProp2 <= 0 || mLocSnps.mLocSnpOptions.mProp2 > 1) error_exit("--mProp2 must be between 0 and 1");
+    //if(mLocSnps.mLocSnpOptions.sProp3 <= 0 || mLocSnps.mLocSnpOptions.sProp3 > 1) error_exit("--sProp3 must be between 0 and 1");
     if (locFile.empty()) {
         error_exit("locus file is empty, please provide a valid file!");
     } else {
@@ -343,9 +348,9 @@ bool Options::validate() {
         mEdOptions.alignTask = EDLIB_TASK_DISTANCE;
     }
     
-    if(mLocSnps.mLocSnpOptions.maxRows4Align < 2){
-        std::cout << "maxRows4Align " << mLocSnps.mLocSnpOptions.maxRows4Align << " is less than the minimum 2, and it is going to be set to 2!" << std::endl;
-        mLocSnps.mLocSnpOptions.maxRows4Align = 2;
+    if(mLocSnps.mLocSnpOptions.maxRVs4Align < 2){
+        std::cout << "maxRVs4Align " << mLocSnps.mLocSnpOptions.maxRVs4Align << " is less than the minimum 2, and it is going to be set to 2!" << std::endl;
+        mLocSnps.mLocSnpOptions.maxRVs4Align = 2;
     }
     
     return true;
@@ -488,44 +493,43 @@ void Options::readLocFile(){
             lineStr = std::string(line);
             if(lineStr.empty()) continue;
             splitStr(lineStr, splitVec);
-            if (splitVec.size() == 8) {
-                LocSnp2 tmpLocSnp;
-                tmpLocSnp.name = splitVec[0];
-                tmpLocSnp.fp = splitVec[1];
-                tmpLocSnp.rp = revCom ? Sequence(splitVec[2]).reverseComplement().mStr : splitVec[2];
-                tmpLocSnp.trimPos = std::make_pair(std::stoi(splitVec[3]), std::stoi(splitVec[4]));
-                if (!(tmpLocSnp.trimPos.first >= 0 &&
-                        tmpLocSnp.trimPos.first < (splitVec[7].length() - tmpLocSnp.trimPos.second) &&
-                        tmpLocSnp.trimPos.second >= 0 &&
-                        tmpLocSnp.trimPos.second < (splitVec[7].length() - tmpLocSnp.trimPos.first))) {
-                    error_exit(tmpLocSnp.name  + " trimming site is not correct!");
-                }
-                tmpLocSnp.ft = Sequence(splitVec[7].substr(0, tmpLocSnp.trimPos.first));
-                tmpLocSnp.rt = Sequence(splitVec[7].substr((splitVec[7].length() - tmpLocSnp.trimPos.second)));
-                tmpLocSnp.ref = splitVec[7].substr(tmpLocSnp.trimPos.first, splitVec[7].length() - tmpLocSnp.trimPos.second - tmpLocSnp.trimPos.first);
-                if (splitVec[5].find("|") != std::string::npos) {
-                    splitStr(splitVec[5], posVec, "|");
-                } else {
+            if (splitVec.size() != 8) {
+                error_exit("Your locus " + lineStr + " does not have 8 columns!");
+            }
+            LocSnp2 tmpLocSnp;
+            tmpLocSnp.name = splitVec[0];
+            tmpLocSnp.fp = splitVec[1];
+            tmpLocSnp.rp = revCom ? Sequence(splitVec[2]).reverseComplement().mStr : splitVec[2];
+            tmpLocSnp.trimPos = std::make_pair(std::stoi(splitVec[3]), std::stoi(splitVec[4]));
+            if (!(tmpLocSnp.trimPos.first >= 0 &&
+                    tmpLocSnp.trimPos.first < (splitVec[7].length() - tmpLocSnp.trimPos.second) &&
+                    tmpLocSnp.trimPos.second >= 0 &&
+                    tmpLocSnp.trimPos.second < (splitVec[7].length() - tmpLocSnp.trimPos.first))) {
+                error_exit(tmpLocSnp.name  + " trimming site is not correct!");
+            }
+            tmpLocSnp.ft = Sequence(splitVec[7].substr(0, tmpLocSnp.trimPos.first));
+            tmpLocSnp.rt = Sequence(splitVec[7].substr((splitVec[7].length() - tmpLocSnp.trimPos.second)));
+            tmpLocSnp.ref = splitVec[7].substr(tmpLocSnp.trimPos.first, splitVec[7].length() - tmpLocSnp.trimPos.second - tmpLocSnp.trimPos.first);
+            posVec.clear();
+            if (splitVec[5].find("|") != std::string::npos) {
+                splitStr(splitVec[5], posVec, "|");
+            } else {
+                if(splitVec[5] != "0"){
                     posVec.push_back(splitVec[5]);
                 }
-                for (auto & itt : posVec) {
-                    if (itt == "NA") break;
-                    auto pos = std::stoi(itt);
-                    if (pos > tmpLocSnp.trimPos.first && pos < (tmpLocSnp.trimPos.first + tmpLocSnp.ref.length())) {
-                        pos -= tmpLocSnp.trimPos.first;
-                        tmpLocSnp.refSnpPosSet.insert(pos);
-                        tmpLocSnp.snpPosSetHaplo.insert(pos);
-                        tmpLocSnp.snpPosSet.insert(pos);
-                        // tmpLocSnp.totPosSet.insert(pos);
-                    }
-                }
-                posVec.clear();
-                mLocSnps.refLocMap[tmpLocSnp.name] = tmpLocSnp;
-                frPMarkerGrpMap[std::string(tmpLocSnp.fp.mStr + tmpLocSnp.rp.mStr)][tmpLocSnp.name] = (tmpLocSnp.ft.length() + tmpLocSnp.ref.length() + tmpLocSnp.rt.length());
-
-            } else {
-                error_exit("Your locus " + lineStr + " does not have 7 columns!");
             }
+            for (auto & itt : posVec) {
+                if (itt == "NA") break;
+                auto pos = std::stoi(itt);
+                if (pos > tmpLocSnp.trimPos.first && pos < (tmpLocSnp.trimPos.first + tmpLocSnp.ref.length())) {
+                    pos -= tmpLocSnp.trimPos.first;
+                    tmpLocSnp.refSnpPosSet.insert(pos);
+                    tmpLocSnp.snpPosSetHaplo.insert(pos);
+                    tmpLocSnp.snpPosSet.insert(pos);
+                }
+            }
+            mLocSnps.refLocMap[tmpLocSnp.name] = tmpLocSnp;
+            frPMarkerGrpMap[std::string(tmpLocSnp.fp.mStr + tmpLocSnp.rp.mStr)][tmpLocSnp.name] = (tmpLocSnp.ft.length() + tmpLocSnp.ref.length() + tmpLocSnp.rt.length());
             splitVec.clear();
         }
         mLocSnps.markerGrpMap.clear();
@@ -565,7 +569,7 @@ void Options::readLocFile(){
                    }
                    std::size_t start = pos >= loc.fp.length() ? pos - loc.fp.length() : 0;
                    loc.fp = Sequence(max_ref_seq.substr(start, (pos - start)));
-                   loc.rp = Sequence(max_ref_seq.substr(pos + loc.ref.mStr.length(), loc.rp.length()));
+                   loc.rp = Sequence(max_ref_seq.substr(pos + loc_seq.length(), loc.rp.length()));
                 }
             }
         }

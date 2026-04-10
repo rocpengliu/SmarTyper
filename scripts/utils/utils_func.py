@@ -65,10 +65,11 @@ def output_snp_table(output_folder_path, selected_sample, sam_mar_snp_dict_sam, 
             elif zygo == 2:
                 snp_df['conclusive'] = 'Y'
                 snp_df['allele2'] = snp_df['allele3']
-
+    if sam_mar_snp_dict_sam.values() is None or len(sam_mar_snp_dict_sam.values()) == 0:
+        return
     tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_snp.txt")
-    snp_df = pd.concat(sam_mar_snp_dict_sam.values(), ignore_index=True)
-    snp_df.to_csv(tab_file_path, sep="\t", index=False)
+    snp_df_t = pd.concat(sam_mar_snp_dict_sam.values(), ignore_index=True)
+    snp_df_t.to_csv(tab_file_path, sep="\t", index=False)
     return True
 
 def output_geno_table(output_folder_path,selected_sample, sam_microhap_dict_sam, anal_type)->bool:
@@ -978,24 +979,32 @@ def populate_each_mar_mh_dict(mar, records) -> tuple:
         final_sam_cur_mh_dict[sam] = tmp_df
         tmp_sim_df = tmp_df[['sample', 'allele', 'zygosity']].copy()
         zygo = tmp_sim_df['zygosity'].iloc[0]
-        if zygo == 'homo':
-            if tmp_sim_df.shape[0] == 1:
-                tmp_sim_df = pd.concat([tmp_sim_df, tmp_sim_df], ignore_index=True)
-            else:
-                tmp_sim_df.iloc[1, tmp_sim_df.columns.get_loc('allele')] = tmp_sim_df.iloc[0]['allele']
-        elif zygo == 'heter':
-            tmp_sim_df = tmp_sim_df.sort_values(by='allele')
+        sim_df = pd.DataFrame(columns=['sample', f'{mar}_allele1', f'{mar}_allele2'])
+        if zygo == "homo":
+            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[0]]], columns=sim_df.columns)], ignore_index=True)
+        elif zygo == "heter":
+            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[1]]], columns=sim_df.columns)], ignore_index=True)
         else:
-            tmp_sim_df.loc[:, 'allele'] = '-9'
-        tmp_sim_df = tmp_sim_df.drop(columns='zygosity')
-        tmp_sim_df = tmp_sim_df.pivot_table(
-            index='sample',
-            columns=tmp_sim_df.groupby('sample').cumcount(),
-            values='allele',
-            aggfunc='first'
-        ).reset_index()
-        tmp_sim_df.columns = ['sample', f'{mar}_allele1', f'{mar}_allele2']
-        final_sam_cur_mh_sim_dict[sam] = tmp_sim_df
+            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, '-9', '-9']], columns=sim_df.columns)], ignore_index=True)
+        
+        # if zygo == 'homo':
+        #     if tmp_sim_df.shape[0] == 1:
+        #         tmp_sim_df = pd.concat([tmp_sim_df, tmp_sim_df], ignore_index=True)
+        #     else:
+        #         tmp_sim_df.iloc[1, tmp_sim_df.columns.get_loc('allele')] = tmp_sim_df.iloc[0]['allele']
+        # elif zygo == 'heter':
+        #     tmp_sim_df = tmp_sim_df.sort_values(by='allele')
+        # else:
+        #     tmp_sim_df.loc[:, 'allele'] = '-9'
+        # tmp_sim_df = tmp_sim_df.drop(columns='zygosity')
+        # tmp_sim_df = tmp_sim_df.pivot_table(
+        #     index='sample',
+        #     columns=tmp_sim_df.groupby('sample').cumcount(),
+        #     values='allele',
+        #     aggfunc='first'
+        # ).reset_index()
+        # tmp_sim_df.columns = ['sample', f'{mar}_allele1', f'{mar}_allele2']
+        final_sam_cur_mh_sim_dict[sam] = sim_df
     return final_sam_cur_mh_dict, final_sam_cur_mh_sim_dict
 
 def init_assigned_reads(mars, samples):

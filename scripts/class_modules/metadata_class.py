@@ -79,6 +79,14 @@ class MetaDataClass:
         fpath =parameter_class.get_sexfile()
         if os.path.isfile(fpath):
             self._sex_df = pd.read_csv(fpath, delimiter="\t")
+            if self._sex_df.shape[0] > 0:
+                parameter_class.set_sex_analysis(True)
+            else:
+                parameter_class.set_sex_analysis(False)
+                modern_messagebox.showerror("Invalid Input", "sex file is empty!")
+                raise ValueError("sex file is empty!")
+        else:
+            parameter_class.set_sex_analysis(False)
     
     def get_cur_microhap_df(self):
         return self._cur_microhap_df

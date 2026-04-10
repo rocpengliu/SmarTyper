@@ -27,6 +27,7 @@ from scripts.microtype.micro_viewer import micro_viewer
 from scripts.machine_learning.modeling_loader import modeling_loader
 from scripts.machine_learning.machine_learning import create_ml_module
 from scripts.workflow.workflow import create_wkfl_module
+from scripts.tutorial.tutorial import create_tutorial_module
 from scripts.utils.colors import COLORS
 from PIL import Image, ImageTk, ImageOps, ImageEnhance
 from scripts.class_modules.class_modules import GenotypeClass
@@ -69,40 +70,43 @@ class SmarTyperApp(ctk.CTk):
         self.genotype_class = GenotypeClass()
         
         self.parent_children = {
-            "data": "genotype",
-            "parameters": "genotype",
-            "run": "genotype",
-            "results": "genotype",
-            "summary": "genotype",
+            "data": "genotyping",
+            "parameters": "genotyping",
+            "run": "genotyping",
+            "results": "genotyping",
+            "summary": "genotyping",
             "modeling": "machine learning",
-            "microtype_data": "microtype",
-            "microtype_results": "microtype",
+            "microtype_data": "microtyping",
+            "microtype_results": "microtyping",
             "loader": "project",
-            "workflow_loader": "workflow"
+            "workflow_loader": "workflow",
+            "tutorial_folder": "tutorial"
         }
-        self.tab_names = ["home", "genotype", "machine learning", "microtype", "project", "workflow"]
+        self.tab_names = ["home", "genotyping", "machine learning", "microtyping", "project", "workflow", "tutorial"]
         self.children_buttons = {
-            "genotype": ["data", "parameters", "run", "results", "summary"],
+            "genotyping": ["data", "parameters", "run", "results", "summary"],
             "machine learning": ["modeling"],
-            "microtype": ["microtype_data", "microtype_results"],
+            "microtyping": ["microtype_data", "microtype_results"],
             "project": ["loader"],
-            "workflow": ["workflow_loader"]
+            "workflow": ["workflow_loader"],
+            "tutorial": ["tutorial_folder"]
         }
         self.menu_expanded = {
-            "genotype": False,
-            "microtype": False,
+            "genotyping": False,
+            "microtyping": False,
             "machine learning": False,
             "project": False,
-            "workflow": False
+            "workflow": False,
+            "tutorial": False
         }
         self.home_path = os.path.dirname(os.path.realpath(__file__))
         
         # Use simple Unicode symbols that are widely supported
         self.icon_symbols = {
             "home": "⌂",
-            "genotype": "◆",
+            "genotyping": "◆",
             "project": "●",
-            "microtype": "◇",
+            "microtyping": "◇",
             "machine learning": "★",
             "loader": "►",
             "run": "►",
@@ -114,26 +118,9 @@ class SmarTyperApp(ctk.CTk):
             "results": "◘",
             "summary": "◙",
             "workflow_loader": "►",
+            "tutorial_folder": "📁",
             "exit": "✕"
         }
-        
-        # self.icons = {
-        #     "home": os.path.join(self.home_path, "images", "home.png"),
-        #     "genotype": os.path.join(self.home_path, "images", "genotyping.png"),
-        #     "project": os.path.join(self.home_path, "images", "project.png"),
-        #     "microtype": os.path.join(self.home_path, "images", "microtype.png"),
-        #     "loader": os.path.join(self.home_path, "images", "opener.png"),
-        #     "run": os.path.join(self.home_path, "images", "run.png"),
-        #     "parameters": os.path.join(self.home_path, "images", "parameters.png"),
-        #     "data": os.path.join(self.home_path, "images", "data.png"),
-        #     "machine learning": os.path.join(self.home_path, "images", "machine_learning.png"),
-        #     "modeling": os.path.join(self.home_path, "images", "modeling.png"),
-        #     "microtype_data": os.path.join(self.home_path, "images", "data.png"),
-        #     "microtype_results": os.path.join(self.home_path, "images", "results.png"),
-        #     "results": os.path.join(self.home_path, "images", "results.png"),
-        #     "summary": os.path.join(self.home_path, "images", "summary.png"),
-        #     "exit": os.path.join(self.home_path, "images", "exit.png")
-        # }
         self.buttons = {}
         self.button_colors = {}  # Store original colors for each button
         self.children_button_refs = {}  # Store child button references
@@ -141,7 +128,7 @@ class SmarTyperApp(ctk.CTk):
         
         # Create pages but don't display them yet
         self.pages = {
-            "genotype": create_genotype_module(self.right_panel),
+            "genotyping": create_genotype_module(self.right_panel),
             "data": data_loader(self.right_panel),
             "parameters": parameter_setter(self.right_panel),
             "run": job_runner(self.right_panel),
@@ -149,12 +136,14 @@ class SmarTyperApp(ctk.CTk):
             "summary": results_summary(self.right_panel),
             "machine learning": create_ml_module(self.right_panel),
             "modeling": modeling_loader(self.right_panel),
-            "microtype": create_micro_module(self.right_panel),
+            "microtyping": create_micro_module(self.right_panel),
             "microtype_data": micro_loader(self.right_panel),
             "microtype_results": micro_viewer(self.right_panel),
             "project": create_project_module(self.right_panel),
             "loader": project_loader(self.right_panel),
-            "workflow_loader": create_wkfl_module(self.right_panel)
+            "workflow_loader": create_wkfl_module(self.right_panel),
+            "tutorial_folder": create_tutorial_module(self.right_panel)
+            
         }
         # Ensure all pages are hidden initially
         for page in self.pages.values():
@@ -209,11 +198,12 @@ class SmarTyperApp(ctk.CTk):
         # Define colors for each module to match home page cards
         module_colors = {
             "home": COLORS['home'],
-            "genotype": COLORS['primary'],
+            "genotyping": COLORS['primary'],
             "machine learning": COLORS['success'],
-            "microtype": COLORS['accent'],
+            "microtyping": COLORS['accent'],
             "project": COLORS['workflow_gold'],
-            "workflow": COLORS['workflow_peach']
+            "workflow": COLORS['workflow_cherry'],
+            "tutorial": COLORS['tutorial_peach']
         }
         
         for tab_name in self.tab_names:
@@ -223,6 +213,8 @@ class SmarTyperApp(ctk.CTk):
             # Map workflow tab to workflow_loader page
             if tab_name == "workflow":
                 page_key = "workflow_loader"
+            elif tab_name == "tutorial":
+                page_key = "tutorial_folder"
             else:
                 page_key = tab_name.lower()
             tab_button = ctk.CTkButton(
@@ -334,7 +326,7 @@ class SmarTyperApp(ctk.CTk):
         # Toggle menus
         if page_name == "home":
             self.toggle_menu(page_name, True)
-        elif page_name in ["genotype", "microtype", "machine learning", "project", "workflow"]:
+        elif page_name in ["genotyping", "microtyping", "machine learning", "project", "workflow", "tutorial"]:
             self.toggle_menu(page_name)
             
     def switch_theme(self, theme_mode):

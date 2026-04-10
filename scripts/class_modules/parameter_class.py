@@ -23,14 +23,23 @@ class ParameterClass:
         self._outputmicrotypeproject = "project_microtype_session.dill"
         
         self._maxMismatchesPSeq = 2
-        self._minSeqs = 5
-        self._ssProH = 0.84
-        self._ssProL = 0.78
-        self._msProH = 0.83
-        self._msProL = 0.79
-        self._sPro3 = 0.80
-        self._minSeqsProSnp = 0.1
-        self._minReads4Filter = 10
+        self._minReads4Locus = 30
+        self._minReads4Allele = 10
+        self._smProp1H = 0.84
+        self._smProp1L = 0.78
+        self._mmProp1H = 0.83
+        self._mmProp1L = 0.79
+        self._mProp2 = 0.50
+        #self._sProp3 = 0.80
+        #self._minSeqsProSnp = 0.1
+        self._maxRVs4Align = 6
+        
+        self._maxMismatchesPSeqSex = 2
+        self._maxMismatchesRefSeqSex = 2
+        self._yxRatio = 0.0001
+        self._minReadsSexAllele = 10
+        self._minReadsSexVariant = 5
+        self._sex_analysis = False
         
         self._nanopore_default = False
         
@@ -50,59 +59,131 @@ class ParameterClass:
         self._has_pre_mh = False
         self._pro_figure = True
     
-    def get_sPro3(self):
-        return self._sPro3
-    
-    def set_sPro3(self, sPro3):
-        if sPro3 < 0 or sPro3 > 1:
-            showerror("Invalid sPro3 threshold", "Invalid sPro3 threshold. Must be between 0 and 1" )
-            raise ValueError("Invalid sPro3 threshold. Must be between 0 and 1")
-        self._sPro3 = sPro3
-    
-    def get_ssProH(self):
-        return self._ssProH
-    
-    def set_ssProH(self, hmProH):
-        if hmProH < 0 or hmProH > 1:
-            showerror("Invalid mProH threshold", "Invalid mProH threshold. Must be between 0 and 1" )
-            raise ValueError("Invalid mProH threshold. Must be between 0 and 1")
-        self._ssProH = hmProH
-    
-    def get_ssProL(self):
-        return self._ssProL
-    
-    def set_ssProL(self, ssProL):
-        if ssProL < 0 or ssProL > 1:
-            showerror("Invalid mProL threshold", "Invalid mProL threshold. Must be between 0 and 1" )
-            raise ValueError("Invalid mProL threshold. Must be between 0 and 1")
-        self._ssProL = ssProL
-    
-    def get_msProH(self):
-        return self._msProH
-    
-    def set_msProH(self, msProH):
-        if msProH < 0 or msProH > 1:
-            showerror("Invalid HtProH threshold", "Invalid HtProH threshold. Must be between 0 and 1" )
-            raise ValueError("Invalid HtProH threshold. Must be between 0 and 1")
-        self._msProH = msProH
+    def get_sex_analysis(self):
+        return self._sex_analysis
+    def set_sex_analysis(self, sex_analysis):
+        self._sex_analysis = sex_analysis if isinstance(sex_analysis, bool) else bool(sex_analysis)
+    def get_maxMismatchesPSeqSex(self):
+        return self._maxMismatchesPSeqSex
+    def set_maxMismatchesPSeqSex(self, maxMismatchesPSeqSex):
+        self._maxMismatchesPSeqSex = maxMismatchesPSeqSex if isinstance(maxMismatchesPSeqSex, int) else int(maxMismatchesPSeqSex)
+        if self._maxMismatchesPSeqSex < 0 or self._maxMismatchesPSeqSex > 5:
+            showerror("Invalid maximum mismatches percentage for sex typing", "Invalid maximum mismatches percentage for sex typing. Must be between 0 and 5.")
+            raise ValueError("Invalid maximum mismatches percentage for sex typing. Must be between 0 and 5")
+    def get_maxMismatchesRefSeqSex(self):
+        return self._maxMismatchesRefSeqSex
+    def set_maxMismatchesRefSeqSex(self, maxMismatchesRefSeqSex):
+        self._maxMismatchesRefSeqSex = maxMismatchesRefSeqSex if isinstance(maxMismatchesRefSeqSex, int) else int(maxMismatchesRefSeqSex)
+        if self._maxMismatchesRefSeqSex < 0 or self._maxMismatchesRefSeqSex > 5:
+            showerror("Invalid maximum mismatches percentage for reference sequence typing", "Invalid maximum mismatches percentage for reference sequence typing. Must be between 0 and 5.")
+            raise ValueError("Invalid maximum mismatches percentage for reference sequence typing. Must be between 0 and 5")
+    def get_yxRatio(self):
+        return self._yxRatio
+    def set_yxRatio(self, yxRatio):
+        self._yxRatio = yxRatio if isinstance(yxRatio, float) else float(yxRatio)
+        if self._yxRatio < 0 or self._yxRatio > 1:
+            showerror("Invalid Y/X ratio threshold for sex typing", "Invalid Y/X ratio threshold for sex typing. Must be between 0 and 1.")
+            raise ValueError("Invalid Y/X ratio threshold for sex typing. Must be between 0 and 1")
+    def get_minReadsSexAllele(self):
+        return self._minReadsSexAllele
+    def set_minReadsSexAllele(self, minReadsSexAllele):
+        self._minReadsSexAllele = minReadsSexAllele if isinstance(minReadsSexAllele, int) else int(minReadsSexAllele)
+        if self._minReadsSexAllele < 1 or self._minReadsSexAllele > 1000:
+            showerror("Invalid minimum number of reads for sex allele", "Invalid minimum number of reads for sex allele. Must be between 1 and 1000.")
+            raise ValueError("Invalid minimum number of reads for sex allele. Must be between 1 and 1000")
+    def get_minReadsSexVariant(self):
+        return self._minReadsSexVariant
+    def set_minReadsSexVariant(self, minReadsSexVariant):
+        self._minReadsSexVariant = minReadsSexVariant if isinstance(minReadsSexVariant, int) else int(minReadsSexVariant)
+        if self._minReadsSexVariant < 1 or self._minReadsSexVariant > 1000:
+            showerror("Invalid minimum number of reads for sex variant", "Invalid minimum number of reads for sex variant. Must be between 1 and 1000.")
+            raise ValueError("Invalid minimum number of reads for sex variant. Must be between 1 and 1000")
         
-    def get_msProL(self):
-        return self._msProL
+        
+    def get_minReads4Locus(self):
+        return self._minReads4Locus
+    def set_minReads4Locus(self, minReads4Locus):
+        self._minReads4Locus = minReads4Locus if isinstance(minReads4Locus, int) else int(minReads4Locus)
+        if self._minReads4Locus < 1:
+            showerror("Invalid minimum number of reads for a locus", "Invalid minimum number of reads for a locus. Must be at least 1.")
+            raise ValueError("Invalid minimum number of reads for a locus. Must be at least 1")
     
-    def set_msProL(self, msProL):
-        if msProL < 0 or msProL > 1:
-            showerror("Invalid HtProL threshold", "Invalid HtProL threshold. Must be between 0 and 1" )
-            raise ValueError("Invalid HtProL threshold. Must be between 0 and 1")
-        self._msProL = msProL
+    def get_minReads4Allele(self):
+        return self._minReads4Allele
+    def set_minReads4Allele(self, minReads4Allele):
+        self._minReads4Allele = minReads4Allele if isinstance(minReads4Allele, int) else int(minReads4Allele)
+        if self._minReads4Allele < 1:
+            showerror("Invalid minimum number of reads for an allele", "Invalid minimum number of reads for an allele. Must be at least 1.")
+            raise ValueError("Invalid minimum number of reads for an allele. Must be at least 1")
+
+    def get_maxRVs4Align(self):
+        return self._maxRVs4Align
+    def set_maxRVs4Align(self, maxRVs4Align):
+        self._maxRVs4Align = maxRVs4Align if isinstance(maxRVs4Align, int) else int(maxRVs4Align)
+        if self._maxRVs4Align < 3:
+            showerror("Invalid maximum number of read variants for alignment", "Invalid maximum number of read variants for alignment. Must be at least 3.")
+            raise ValueError("Invalid maximum number of read variants for alignment. Must be at least 3")
+        
+    def get_mProp2(self):
+        return self._mProp2
+    def set_mProp2(self, mProp2):
+        if mProp2 < 0 or mProp2 > 1:
+            showerror("Invalid mProp2 threshold", "Invalid mProp2 threshold. Must be between 0 and 1" )
+            raise ValueError("Invalid mProp2 threshold. Must be between 0 and 1")
+        self._mProp2 = mProp2
+    # def get_sProp3(self):
+    #     return self._sProp3
+    
+    # def set_sProp3(self, sProp3):
+    #     if sProp3 < 0 or sProp3 > 1:
+    #         showerror("Invalid sProp3 threshold", "Invalid sProp3 threshold. Must be between 0 and 1" )
+    #         raise ValueError("Invalid sProp3 threshold. Must be between 0 and 1")
+    #     self._sProp3 = sProp3
+    
+    def get_smProp1H(self):
+        return self._smProp1H
+    
+    def set_smProp1H(self, smProp1H):
+        if smProp1H < 0 or smProp1H > 1:
+            showerror("Invalid sProH threshold", "Invalid sProH threshold. Must be between 0 and 1" )
+            raise ValueError("Invalid sProH threshold. Must be between 0 and 1")
+        self._smProp1H = smProp1H
+    
+    def get_smProp1L(self):
+        return self._smProp1L
+    
+    def set_smProp1L(self, smProp1L):
+        if smProp1L < 0 or smProp1L > 1:
+            showerror("Invalid sProL threshold", "Invalid sProL threshold. Must be between 0 and 1" )
+            raise ValueError("Invalid sProL threshold. Must be between 0 and 1")
+        self._smProp1L = smProp1L
+    
+    def get_mmProp1H(self):
+        return self._mmProp1H
+    
+    def set_mmProp1H(self, mmProp1H):
+        if mmProp1H < 0 or mmProp1H > 1:
+            showerror("Invalid mmProp1H threshold", "Invalid mmProp1H threshold. Must be between 0 and 1" )
+            raise ValueError("Invalid mmProp1H threshold. Must be between 0 and 1")
+        self._mmProp1H = mmProp1H
+        
+    def get_mmProp1L(self):
+        return self._mmProp1L
+    
+    def set_mmProp1L(self, mmProp1L):
+        if mmProp1L < 0 or mmProp1L > 1:
+            showerror("Invalid mmProp1L threshold", "Invalid mmProp1L threshold. Must be between 0 and 1" )
+            raise ValueError("Invalid mmProp1L threshold. Must be between 0 and 1")
+        self._mmProp1L = mmProp1L
     
     
     def check_parameters_valid(self):
-        if self._ssProL > self._ssProH:
-            showerror("Invalid mPro thresholds", "Invalid mPro thresholds. mProL threshold cannot be greater than mProH threshold.")
-            raise ValueError("Invalid mPro thresholds. mProL threshold cannot be greater than mProH threshold.")      
-        if self._msProL > self._msProH:
-            showerror("Invalid HtPro thresholds", "Invalid HtPro thresholds. HtProL threshold cannot be greater than HtProH threshold.")
-            raise ValueError("Invalid HtPro thresholds. HtProL threshold cannot be greater than HtProH threshold.")
+        if self._smProp1L > self._smProp1H:
+            showerror("Invalid sPro thresholds", "Invalid sPro thresholds. sProL threshold cannot be greater than sProH threshold.")
+            raise ValueError("Invalid sPro thresholds. sProL threshold cannot be greater than sProH threshold.")      
+        if self._mmProp1L > self._mmProp1H:
+            showerror("Invalid msPro thresholds", "Invalid msPro thresholds. mmProp1L threshold cannot be greater than mmProp1H threshold.")
+            raise ValueError("Invalid msPro thresholds. mmProp1L threshold cannot be greater than mmProp1H threshold.")
     
     def set_projectdir(self, projectdir):
         self._projectdir = projectdir
@@ -208,31 +289,6 @@ class ParameterClass:
         return self._revcomloci
     def set_revcomloci(self, revcomloci):
         self._revcomloci = revcomloci
-        
-    def get_minReads4Filter(self):
-         return self._minReads4Filter
-    def set_minReads4Filter(self, minReads4Filter):
-         self._minReads4Filter = minReads4Filter if isinstance(minReads4Filter, int) else int(minReads4Filter)
-         if self._minReads4Filter < 1 or self._minReads4Filter > 1000:
-             showerror("Invalid minimum number of reads for filtering", "Invalid minimum number of reads for filtering. Must be between 1 and 1000.")
-             raise ValueError("Invalid minimum number of reads for filtering. Must be between 1 and 1000")
-     
-    def get_minSeqsProSnp(self):
-         return self._minSeqsProSnp
-    def set_minSeqsProSnp(self, minSeqsProSnp):
-         self._minSeqsProSnp = minSeqsProSnp if isinstance(minSeqsProSnp, int) else int(minSeqsProSnp)
-         if self._minSeqsProSnp < 0.01 or self._minSeqsProSnp > 1:
-             showerror("Invalid minimum number of sequences per SNP", "Invalid minimum number of sequences per SNP. Must be between 0.01 and 1.")
-             raise ValueError("Invalid minimum number of sequences per SNP. Must be between 0.01 and 1")
-
-    def get_minSeqs(self):
-        return self._minSeqs
-    
-    def set_minSeqs(self, minSeqs):
-        self._minSeqs = minSeqs if isinstance(minSeqs, int) else int(minSeqs)
-        if self._minSeqs < 1:
-            showerror("Invalid minimum number of sequences", "Invalid minimum number of sequences. Must be between 1 and 1000.")
-            raise ValueError("Invalid minimum number of sequences. Must be between 1 and 1000")    
     
     def get_maxMismatchesPSeq(self):
         return self._maxMismatchesPSeq

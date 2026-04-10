@@ -55,9 +55,12 @@ def create_body(parent, frame):
     body_frame.progress_label.grid(row=0, column=0, padx=(10,15), pady=5, sticky="w")
     
     body_frame.timer_label = ctk.CTkLabel(progress_info_frame, text="Elapsed time: 0s", 
-                                          font=bfont, 
-                                          text_color=COLORS['secondary'])
+                                          font=bfont, text_color=COLORS['secondary'])
     body_frame.timer_label.grid(row=0, column=1, padx=(0,15), pady=5, sticky="w")
+    
+    body_frame.remain_time_label = ctk.CTkLabel(progress_info_frame, text="Estimated remaining time: 0s", 
+                                               font=bfont, text_color=COLORS['danger'])
+    body_frame.remain_time_label.grid(row=0, column=2, padx=(0,10), pady=5, sticky="w")
     
     # Modern progress bar with CustomTkinter
     body_frame.progress_bar = ctk.CTkProgressBar(body_frame, height=25, corner_radius=10,
@@ -163,19 +166,41 @@ def update_timer(run_frame):
         minutes = (elapsed_time % 3600) // 60
         seconds = elapsed_time % 60
         run_frame.timer_label.configure(text=f"Elapsed time: {hours:02d}h:{minutes:02d}m:{seconds:02d}s")
-            #frame.after(1, update_timer, frame, start_time, run_finished)
+        if run_frame.last_finished_sample_idx > 0:
+            if run_frame.last_finished_sample_idx == run_frame.tot_sams:
+                if(run_frame.progress_bar.get() < 1.0):
+                    run_frame.remain_time_label.configure(text=f"Estimated remaining time: waiting for finalizing...")
+                else:
+                    run_frame.remain_time_label.configure(text=f"Estimated remaining time: 0s")
+            else:
+                # During sample processing, keep counting down from the last completed-sample estimate.
+                remaining_time2 = max(0, int(run_frame.last_estimated_finished_time - elapsed_time))
+                rem_hours2 = remaining_time2 // 3600
+                rem_minutes2 = (remaining_time2 % 3600) // 60
+                rem_seconds2 = remaining_time2 % 60
+                run_frame.remain_time_label.configure(text=f"Estimated remaining time: {rem_hours2:02d}h:{rem_minutes2:02d}m:{rem_seconds2:02d}s")
+        else:
+            run_frame.remain_time_label.configure(text=f"Estimated remaining time: calculating...")
+    else:
+        run_frame.remain_time_label.configure(text=f"Estimated remaining time: 0s")
 
 def update_progressbar(run_frame):
+    if run_frame.tot_sams <= 0:
+        run_frame.progress_bar.set(1.0)
+        run_frame.progress_label.configure(text="processing 0 out of 0 samples with 0 loci (100%)")
+        run_frame.update_idletasks()
+        return
+
     if not run_frame.run_finished.is_set():
         s3 = (run_frame.cur_sam_idx - 1) * 100 / run_frame.tot_sams
         formatted_s3 = f"{s3:.2f}"
         formatted_s3=str(formatted_s3)
         run_frame.progress_bar.set(s3 / 100)  # CTkProgressBar uses 0.0 to 1.0
-        run_frame.progress_label.configure(text=f"processing {str(run_frame.cur_sam_idx)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} markers ({formatted_s3}% finished)")
+        run_frame.progress_label.configure(text=f"processing {str(run_frame.cur_sam_idx)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} loci ({formatted_s3}% finished)")
         run_frame.update_idletasks()
     else:
         run_frame.progress_bar.set(1.0)  # CTkProgressBar uses 0.0 to 1.0 (1.0 = 100%)
-        run_frame.progress_label.configure(text=f"processing {str(run_frame.tot_sams)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} markers  (100%)")
+        run_frame.progress_label.configure(text=f"processing {str(run_frame.tot_sams)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} loci  (100%)")
 
 def capture_output(run_frame, sample_event):
     while not sample_event.is_set():
@@ -206,20 +231,28 @@ def target(parent):
     subargs['var'] = genoclass.get_parameter().get_analtype()
     subargs["loc"] = genoclass.get_parameter().get_locifile()
     subargs['revCom'] = genoclass.get_parameter().get_revcomloci()
-    subargs['minSeqs'] = genoclass.get_parameter().get_minSeqs()
+    subargs['minReads4Locus'] = genoclass.get_parameter().get_minReads4Locus()
     subargs['maxMismatchesPSeq'] = genoclass.get_parameter().get_maxMismatchesPSeq()
     subargs['thread'] = genoclass.get_parameter().get_thread()
     subargs['average_qual'] = genoclass.get_parameter().get_average_qual()
     subargs['length_required'] = genoclass.get_parameter().get_length_required()
+    if genoclass.get_parameter().get_sex_analysis():
+        subargs['sex'] = genoclass.get_parameter().get_sexfile()
+        subargs['maxMismatchesSexPSeq'] = genoclass.get_parameter().get_maxMismatchesPSeqSex()
+        subargs['maxMismatchesSexRefSeq'] = genoclass.get_parameter().get_maxMismatchesRefSeqSex()
+        subargs['yxRatio'] = genoclass.get_parameter().get_yxRatio()
+        subargs['minReadsSexAllele'] = genoclass.get_parameter().get_minReadsSexAllele()
+        subargs['minReadsSexVariant'] = genoclass.get_parameter().get_minReadsSexVariant()
     if genoclass.get_parameter().get_analtype() == "snp":
         # Keep internal parameter names decoupled from CLI flags expected by seqtyper core.
-        subargs['ssProH'] = genoclass.get_parameter().get_ssProH()
-        subargs['ssProL'] = genoclass.get_parameter().get_ssProL()
-        subargs['msProH'] = genoclass.get_parameter().get_msProH()
-        subargs['msProL'] = genoclass.get_parameter().get_msProL()
-        subargs['sPro3'] = genoclass.get_parameter().get_sPro3()
-        subargs['minSeqsProSnp'] = genoclass.get_parameter().get_minSeqsProSnp()
-        subargs['minReads4Filter'] = genoclass.get_parameter().get_minReads4Filter()
+        subargs['smProp1H'] = genoclass.get_parameter().get_smProp1H()
+        subargs['smProp1L'] = genoclass.get_parameter().get_smProp1L()
+        subargs['mmProp1H'] = genoclass.get_parameter().get_mmProp1H()
+        subargs['mmProp1L'] = genoclass.get_parameter().get_mmProp1L()
+        subargs['mProp2'] = genoclass.get_parameter().get_mProp2()
+        #subargs['sProp3'] = genoclass.get_parameter().get_sProp3()
+        subargs['minReads4Allele'] = genoclass.get_parameter().get_minReads4Allele()
+        subargs['maxRVs4Align'] = genoclass.get_parameter().get_maxRVs4Align()
     else:
         pass
 
@@ -247,6 +280,8 @@ def target(parent):
     run_frame.run_finished = threading.Event()
     run_frame.start_time = time.time()
     run_frame.cur_sam_idx = 0
+    run_frame.last_finished_sample_idx = 0
+    run_frame.last_estimated_finished_time = 0
     run_frame.tot_sams = len(run_frame.args_dir)
     run_frame.tot_mars = len(genoclass.get_metadata().get_ref_markers_list())
     
@@ -303,7 +338,6 @@ def run_wrapper(parent, run_frame):
             capture_thread.start()
 
             seqtyper_core.run_seqtyper_wrapper(arg_lst)
-
             # Signal capture thread to stop and wait for it
             sample_event.set()
             capture_thread.join()
@@ -313,6 +347,9 @@ def run_wrapper(parent, run_frame):
                 genoclass.read_sam_outputs(sample, run_frame)
                 run_frame.output_queue.put(f'Finish the processing sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
                 run_frame.output_queue.put(f'---------------------------------------------------------end index: {index+1}----------------------------------------------------' + '\n\n\n')
+                
+                run_frame.last_finished_sample_idx = run_frame.cur_sam_idx
+                run_frame.last_estimated_finished_time = max(1, int(time.time() - run_frame.start_time)) * run_frame.tot_sams / run_frame.last_finished_sample_idx
         with run_update_lock:
             run_frame.output_queue.put(f'starting to generate all sample figures\n')
         if genoclass.get_parameter().is_pro_figure():

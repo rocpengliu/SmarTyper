@@ -6,6 +6,7 @@ import tkinter as tk
 import os, datetime
 import threading, queue
 import traceback
+import time
 
 def results_summary(parent):
     frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
@@ -64,9 +65,8 @@ def create_body(parent, frame):
     body_frame.pady = (5, 5)
     body_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(2,2))
     
-    body_frame.grid_rowconfigure(0, weight=1) #top panel
-    body_frame.grid_rowconfigure(1, weight=6) # bottom panel
-    body_frame.grid_rowconfigure(2, weight=1) # 
+    body_frame.grid_rowconfigure(0, weight=0) # top panel keeps natural height
+    body_frame.grid_rowconfigure(1, weight=1) # bottom panel expands
     body_frame.grid_columnconfigure(0, weight=1) # top and bottom panels
     body_frame.grid_columnconfigure(1, weight=1) # top and bottom panels
     
@@ -83,13 +83,17 @@ def create_body(parent, frame):
     ctk.CTkLabel(body_frame.top_panel, 
                  text="This is to output all tables and figures to local storage! Please be patient, do not close the program.", 
                  font=bfont, 
-                 text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(10,10), sticky="e")
+                 text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(10,50), sticky="e")
     row += 1
+    body_frame.timer_label = ctk.CTkLabel(body_frame.top_panel, text = "Elapsed time: 0m and 0s",
+                                          font=bfont, text_color=COLORS['secondary'])
+    body_frame.timer_label.grid(row=row, column=0, padx=body_frame.padx, pady=(10,0), sticky="e")
+    
     body_frame.bottom_panel = ctk.CTkFrame(body_frame, fg_color="transparent")
-    body_frame.bottom_panel.grid(row=row, column=0, columnspan=1, sticky="nsew", padx=body_frame.padx, pady=(0,0))
+    body_frame.bottom_panel.grid(row=1, column=0, columnspan=1, sticky="nsew", padx=body_frame.padx, pady=(2,0))
     body_frame.bottom_panel.grid_columnconfigure(0, weight=1)
     body_frame.bottom_panel.grid_rowconfigure(0, weight=1)
-    
+    body_frame.is_complete = False
     body_frame.log_text = ctk.CTkTextbox(
         body_frame.bottom_panel,
         wrap="word",
@@ -102,6 +106,14 @@ def create_body(parent, frame):
     body_frame.log_text.grid(row=0, column=0, sticky="nsew", padx=6, pady=6)
     
     return body_frame
+
+def update_timer(body_frame, start_time):
+    if body_frame.is_complete:
+        return
+    elapsed_time = time.time() - start_time
+    mins, secs = divmod(elapsed_time, 60)
+    body_frame.timer_label.configure(text=f"Elapsed time: {int(mins)}m and {int(secs)}s")
+    body_frame.after(1000, lambda: update_timer(body_frame, start_time))
 
 def poll_log_text(body_frame):
     try:
@@ -123,6 +135,7 @@ def run_thread(parent):
 
 def run_pool(parent):
     try:
+        start_time = time.time()
         genoclass = parent.master.genotype_class
         summary_frame = parent.master.pages.get('summary', None)
         if summary_frame is None:
@@ -134,24 +147,31 @@ def run_pool(parent):
             return
         def log_msg(msg):
             run_frame.log_queue.put(msg)
-        log_msg(f'This process is very memory intensive, it may take a while to finish. Please be patient and do not close the program.\n\n')
-        log_msg(f"-------------------------------start step 1-----------------------------")
+        run_frame.is_complete = False
+        update_timer(run_frame, start_time)
+        log_msg(f'This process is memory intensive, it may take a while to finish. Please be patient and do not close the program.\n\n')
+        log_msg(f"-------------------------------start step 1 out 2-----------------------------")
         log_msg(f"starting to dump genotyping project!")
         log_msg(f"This is slow, please be patient!")
         genoclass.dump_session("genotype") #must dump session first because generate_all may crash due to high memory usage
         log_msg(f"finished to dump genotyping project!")
-        log_msg(f"-------------------------------end step 1-------------------------------\n\n")
-        log_msg(f"-------------------------------start step 2-----------------------------")
+        log_msg(f"-------------------------------end step 1 out 2-------------------------------\n\n")
+        log_msg(f"-------------------------------start step 2 out 2-----------------------------")
         log_msg(f"starting to output all files!")
         go = genoclass.generate_all(log_func = log_msg)
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        mins, secs = divmod(elapsed_time, 60)
         if go:
             log_msg(f"finished to output all files!")
-            log_msg(f"-------------------------------end step 2-------------------------------\n\n")
+            log_msg(f"-------------------------------end step 2 out 2-------------------------------\n\n")
             log_msg(f"Genotyping processing completed successfully. Please click 'Microtype →' for microtype analysis or 'Exit' to close the program.")
             run_frame.res_queue.put(('success', go))
         else:
             log_msg(f"Genotyping processing failed. Please check the log for details.")
             run_frame.res_queue.put(("Genotyping processing failed. Please check the log for details.", go))
+        log_msg(f"Total elapsed time: {int(mins)}m and {int(secs)}s.")
+        run_frame.is_complete = True
     except Exception as e:
         traceback.print_exc()
         log_msg(f"Error during microhap processing: {e}")
@@ -184,7 +204,7 @@ def go_button(parent):
                 panel.body_frame.top_panel.in_entry.insert(0, fpath)
                 genoclass.get_metadata().read_cur_microhap_file(genoclass.get_parameter())
         
-    parent.master.toggle_menu("genotype", all=True)  # Fold all menus first
-    parent.master.toggle_menu("microtype")           # Unfold microtype menu
-    parent.master.button_clicked("microtype_data", "microtype")
+    parent.master.toggle_menu("genotyping", all=True)  # Fold all menus first
+    parent.master.toggle_menu("microtyping")           # Unfold microtype menu
+    parent.master.button_clicked("microtype_data", "microtyping")
     parent.master.show_page("microtype_data")

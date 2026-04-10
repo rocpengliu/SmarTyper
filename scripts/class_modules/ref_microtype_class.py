@@ -16,6 +16,7 @@ class RefMicroType:
         self._rprimer=""
         self._triml=0
         self._trimr=0
+        self._triml_exon=0 # this is consider the triming with the right frame, only used in dna_align to show the right exon positon in the alignment table.
         self._ori_dna_ref = "" #paired with _ori_aa_ref if it has exons
         self._cur_dna_ref = "" #trimmed ones, and paired with _cur_aa_ref if it has exons,
         self._ori_cds_ref = "" # paired with _ori_aa_ref if it has exons but without introns
@@ -93,6 +94,17 @@ class RefMicroType:
                 self._triml = triml
             else:
                 raise ValueError("triml must be an integer")
+        except ValueError as e:
+            modern_messagebox.showerror(None, "Invalid Input", str(e))
+            
+    def get_triml_exon(self):
+        return self._triml_exon
+    def set_triml_exon(self, triml_exon):
+        try:
+            if isinstance(triml_exon, int):
+                self._triml_exon = triml_exon
+            else:
+                raise ValueError("triml_exon must be an integer")
         except ValueError as e:
             modern_messagebox.showerror(None, "Invalid Input", str(e))
     def get_trimr(self):

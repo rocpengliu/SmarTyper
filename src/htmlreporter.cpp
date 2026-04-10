@@ -490,7 +490,7 @@ void HtmlReporter::reportSex(ofstream & ofs) {
             
             int ii = 1;
             for (auto it = mOptions->mSex.seqVarVecY.begin(); it != mOptions->mSex.seqVarVecY.end(); ++it) {
-                if(ii > mOptions->mLocSnps.mLocSnpOptions.maxRows4Align) break;
+                if(ii > mOptions->mLocSnps.mLocSnpOptions.maxRVs4Align) break;
                 ii++;
                 std::string note = "";
                 if (it == mOptions->mSex.seqVarVecY.begin()) {
@@ -530,7 +530,7 @@ void HtmlReporter::reportSex(ofstream & ofs) {
             
             int ii = 1;
             for (auto it = mOptions->mSex.seqVarVecX.begin(); it != mOptions->mSex.seqVarVecX.end(); ++it) {
-                if(ii > mOptions->mLocSnps.mLocSnpOptions.maxRows4Align) break;
+                if(ii > mOptions->mLocSnps.mLocSnpOptions.maxRVs4Align) break;
                 ii++;
                 std::string note = "";
                 if (it == mOptions->mSex.seqVarVecX.begin()) {
@@ -794,7 +794,7 @@ void HtmlReporter::reportSnpAlignmentTable(ofstream& ofs, std::string & divName,
             "<td>" + std::to_string(locSnp.ft.length() + locSnp.ref.mStr.length() + locSnp.rt.length()) + "</td>" <<
             "<td align='center'>" + highligher(locSnp, true, locSnp.ref.mStr, locSnp.ref.mStr, locSnp.snpPosSet, true) + "</td>";
     ofs << "</tr>\n";
-    outputRow(ofs, locSnp, true, mOptions->mLocSnps.mLocSnpOptions.maxRows4Align);
+    outputRow(ofs, locSnp, true, mOptions->mLocSnps.mLocSnpOptions.maxRVs4Align);
     ofs << "</table>\n";
     ofs << "</pre>\n";
 
@@ -1020,17 +1020,17 @@ void HtmlReporter::reportSnpTablePlot(ofstream& ofs, std::string & divName, LocS
 
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
-        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL)) + ", ";
+        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.mmProp1H : mOptions->mLocSnps.mLocSnpOptions.mmProp1L)) + ", ";
         json_str += "x1: 1, ";
-        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL)) + ", ";
+        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.mmProp1H : mOptions->mLocSnps.mLocSnpOptions.mmProp1L)) + ", ";
         json_str += "line:{color: 'goldenrod', width: 4, dash: 'line'}";
         json_str += "},\n";
 
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
-        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL))) + ", ";
+        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.mmProp1H : mOptions->mLocSnps.mLocSnpOptions.mmProp1L))) + ", ";
         json_str += "x1: 1, ";
-        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL))) + ", ";
+        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.mmProp1H : mOptions->mLocSnps.mLocSnpOptions.mmProp1L))) + ", ";
         json_str += "line:{color: 'goldenrod', width: 4, dash: 'line'}";
         json_str += "}\n";
 
@@ -1038,33 +1038,33 @@ void HtmlReporter::reportSnpTablePlot(ofstream& ofs, std::string & divName, LocS
 
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
-        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads / 2 - ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.htProL - 0.5))) + ", ";
+        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads / 2 - ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.smProp1L - 0.5))) + ", ";
         json_str += "x1: 1, ";
-        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads / 2 - ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.htProL - 0.5))) + ", ";
+        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads / 2 - ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.smProp1L - 0.5))) + ", ";
         json_str += "line:{color: 'magenta', width: 2, dash: 'line'}";
         json_str += "},\n";
 
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
-        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads / 2 + ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.htProL - 0.5))) + ", ";
+        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads / 2 + ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.smProp1L - 0.5))) + ", ";
         json_str += "x1: 1, ";
-        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads / 2 + ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.htProL - 0.5))) + ", ";
+        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads / 2 + ((double) locSnp.totHaploReads * (mOptions->mLocSnps.mLocSnpOptions.smProp1L - 0.5))) + ", ";
         json_str += "line:{color: 'magenta', width: 2, dash: 'line'}";
         json_str += "},\n";
 
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
-        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL)) + ", ";
+        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.smProp1H : mOptions->mLocSnps.mLocSnpOptions.smProp1L)) + ", ";
         json_str += "x1: 1, ";
-        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL)) + ", ";
+        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.smProp1H : mOptions->mLocSnps.mLocSnpOptions.smProp1L)) + ", ";
         json_str += "line:{color: 'goldenrod', width: 4, dash: 'line'}";
         json_str += "},\n";
 
         json_str += "{ type: 'line', xref: 'paper', ";
         json_str += "x0: 0, ";
-        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL))) + ", ";
+        json_str += "y0: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.smProp1H : mOptions->mLocSnps.mLocSnpOptions.smProp1L))) + ", ";
         json_str += "x1: 1, ";
-        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.hmProH : mOptions->mLocSnps.mLocSnpOptions.hmProL))) + ", ";
+        json_str += "y1: " + std::to_string((double) locSnp.totHaploReads * (1 - (locSnp.genoStr3 == "homo" ? mOptions->mLocSnps.mLocSnpOptions.smProp1H : mOptions->mLocSnps.mLocSnpOptions.smProp1L))) + ", ";
         json_str += "line:{color: 'goldenrod', width: 4, dash: 'line'}";
         json_str += "}\n";
 

@@ -187,6 +187,7 @@ def create_align_tbl(ref_mar_refmt, tbl_frame):
     seq_widget.tag_configure('purple_text', foreground='purple')
 
     exon_list = ref_mar_refmt.get_cur_exon_pos()
+    
     refseq = ref_mar_refmt.get_ori_dna_ref()
     ref_label = ref_mar_refmt.get_locus() + '_ref'
     max_label_len = max(len(ref_label), len(ref_mar_refmt.get_longest_label_nm(dna=True)))
@@ -206,7 +207,7 @@ def create_align_tbl(ref_mar_refmt, tbl_frame):
             start += (max_label_len + 2)
             end += (max_label_len + 2)
             exon_len = end - start
-            exon = str(exon_list[idx]) if exon_list else str(idx)
+            exon = str(tuple(v + ref_mar_refmt.get_triml() for v in exon_list[idx])) if exon_list else str(idx)
             if exon_len < len(exon):
                 exon = 'E'
             elif exon_len < (len(exon) + 1):

@@ -104,7 +104,7 @@ void run_seqtyper(int argc, char* argv[]){
 
     cmd.add<string>("loc", 0, "loci file containing loci names, 5'primer sequence, reverse complement of 3'primer sequence, 5'flank region, 3'flank region, repeat unit and reference microsatellite repeat array, separated by '\t", false, "");
     cmd.add("revCom", 0, "if your reverse primer sequence in the loc file is not reverse complentary, please specify it");
-    cmd.add<int>("minSeqs", 0, "minimum number of reads for a genotype, default: 5", false, 5);
+    cmd.add<int>("minReads4Locus", 0, "minimum number of reads for a locus, default: 30", false, 30);
     cmd.add<int>("maxMismatchesPSeq", 0, "maximum mismatches for primer sequences 2", false, 2);
     cmd.add("noPlot", 0, "If specified, do not plot");
     
@@ -127,16 +127,18 @@ void run_seqtyper(int argc, char* argv[]){
     cmd.add<double>("maxVarRatio", 0, "ratio of two heter alleles based on variations either in flanking regions or MRA, the ideal is 1, default: 1.5", false, 1.5);
     
     //for snp;
-    cmd.add<double>("ssProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= ssProH when there is only one true SNP, must be > ssProL and coupled with ssProL. default: 0.84", false, 0.84);
-    cmd.add<double>("ssProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= ssProL when there is only one true SNP, must be < ssProH and coupled with ssProH. default: 0.78", false, 0.78);
-    cmd.add<double>("msProH", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= msProH when there are at least two true SNPs, must be > msProL and coupled with msProL. default: 0.83", false, 0.83);
-    cmd.add<double>("msProL", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= msProL when there are at least two true SNPs, must be < msProH and coupled with msProH. default: 0.79", false, 0.79);
-    cmd.add<double>("sPro3", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= sPro3. default: 0.8", false, 0.8);
-    cmd.add<double>("minSeqsProSnp", 0, "minimum proportion reads against largest peak for a genotype, default: 0.1 (10%)", false, 0.10);
-    cmd.add<int>("minReads4Filter", 0, "minimum reads for filtering read variant. if the maximum reads of haplotype is more than this, the low abundance read variants will be filtered, otherwise will be kept. This is used for the shallow sequencing. default: 50", false, 50);
-    cmd.add<int>("maxRows4Align", 0, "maximum rows for alignment table, must be > 2 rows. default: 6", false, 6);
+    cmd.add<double>("smProp1H", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= smProp1H when there is only one true SNP, must be > smProp1L and coupled with smProp1L. default: 0.84", false, 0.84);
+    cmd.add<double>("smProp1L", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= smProp1L when there is only one true SNP, must be < smProp1H and coupled with smProp1H. default: 0.78", false, 0.78);
+    cmd.add<double>("mmProp1H", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= mmProp1H when there are at least two true SNPs, must be > mmProp1L and coupled with mmProp1L. default: 0.83", false, 0.83);
+    cmd.add<double>("mmProp1L", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= mmProp1L when there are at least two true SNPs, must be < mmProp1H and coupled with mmProp1H. default: 0.79", false, 0.79);
+    cmd.add<double>("mProp2", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= mProp2. default: 0.50", false, 0.50);
+    //cmd.add<double>("sProp3", 0, "best SNPs proportion based on all amplicons. Allele is reassessed when it is classifed as inconclusive using ProH and ProL and mProp2: 0.8", false, 0.8);
+    //cmd.add<double>("minSeqsProSnp", 0, "minimum proportion reads against largest peak for a genotype, default: 0.1 (10%)", false, 0.10);
+    cmd.add<int>("minReads4Allele", 0, "minimum reads for filtering an allele, read1 for homo and read2 for heter. default: 20", false, 20);
+    cmd.add<int>("maxRVs4Align", 0, "maximum number of read variants for alignment table, must be > 2 rows. default: 6", false, 6);
     cmd.add("noSnpPlot", 0, "If specified, do not plot SNPs");
     cmd.add("noErrorPlot", 0, "If specified, do not plot error rate");
+    
     
     //for sex
     cmd.add<string>("sex", 0, "sex loci file containing sex locus names, 5'primer sequence, reverse complement of 3'primer sequence, X/Z reference sequence, Y/W reference sequence, separated by '\t", false, "");
@@ -257,33 +259,36 @@ void run_seqtyper(int argc, char* argv[]){
     opt->mEdOptions.format = cmd.get<string>("format");
 
     opt->sexFile = cmd.get<string>("sex");
-    opt->mSex.mismatchesPF = opt->mSex.mismatchesPR = cmd.get<unsigned int>("maxMismatchesSexPSeq");
-    opt->mSex.mismatchesRX = opt->mSex.mismatchesRY = cmd.get<unsigned int>("maxMismatchesSexRefSeq");
-    opt->mSex.YXRationCuttoff = cmd.get<double>("yxRatio");
-    opt->mSex.minReadsSexAllele = cmd.get<int>("minReadsSexAllele");
-    opt->mSex.minReadsSexVariant = cmd.get<int>("minReadsSexVariant");
+    if(opt->sexFile != ""){
+        opt->mSex.mismatchesPF = opt->mSex.mismatchesPR = cmd.get<unsigned int>("maxMismatchesSexPSeq");
+        opt->mSex.mismatchesRX = opt->mSex.mismatchesRY = cmd.get<unsigned int>("maxMismatchesSexRefSeq");
+        opt->mSex.YXRationCuttoff = cmd.get<double>("yxRatio");
+        opt->mSex.minReadsSexAllele = cmd.get<int>("minReadsSexAllele");
+        opt->mSex.minReadsSexVariant = cmd.get<int>("minReadsSexVariant");
+    }
 
     opt->mLocVars.locVarOptions.maxScore = cmd.get<int>("maxScore");
     opt->mLocVars.locVarOptions.numBestSeqs = cmd.get<int>("numBestSeqs");
     opt->mLocVars.locVarOptions.coreRep = cmd.get<int>("core");
     opt->noPlot = cmd.exist("noPlot");
         
-    if (opt->var == "snp" || opt->sexFile != "") {
-        opt->mLocSnps.mLocSnpOptions.minSeqs = cmd.get<int>("minSeqs");
-        opt->mLocSnps.mLocSnpOptions.minSeqsPer = cmd.get<double>("minSeqsProSnp");
-        opt->mLocSnps.mLocSnpOptions.hmProH = cmd.get<double>("ssProH");
-        opt->mLocSnps.mLocSnpOptions.hmProL = cmd.get<double>("ssProL");
-        opt->mLocSnps.mLocSnpOptions.htProH = cmd.get<double>("msProH");
-        opt->mLocSnps.mLocSnpOptions.htProL = cmd.get<double>("msProL");
-        opt->mLocSnps.mLocSnpOptions.htPro3 = cmd.get<double>("sPro3");
-        opt->mLocSnps.mLocSnpOptions.minReads4Filter = cmd.get<int>("minReads4Filter");
-        opt->mLocSnps.mLocSnpOptions.maxRows4Align = cmd.get<int>("maxRows4Align");
+    if (opt->var == "snp") {
+        opt->mLocSnps.mLocSnpOptions.minReads4Locus = cmd.get<int>("minReads4Locus");
+        //opt->mLocSnps.mLocSnpOptions.minSeqsPer = cmd.get<double>("minSeqsProSnp");
+        opt->mLocSnps.mLocSnpOptions.smProp1H = cmd.get<double>("smProp1H");
+        opt->mLocSnps.mLocSnpOptions.smProp1L = cmd.get<double>("smProp1L");
+        opt->mLocSnps.mLocSnpOptions.mmProp1H = cmd.get<double>("mmProp1H");
+        opt->mLocSnps.mLocSnpOptions.mmProp1L = cmd.get<double>("mmProp1L");
+        opt->mLocSnps.mLocSnpOptions.mProp2 = cmd.get<double>("mProp2");
+        //opt->mLocSnps.mLocSnpOptions.sProp3 = cmd.get<double>("sProp3");
+        opt->mLocSnps.mLocSnpOptions.minReads4Allele = cmd.get<int>("minReads4Allele");
+        opt->mLocSnps.mLocSnpOptions.maxRVs4Align = cmd.get<int>("maxRVs4Align");
         opt->noSnpPlot = cmd.exist("noSnpPlot");
         opt->noErrorPlot = cmd.exist("noErrorPlot");
     } else {
         opt->mLocVars.locVarOptions.maxMismatchesPSeq = cmd.get<int>("maxMismatchesPSeq");
         opt->mLocVars.locVarOptions.maxMismatchesPer4FR = cmd.get<double>("maxMismatchesPer4FR");
-        opt->mLocVars.locVarOptions.minSeqs = cmd.get<int>("minSeqs");
+        opt->mLocVars.locVarOptions.minSeqs = cmd.get<int>("minReads4Locus");
         opt->mLocVars.locVarOptions.minWarningSeqs = cmd.get<int>("minWarningSeqs");
         opt->mLocVars.locVarOptions.minSeqsPer = cmd.get<int>("minSeqsPercentage");
         opt->mLocVars.locVarOptions.hlRatio1 = cmd.get<double>("hlRatio1");

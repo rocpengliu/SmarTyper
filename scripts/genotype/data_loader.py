@@ -301,7 +301,7 @@ def create_footer(parent, frame):
     footer_frame.previous_button = ctk.CTkButton(footer_frame, text="← Previous", font=pnbuttonfont,
                                     fg_color=COLORS['primary'], hover_color=COLORS['secondary'],
                                     corner_radius=10, height=child_button_size['height'], width=child_button_size['width'],
-                                    command = lambda:parent.master.show_page("genotype"))
+                                    command = lambda:parent.master.show_page("genotyping"))
     footer_frame.previous_button.grid(row=0, column=0, padx=(10, 100), sticky="e")
     
     # Next Button

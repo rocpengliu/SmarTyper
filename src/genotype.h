@@ -218,7 +218,8 @@ public:
     int totHaploReads;
     
     double ratioHaplo; //ratio = big one / big one + small one; if 1 is homo,  if < jetter is heter, is <homo > jetter is inconclusive.
-    double ratioHaplo2;//ratio = read2 / read2 + read3
+    double ratioHaplo2;//ratio = read2 / read2 + read3 default 1
+    double ratioHaplo3; // best snp proportion based on all amplicons should be the ratiovar
     std::string genoStr3;//seqerr (ratio > homo and should regarded as seq errors), inconclusive (ratio between homo and heter), homo or heter;//homo also include CC against ref AA;;
     bool isIndel;
     std::pair<std::pair<bool, bool>, bool> status;//isindel for hp1/ref, isindel for hp2/ref, isindel for hp1/hp2
@@ -245,7 +246,6 @@ public:
     std::pair<int, double> getBaseFreqPair(int pos);
     std::vector<std::pair<int, double>> ratioVec;//for each snv, the ratio of number of read variants with and without that snv
     std::string getRatioStr();
-    double ratioVar;
 };
 
 struct MatchTrim {

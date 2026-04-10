@@ -15,8 +15,11 @@ COLORS = {
     'workflow_gold': '#ffb300',   # Warm gold for workflow
     'workflow_red': '#ff5e5b',    # Warm coral red for workflow
     'workflow_peach': '#ff9472',  # Warm peach for workflow
+    'workflow_cherry': '#f43f5e',    # Warm cherry red for workflow
     'workflow_rose': '#ff6f91',   # Warm rose pink for workflow
     'workflow_copper': '#b87333', # Warm copper for workflow
+    'tutorial_cherry': '#f43f5e',     # Bright cherry for tutorial
+    'tutorial_peach': '#ff9472'     # Bright peach for tutorial
 }
 
 aa_color_palette = {

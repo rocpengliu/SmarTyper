@@ -21,7 +21,7 @@ def main():
     # Loci file
     parser.add_argument('--loc', type=str, default='', help='loci file containing loci names, primers, flanking regions, etc.')
     parser.add_argument('--revCom', action='store_true', help='if your reverse primer sequence in the loc file is not reverse complentary, please specify it')
-    parser.add_argument('--minSeqs', type=int, default=5, help='minimum number of reads for a genotype, default: 5')
+    parser.add_argument('--minReads4Locus', type=int, default=30, help='minimum number of reads for a locus, default: 30')
     parser.add_argument('--maxMismatchesPSeq', type=int, default=2, help='maximum mismatches for primer sequences 2, default: 2')
     parser.add_argument('--noPlot', action='store_true', help='If specified, do not plot')
     
@@ -45,14 +45,15 @@ def main():
     parser.add_argument('--maxVarRatio', type=float, default=1.5, help='ratio of two heter alleles, default: 1.5')
     
     # SNP parameters
-    parser.add_argument('--ssProH', type=float, default=0.84, help='homo threshold when one true SNP, default: 0.84')
-    parser.add_argument('--ssProL', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.78')
-    parser.add_argument('--msProH', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.83')
-    parser.add_argument('--msProL', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.79')
-    parser.add_argument('--sPro3', type=float, default=0.8, help='heter threshold for read2/read3 proportion, default: 0.8')
-    parser.add_argument('--minSeqsProSnp', type=float, default=0.10, help='minimum proportion reads against largest peak for SNP genotype, default: 0.1 (10%%)')
-    parser.add_argument('--minReads4Filter', type=int, default=50, help='minimum reads for filtering read variant, default: 50')
-    parser.add_argument('--maxRows4Align', type=int, default=6, help='maximum rows for alignment table, must be > 2 rows. default: 6')
+    parser.add_argument('--smProp1H', type=float, default=0.84, help='homo threshold when one true SNP, default: 0.84')
+    parser.add_argument('--smProp1L', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.78')
+    parser.add_argument('--mmProp1H', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.83')
+    parser.add_argument('--mmProp1L', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.79')
+    parser.add_argument('--mProp2', type=float, default=0.50, help='heter threshold for read2/read3 proportion, default: 0.50')
+    #parser.add_argument('--sProp3', type=float, default=0.8, help='heter threshold for read2/read3 proportion, default: 0.8')
+    #parser.add_argument('--minSeqsProSnp', type=float, default=0.10, help='minimum proportion reads against largest peak for SNP genotype, default: 0.1 (10%%)')
+    parser.add_argument('--minReads4Allele', type=int, default=10, help='minimum reads for filtering an allele, read1 for homo and read2 for heter, default: 10')
+    parser.add_argument('--maxRVs4Align', type=int, default=6, help='maximum number of read variants for alignment table, must be > 2 rows. default: 6')
     parser.add_argument('--noSnpPlot', action='store_true', help='If specified, do not plot SNPs')
     parser.add_argument('--noErrorPlot', action='store_true', help='If specified, do not plot error rate')
     
@@ -175,7 +176,7 @@ def main():
         'nanopore_default': '--nanopore_default',
         'loc': '--loc',
         'revCom': '--revCom',
-        'minSeqs': '--minSeqs',
+        'minReads4Locus': '--minReads4Locus',
         'maxMismatchesPSeq': '--maxMismatchesPSeq',
         'noPlot': '--noPlot',
         'mode': '--mode',
@@ -193,14 +194,15 @@ def main():
         'hlRatio1': '--hlRatio1',
         'hlRatio2': '--hlRatio2',
         'maxVarRatio': '--maxVarRatio',
-        'ssProH': '--ssProH',
-        'ssProL': '--ssProL',
-        'msProH': '--msProH',
-        'msProL': '--msProL',
-        'sPro3': '--sPro3',
-        'minSeqsProSnp': '--minSeqsProSnp',
-        'minReads4Filter': '--minReads4Filter',
-        'maxRows4Align': '--maxRows4Align',
+        'smProp1H': '--smProp1H',
+        'smProp1L': '--smProp1L',
+        'mmProp1H': '--mmProp1H',
+        'mmProp1L': '--mmProp1L',
+        'mProp2': '--mProp2',
+        #'sProp3': '--sProp3',
+        #'minSeqsProSnp': '--minSeqsProSnp',
+        'minReads4Allele': '--minReads4Allele',
+        'maxRVs4Align': '--maxRVs4Align',
         'noSnpPlot': '--noSnpPlot',
         'noErrorPlot': '--noErrorPlot',
         'sex': '--sex',

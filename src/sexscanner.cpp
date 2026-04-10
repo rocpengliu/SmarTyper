@@ -309,9 +309,9 @@ void SexScanner::merge(std::vector<std::map<std::string, std::map<std::string, i
 
                 if(mapPair2.first){//no indel
                     if (mapPair2.second.size() == 1){//1 snp;
-                        if (mOptions->mSex.haploRatio >= mOptions->mLocSnps.mLocSnpOptions.hmProH) {
+                        if (mOptions->mSex.haploRatio >= mOptions->mLocSnps.mLocSnpOptions.smProp1H) {
                             mOptions->mSex.haploStr = "homo";
-                        } else if (abs(mOptions->mSex.haploRatio) <= mOptions->mLocSnps.mLocSnpOptions.hmProL) {
+                        } else if (abs(mOptions->mSex.haploRatio) <= mOptions->mLocSnps.mLocSnpOptions.smProp1L) {
                             mOptions->mSex.haplotype = true;
                             mOptions->mSex.haploStr = "heter";
                             mOptions->mSex.hyploSnpSetX = mapPair2.second;
@@ -320,9 +320,9 @@ void SexScanner::merge(std::vector<std::map<std::string, std::map<std::string, i
                             //mOptions->mSex.haploStr = "inconclusive";
                         }
                     } else {// >= 2 snps;
-                        if (mOptions->mSex.haploRatio >= mOptions->mLocSnps.mLocSnpOptions.htProH){
+                        if (mOptions->mSex.haploRatio >= mOptions->mLocSnps.mLocSnpOptions.mmProp1H){
                             mOptions->mSex.haploStr = "homo";
-                        } else if (abs(mOptions->mSex.haploRatio) <= mOptions->mLocSnps.mLocSnpOptions.htProL){
+                        } else if (abs(mOptions->mSex.haploRatio) <= mOptions->mLocSnps.mLocSnpOptions.mmProp1L){
                             mOptions->mSex.haplotype = true;
                             mOptions->mSex.haploStr = "heter";
                             mOptions->mSex.hyploSnpSetX = mapPair2.second;
@@ -330,13 +330,13 @@ void SexScanner::merge(std::vector<std::map<std::string, std::map<std::string, i
                         }
                     }
                 } else {// indel;
-                    if (mOptions->mSex.haploRatio >= mOptions->mLocSnps.mLocSnpOptions.htProH){
+                    if (mOptions->mSex.haploRatio >= mOptions->mLocSnps.mLocSnpOptions.mmProp1H){
                         mOptions->mSex.haploStr = "homo";
                     } else {
                         if( mOptions->mSex.getHaploVar('x', 1).numReads >= mOptions->mSex.minReadsSexVariant){
                             mOptions->mSex.haploStr = "heter";
                         } else {
-                            
+                            mOptions->mSex.haploStr = "inconclusive";
                         }
                     }
                     mOptions->mSex.haploIndel = true;
@@ -348,6 +348,7 @@ void SexScanner::merge(std::vector<std::map<std::string, std::map<std::string, i
             mOptions->mSex.sexMF = "Inconclusive";
         }
     }
+
     
     if(!mOptions->mSex.getHaploVar('y', 0).indel && mOptions->mSex.sexMF != "Inconclusive"){
         int stot = 0.00;

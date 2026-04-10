@@ -14,7 +14,7 @@ def create_wkfl_module(parent):
     
     # Machine Learning title label with modern styling
     label = ctk.CTkLabel(page, text="★ Main Workflow of SmarTyper", font=module_font, 
-                         fg_color="transparent", text_color=COLORS['workflow_peach'])
+                         fg_color="transparent", text_color=COLORS['workflow_cherry'])
     label.grid(row=0, column=0, pady=(30, 10), padx=(40, 50), sticky="n")
 
     # Display the workflow image

@@ -1,6 +1,19 @@
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 import glob
+from pathlib import Path
+from setuptools.command.build_ext import build_ext as _build_ext
+
+
+class build_ext(_build_ext):
+    def run(self):
+        super().run()
+        # Remove transient object files that can appear in src/ after compilation.
+        for obj_file in Path("src").glob("*.o"):
+            try:
+                obj_file.unlink()
+            except OSError:
+                pass
 
 # Define compiler and linker flags.
 extra_compile_args = ["-std=c++11", "-g"]
@@ -37,4 +50,5 @@ extensions = [
 setup(
     name="seqtyper_project",
     ext_modules=cythonize(extensions, compiler_directives={'language_level': "3"}),
+    cmdclass={"build_ext": build_ext},
 )

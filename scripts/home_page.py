@@ -87,10 +87,10 @@ def create_home(parent, app):
         main_panel.grid_columnconfigure(i, weight=1, uniform="card")
         main_panel.grid_rowconfigure(i, weight=1, uniform="card")
     cards = [
-        {"title": "Genotype", "desc": "\u2022Read raw amplicon sequence data (fastq.gz)\n\u2022Conduct read quality control\n\u2022Demultiplex reads based on locus's primer sequences\n\u2022Extract various features\n\u2022Predict zygosity & genotype\n\u2022Review & correct genotype on interactive genotype plot\n\u2022Based on software tool Seq2Type", "color": COLORS['primary'], "row": 0, "col": 0, "page": "genotype"},
-        {"title": "Microtype", "desc": "\u2022Identify & visualize microtypes (microhaplotype & micropeptype)\n\u2022Align sequence & construct phylogenetic tree\n\u2022Visualize microtype & sequence alignment\n\u2022Visualize phylogenetic tree\n\u2022Generate microtype plot\n\u2022Based on output genotype file from Genotype module\n", "color": COLORS['accent'], "row": 0, "col": 1, "page": "microtype"},
+        {"title": "Genotyping", "desc": "\u2022Read raw amplicon sequence data (fastq.gz)\n\u2022Conduct read quality control\n\u2022Demultiplex reads based on locus's primer sequences\n\u2022Extract various features\n\u2022Predict zygosity & genotype\n\u2022Review & correct genotype on interactive genotype plot\n\u2022Based on software tool Seq2Type", "color": COLORS['primary'], "row": 0, "col": 0, "page": "genotyping"},
+        {"title": "Microtyping", "desc": "\u2022Identify & visualize microtypes (microhaplotype & micropeptype)\n\u2022Align sequence & construct phylogenetic tree\n\u2022Visualize microtype & sequence alignment\n\u2022Visualize phylogenetic tree\n\u2022Generate microtype plot\n\u2022Based on output genotype file from Genotype module\n", "color": COLORS['accent'], "row": 0, "col": 1, "page": "microtyping"},
         {"title": "Machine Learning", "desc": "\u2022Train ML models\n\u2022Apply models to feature table\n\u2022Predict zygosity & genotype for smart genotyping\n\u2022Based on an existing genotype table\n\u2022This module is optional", "color": COLORS['success'], "row": 1, "col": 0, "page": "machine learning"},
-        {"title": "Project Manager", "desc": "\u2022Manage existing projects\n\u2022Review & reedit genotype\n\u2022Review microtype\n\n", "color": COLORS['workflow_gold'], "row": 1, "col": 1, "page": "project"}
+        {"title": "Project Managing", "desc": "\u2022Manage existing projects\n\u2022Review & reedit genotype\n\u2022Review microtype\n\n", "color": COLORS['workflow_gold'], "row": 1, "col": 1, "page": "project"}
     ]
     def create_modern_card(parent, card_data, app):
         # Card with border color matching its main color
