@@ -22,20 +22,20 @@ class ParameterClass:
         self._outputgenotypeproject = "project_genotype_session.dill"
         self._outputmicrotypeproject = "project_microtype_session.dill"
         
-        self._maxMismatchesPSeq = 2
+        self._maxMismatchesPSeq = 4
         self._minReads4Locus = 30
         self._minReads4Allele = 10
-        self._smProp1H = 0.84
-        self._smProp1L = 0.78
-        self._mmProp1H = 0.83
-        self._mmProp1L = 0.79
-        self._mProp2 = 0.50
+        self._smProp1H = 0.80
+        self._smProp1L = 0.72
+        self._mmProp1H = 0.80
+        self._mmProp1L = 0.78
+        self._mProp2 = 0.70
         #self._sProp3 = 0.80
         #self._minSeqsProSnp = 0.1
         self._maxRVs4Align = 6
         
-        self._maxMismatchesPSeqSex = 2
-        self._maxMismatchesRefSeqSex = 2
+        self._maxMismatchesPSeqSex = 4
+        self._maxMismatchesRefSeqSex = 4
         self._yxRatio = 0.0001
         self._minReadsSexAllele = 10
         self._minReadsSexVariant = 5

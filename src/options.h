@@ -262,7 +262,7 @@ public:
 class LocVarOptions{
 public:
     LocVarOptions(){
-        maxMismatchesPSeq = 2;
+        maxMismatchesPSeq = 4;
         minSeqs = 5;
         minSeqsPer = 5;
         minWarningSeqs = 50;
@@ -299,14 +299,14 @@ public:
 class LocSnpOptions{
 public:
     LocSnpOptions(){
-        maxMismatchesPSeq = 2;
+        maxMismatchesPSeq = 4;
         maxScorePrimer = -1;
         minReads4Locus = 30;
-        smProp1H = 0.84;
-        smProp1L = 0.78;
-        mmProp1H = 0.83;
-        mmProp1L = 0.79;
-        mProp2 = 0.50;
+        smProp1H = 0.80;
+        smProp1L = 0.72;
+        mmProp1H = 0.80;
+        mmProp1L = 0.78;
+        mProp2 = 0.70;
         //sProp3 = 0.0;
         hmPer = 0.0;
         //htJetter = 0.25;

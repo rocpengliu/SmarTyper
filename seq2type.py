@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--loc', type=str, default='', help='loci file containing loci names, primers, flanking regions, etc.')
     parser.add_argument('--revCom', action='store_true', help='if your reverse primer sequence in the loc file is not reverse complentary, please specify it')
     parser.add_argument('--minReads4Locus', type=int, default=30, help='minimum number of reads for a locus, default: 30')
-    parser.add_argument('--maxMismatchesPSeq', type=int, default=2, help='maximum mismatches for primer sequences 2, default: 2')
+    parser.add_argument('--maxMismatchesPSeq', type=int, default=2, help='maximum mismatches for primer sequences 4, default: 4')
     parser.add_argument('--noPlot', action='store_true', help='If specified, do not plot')
     
     # Sequence alignment
@@ -45,11 +45,11 @@ def main():
     parser.add_argument('--maxVarRatio', type=float, default=1.5, help='ratio of two heter alleles, default: 1.5')
     
     # SNP parameters
-    parser.add_argument('--smProp1H', type=float, default=0.84, help='homo threshold when one true SNP, default: 0.84')
-    parser.add_argument('--smProp1L', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.78')
-    parser.add_argument('--mmProp1H', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.83')
-    parser.add_argument('--mmProp1L', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.79')
-    parser.add_argument('--mProp2', type=float, default=0.50, help='heter threshold for read2/read3 proportion, default: 0.50')
+    parser.add_argument('--smProp1H', type=float, default=0.84, help='homo threshold when one true SNP, default: 0.80')
+    parser.add_argument('--smProp1L', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.72')
+    parser.add_argument('--mmProp1H', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.78')
+    parser.add_argument('--mmProp1L', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.80')
+    parser.add_argument('--mProp2', type=float, default=0.50, help='heter threshold for read2/read3 proportion, default: 0.7')
     #parser.add_argument('--sProp3', type=float, default=0.8, help='heter threshold for read2/read3 proportion, default: 0.8')
     #parser.add_argument('--minSeqsProSnp', type=float, default=0.10, help='minimum proportion reads against largest peak for SNP genotype, default: 0.1 (10%%)')
     parser.add_argument('--minReads4Allele', type=int, default=10, help='minimum reads for filtering an allele, read1 for homo and read2 for heter, default: 10')
