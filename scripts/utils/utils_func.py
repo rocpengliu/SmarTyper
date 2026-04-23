@@ -1023,15 +1023,21 @@ def init_sam_mar_ml(mars, samples):
     sam_mar_ml_dict = {sam : {mar : pd.DataFrame(columns=ml_mh_df_columns) for mar in mars} for sam in samples}
     return sam_mar_ml_dict
 
-def training_each_model_clf(df, micro_type):
+def training_each_model_clf(df, micro_type, ml_training_ratio):
     if micro_type == "snp":
         X_tot = df.drop(['locus', 'zygosity'], axis = 1)
         y = df['zygosity']
-        X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = 0.2, random_state = 42, stratify=y)
+        X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = (1 - ml_training_ratio), random_state = 42, stratify=y)
         clf = GradientBoostingClassifier(random_state = 42)
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
-        return [clf, accuracy]
+        importtances = clf.feature_importances_
+        features = X_tot.columns
+        feature_df = pd.DataFrame({
+            "Feature": features,
+            "Importance": importtances
+        }).sort_values(by = 'Importance', ascending = False)
+        return [clf, accuracy, feature_df]
     elif micro_type == "sat":
         pass

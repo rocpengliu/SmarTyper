@@ -58,6 +58,13 @@ class ParameterClass:
         self._include_pre_mh = True
         self._has_pre_mh = False
         self._pro_figure = True
+        
+        self._ml_training_ratio = 0.8
+        
+    def set_ml_training_ratio(self, ml_training_ratio):
+        self._ml_training_ratio = ml_training_ratio
+    def get_ml_training_ratio(self):
+        return self._ml_training_ratio
     
     def get_sex_analysis(self):
         return self._sex_analysis

@@ -80,6 +80,17 @@ def create_body(parent, frame):
                                                     genotype_class.get_machine_learning().read_training_df(genotype_class.get_parameter())))
     row += 1
     
+    training_ratio_var = tk.StringVar(value=str(genotype_class.get_parameter().get_ml_training_ratio()))
+    ctk.CTkLabel(body_frame.top_panel, text="Training ratio:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
+    body_frame.top_panel.training_ratio_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=training_ratio_var, height=26, corner_radius=8, border_width=2)
+    body_frame.top_panel.training_ratio_entry.grid(row=row, column=2, padx=body_frame.padx, pady=(1,1), sticky="w")
+    training_ratio_var.trace_add("write", lambda *args: (
+        genotype_class.get_parameter().set_ml_training_ratio(
+            float(training_ratio_var.get()) if training_ratio_var.get().replace('.', '', 1).isdigit() else genotype_class.get_parameter().get_ml_training_ratio()
+        )
+    ))
+    row += 1
+    
     output_var = ctk.StringVar(value=genotype_class.get_parameter().get_mloutputdir())
     ctk.CTkLabel(body_frame.top_panel, text="Output folder:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=(1,1), sticky="e")
     body_frame.top_panel.out_entry = ctk.CTkEntry(body_frame.top_panel, width=250, textvariable=output_var,

@@ -2,6 +2,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 import pandas as pd
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
@@ -23,6 +24,12 @@ class MachineLearningClass:
         self._ms_training_model_clf_dict = {}
         self._mh_model_pred_accu_dict = {} # model training accuracy locus = pd.dataframe()
         self._ms_model_pred_accu_dict = {} # model training accuracy
+        self._ml_loci_feature_importance_dict = {} # locus = pd.DataFrame with feature importance
+    
+    def set_ml_loci_feature_importance_dict(self, ml_loci_feature_importance_dict):
+        self._ml_loci_feature_importance_dict = ml_loci_feature_importance_dict
+    def get_ml_loci_feature_importance_dict(self):
+        return self._ml_loci_feature_importance_dict
     
     def set_mh_training_df_dict(self, mh_training_df_dict):
         self._mh_training_df_dict = mh_training_df_dict
@@ -87,6 +94,55 @@ class MachineLearningClass:
             elif parameter_class.get_analtype() == "sat":
                 pass
         print(f"training file: {fpath} done")
+
+    def output_feature_importance_pdf(self, output_dir, plots_per_page = 2, log_func = None):
+        if not self._ml_loci_feature_importance_dict:
+            msg = "No feature importance data available, skipping PDF export."
+            print(msg)
+            if log_func is not None:
+                log_func(msg)
+            return None
+
+        pdf_path = os.path.join(output_dir, "All_loci_feature_importance.pdf")
+        loci = sorted(self._ml_loci_feature_importance_dict)
+        plots_per_page = max(1, int(plots_per_page))
+
+        with PdfPages(pdf_path) as pdf:
+            for page_start in range(0, len(loci), plots_per_page):
+                page_loci = loci[page_start:page_start + plots_per_page]
+                fig, axes = plt.subplots(len(page_loci), 1, figsize = (11, 8.5))
+                axes = np.atleast_1d(axes)
+
+                for ax, locus in zip(axes, page_loci):
+                    feature_df = self._ml_loci_feature_importance_dict.get(locus)
+                    if feature_df is None or feature_df.empty:
+                        ax.text(0.5, 0.5, f"{locus}\nNo feature importance data", ha = 'center', va = 'center')
+                        ax.set_axis_off()
+                        continue
+
+                    if {'Feature', 'Importance'}.issubset(feature_df.columns):
+                        plot_df = feature_df[['Feature', 'Importance']].copy()
+                    else:
+                        plot_df = feature_df.iloc[:, :2].copy()
+                        plot_df.columns = ['Feature', 'Importance']
+
+                    plot_df = plot_df.sort_values(by = 'Importance', ascending = True)
+                    ax.barh(plot_df['Feature'].astype(str), plot_df['Importance'], color = 'steelblue')
+                    ax.set_title(f"Locus: {locus}")
+                    ax.set_xlabel("Importance")
+                    ax.set_ylabel("Feature")
+                    ax.tick_params(axis = 'y', labelsize = 8)
+
+                fig.suptitle("Feature Importance by Locus")
+                fig.tight_layout(rect = [0, 0.03, 1, 0.97])
+                pdf.savefig(fig)
+                plt.close(fig)
+
+        msg = f"Feature importance PDF written to: {pdf_path}"
+        print(msg)
+        if log_func is not None:
+            log_func(msg)
+        return pdf_path
         
     def training_model_clf(self, parameter_class, log_func = None):
         num_loc = 0
@@ -99,14 +155,11 @@ class MachineLearningClass:
                 for locus, locus_df in self._mh_training_df_dict.items():
                     print(f"starting to training model for marker: {locus}")
                     if 'zygosity' in locus_df.columns:
-                        # class_counts = locus_df['zygosity'].value_counts()
-                        # num_classes = locus_df['zygosity'].nunique()
-                        # min_class_size = class_counts.min()
                         zygo_count = locus_df['zygosity'].value_counts().reindex([0, 1, 2], fill_value = 0)
                         num_classes = (zygo_count > 0).sum()
                         min_class_size = zygo_count[zygo_count > 0].min()
                         if num_classes >= 2 and min_class_size >= 2:
-                            future = executor.submit(training_each_model_clf, locus_df, "snp")
+                            future = executor.submit(training_each_model_clf, locus_df, "snp", parameter_class.get_ml_training_ratio())
                             futures[future] = (locus, zygo_count)
                             pass_loc += 1
                         else:
@@ -140,6 +193,7 @@ class MachineLearningClass:
                                                                              'homo' : int(zygo_count.loc[1]),
                                                                              'heter': int(zygo_count.loc[2]),
                                                                              'inconclusive': int(zygo_count.loc[0])}, index=[0])
+                        self._ml_loci_feature_importance_dict[locus] = clf_accu[2]
                         num_loc += 1
                         if num_loc % 10 == 0:
                             if log_func is not None:
@@ -154,13 +208,22 @@ class MachineLearningClass:
                 log_func(f"Model training completed for {num_loc} markers, {pass_loc} markers passed for submission, {failed_loc} markers failed the training criteria.\n\n")
                 log_func("Model training completed.\n\n")
                 log_func("Starting to write accuracy file!")
-            # Keep locus as a column and drop the inner row index from concatenated frames.
-            com_df = pd.concat(self.get_mh_model_pred_accu_dict(), names = ['locus']).reset_index(level='locus').reset_index(drop=True)
-            com_df.to_csv(os.path.join(parameter_class.get_mloutputdir(), "All_loci_accuracy.txt"), sep = '\t', index = False)
+            if self.get_mh_model_pred_accu_dict() is not None and len(self.get_mh_model_pred_accu_dict()) > 0:
+                # Keep locus as a column and drop the inner row index from concatenated frames.
+                com_df = pd.concat(self.get_mh_model_pred_accu_dict(), names = ['locus']).reset_index(level='locus').reset_index(drop=True)
+                com_df.to_csv(os.path.join(parameter_class.get_mloutputdir(), "All_loci_accuracy.txt"), sep = '\t', index = False)
+            else:
+                msg = "No trained marker accuracy data available, skipping All_loci_accuracy.txt export."
+                print(msg)
+                if log_func is not None:
+                    log_func(msg)
             if log_func is not None:
                 log_func(f"Finished dump accuracy file!\n\n")
                 log_func(f"Starting to dump training models...")
-            joblib.dump(self._mh_training_model_clf_dict, os.path.join(parameter_class.get_mloutputdir(), "All_training_models.pkl"))
+            if self._ml_loci_feature_importance_dict is not None and len(self._ml_loci_feature_importance_dict) > 0:
+                self.output_feature_importance_pdf(parameter_class.get_mloutputdir(), plots_per_page = 2, log_func = log_func)
+            if self._mh_training_model_clf_dict is not None and len(self._mh_training_model_clf_dict) > 0:
+                joblib.dump(self._mh_training_model_clf_dict, os.path.join(parameter_class.get_mloutputdir(), "All_training_models.pkl"))
             print(f"training model done")
             if log_func is not None:
                 log_func("Training models dumped successfully!")
