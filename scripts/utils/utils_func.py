@@ -21,6 +21,16 @@ import copy
 from .modern_messagebox import ModernMessageBox
 from scripts.class_modules.microtype_class import ComboMicroType
 
+
+def _concat_non_empty_frames(frame_dict):
+    """Concatenate only populated DataFrames and return None when there is nothing to write."""
+    if not frame_dict:
+        return None
+    frames = [df for df in frame_dict.values() if isinstance(df, pd.DataFrame) and not df.empty]
+    if not frames:
+        return None
+    return pd.concat(frames, ignore_index=True)
+
 def load_pdf(file_path, canvas):
     try:
         doc = fitz.open(file_path)
@@ -65,24 +75,28 @@ def output_snp_table(output_folder_path, selected_sample, sam_mar_snp_dict_sam, 
             elif zygo == 2:
                 snp_df['conclusive'] = 'Y'
                 snp_df['allele2'] = snp_df['allele3']
-    if sam_mar_snp_dict_sam.values() is None or len(sam_mar_snp_dict_sam.values()) == 0:
-        return
+    snp_df_t = _concat_non_empty_frames(sam_mar_snp_dict_sam)
+    if snp_df_t is None:
+        return False
     tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_snp.txt")
-    snp_df_t = pd.concat(sam_mar_snp_dict_sam.values(), ignore_index=True)
     snp_df_t.to_csv(tab_file_path, sep="\t", index=False)
     return True
 
 def output_geno_table(output_folder_path,selected_sample, sam_microhap_dict_sam, anal_type)->bool:
     #print(f"starting to output_geno_table for {selected_sample}")
     tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_haplotype.txt")
-    geno_df = pd.concat(sam_microhap_dict_sam.values(), ignore_index=True)
+    geno_df = _concat_non_empty_frames(sam_microhap_dict_sam)
+    if geno_df is None:
+        return False
     geno_df.to_csv(tab_file_path, sep="\t", index=False)
     #print(f"finished to output_geno_table for {selected_sample}")
     return True
 
 def output_ml_table(output_folder_path,selected_sample, sam_ml_dict_sam, anal_type)->bool:
     tab_file_path = os.path.join(output_folder_path, f"{selected_sample}_sample_final_ml.txt")
-    ml_df = pd.concat(sam_ml_dict_sam.values(), ignore_index=True)
+    ml_df = _concat_non_empty_frames(sam_ml_dict_sam)
+    if ml_df is None:
+        return False
     ml_df.to_csv(tab_file_path, sep="\t", index=False)
     return True
 
@@ -110,16 +124,24 @@ def prod_ml_tbl(sam_microhap_dict_sam, sam_ml_dict_sam, selected_sample, anal_ty
 def output_all_geno_table(genoclass, anal_type):
     tab_file_path = os.path.join(genoclass.get_parameter().get_outputdir(), f"All_sample_final_haplotype.txt")
     for idx, (sam, sam_dict) in enumerate(genoclass.get_microhap().get_sam_microhaps_dir().items()):
-        geno_df = pd.concat(sam_dict.values(), ignore_index=True)
+        geno_df = _concat_non_empty_frames(sam_dict)
+        if geno_df is None:
+            continue
         if idx == 0:
             geno_df.to_csv(tab_file_path, sep="\t", index=False, header=True)
         else:
             geno_df.to_csv(tab_file_path, sep="\t", index=False, header=False, mode='a')
     
     tab_file_path2 = os.path.join(genoclass.get_parameter().get_outputdir(), "All_sample_final_ml.txt")
-    ml_df = pd.concat(
-                    [df for od in genoclass.get_microhap().get_sam_mar_ml_dict().values() for df in od.values() if df is not None],
-                    axis = 0, ignore_index = True)
+    ml_frames = [
+        df
+        for od in genoclass.get_microhap().get_sam_mar_ml_dict().values()
+        for df in od.values()
+        if isinstance(df, pd.DataFrame) and not df.empty
+    ]
+    if not ml_frames:
+        return
+    ml_df = pd.concat(ml_frames, axis=0, ignore_index=True)
     ml_df = ml_df.sort_values(by=['locus']).reset_index(drop=True)
     ml_df.to_csv(tab_file_path2, sep = "\t", index = False)
 

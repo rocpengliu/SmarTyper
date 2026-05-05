@@ -64,23 +64,6 @@ def display_phylotre(genotab, genoclass):
     fig_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=(2,2))
     create_phy_fig(ref_mar_refmt, fig_frame)
     
-    # page_flip_frame=ctk.CTkFrame(genotab, fg_color='transparent')
-    # page_flip_frame.grid(row=2,column=0, pady=(5,5), sticky='ew')
-    
-    # genotab.previous_page_button = ctk.CTkButton(page_flip_frame, text="← Previous", font=bmbfont,
-    #                                      width=child_button_size['width'], height=child_button_size['height'],
-    #                                      fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-    #                                      corner_radius=10,
-    #                                      command=lambda:change_page(-1, genotab, genoclass))
-    # genotab.previous_page_button.grid(row=0,column=0,sticky="e",padx=(100,0), pady=(5,5))
-    # #previous_page_button.pack(side="left", padx=(10, 50), pady=(5,5))
-    # genotab.next_page_button = ctk.CTkButton(page_flip_frame, text="Next →", font=bmbfont,
-    #                                  width=child_button_size['width'], height=child_button_size['height'],
-    #                                  fg_color=COLORS['accent'], hover_color=COLORS['secondary'],
-    #                                  corner_radius=10,
-    #                                  command=lambda:change_page(1, genotab, genoclass))
-    # genotab.next_page_button.grid(row=0,column=1, sticky='e', padx=(200, 0), pady=(2,2))
-    
     # Ensure scroll_frame expands and fills the canvas upon resize
     canvas.bind("<Configure>", lambda event: on_canvas_configure(canvas, event))
     canvas.bind_all("<MouseWheel>", lambda event: on_mouse_wheel(event, canvas))
@@ -123,16 +106,16 @@ def change_page(page, genotab, genoclass, change = True):
 
 def create_phy_fig(ref_mar_refmt, fig_frame):
     if ref_mar_refmt.get_has_exon():
-        fig, (ax1, ax2)=plt.subplots(1, 2, figsize=(20, 10))
+        fig, (ax1, ax2)=plt.subplots(1, 2, figsize=(20, 10), dpi = 120)
         Phylo.draw(ref_mar_refmt.get_cur_dna_tre(), do_show=False, axes = ax1)
         ax1.set_title("DNA tree")
         ax1.set_ylabel("microtype")
         Phylo.draw(ref_mar_refmt.get_cur_aa_tre(), do_show=False, axes = ax2)
         ax2.set_title("AA tree")
         ax2.set_ylabel("microtype")
-        fig.suptitle(f"Phylogenetic Trees {ref_mar_refmt.get_locus()}", fontsize=16)
+        fig.suptitle(f"Phylogenetic Trees of {ref_mar_refmt.get_locus()}", fontsize=16)
     else:
-        fig, ax1=plt.subplots(1,figsize=(15, 10))
+        fig, ax1=plt.subplots(1,figsize=(15, 10), dpi = 120)
         Phylo.draw(ref_mar_refmt.get_cur_dna_tre(), do_show=False, axes = ax1)
         ax1.set_title("DNA tree")
         ax1.set_ylabel("microtype")
