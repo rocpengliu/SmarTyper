@@ -2,19 +2,19 @@
 
 ## Description
 
-**SmarTyper** is a novel, smart, multifunctional platform for identifying genetic variation from targeted sequencing data.
+**SmarTyper** is a novel, smart, comprehensive and interfaced-based platform for microtype (microhaplotype & micropeptype) genotyping from targeted sequencing data.
 
 ## Key features of SmarTyper
 
-* **Multifunctional**: conducts genotyping for SNPs, microhaplotypes, and micropeptides.
+* **Multifunctional**: conducts genotyping for SNPs, microhaplotypes, and micropeptypes.
 
 * **Smart**: supports smart genotyping powered by AI.
 
-* **Interactive**: supports both automatic and manual genotyping with interactive plotting.
+* **Interactive**: supports both automated and manual genotyping with interactive plotting.
 
 * **Ultra-fast**: about 5 seconds per sample using a single thread.
 
-* **All-in-one**: SmarTyper takes raw targeted sequencing reads as input and outputs genotype tables without intermediate file writing/loading, which improves I/O efficiency.
+* **All-in-one**: SmarTyper takes raw targeted sequencing reads as input and outputs genotype tables.
 
 * **Reads-to-report files**: generates genotype tables, figures for report.
 
@@ -51,6 +51,9 @@ python3 setup.py clean --all && python3 setup.py build_ext --inplace
 ```bash
 python3 smartyper.py
 ```
+
+## Seq2Type as a standalone software tool
+
 
 ## To do list
 
