@@ -68,8 +68,8 @@ def main():
     parser.add_argument('--debug', action='store_true', help='If specified, print debug')
     
     # Reporting
-    parser.add_argument('-j', '--json', type=str, default='seq2sat.json', help='the json format report file name')
-    parser.add_argument('--html', type=str, default='seq2sat.html', help='the html format report file name')
+    parser.add_argument('-j', '--json', type=str, default='seq2type.json', help='the json format report file name')
+    parser.add_argument('--html', type=str, default='seq2type.html', help='the html format report file name')
     parser.add_argument('-R', '--report_title', type=str, default='seq2type report', help='report title')
     parser.add_argument('--help', action='store_true', help='show this help message and exit')
 
@@ -154,7 +154,7 @@ def main():
     parser.add_argument('--umi_loc', type=str, default='', help='specify the location of UMI (index1/index2/read1/read2/per_index/per_read)')
     parser.add_argument('--umi_len', type=int, default=0, help='if the UMI is in read1/read2, its length should be provided')
     parser.add_argument('--umi_prefix', type=str, default='', help='prefix for UMI')
-    parser.add_argument('--umi_skip', type=int, default=0, help='if the UMI is in read1/read2, seq2sat can skip several bases following UMI, default is 0')
+    parser.add_argument('--umi_skip', type=int, default=0, help='if the UMI is in read1/read2, seq2type can skip several bases following UMI, default is 0')
 
     args = parser.parse_args()
 

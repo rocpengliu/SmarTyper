@@ -18,7 +18,7 @@ def create_wkfl_module(parent):
     label.grid(row=0, column=0, pady=(30, 10), padx=(40, 50), sticky="n")
 
     # Display the workflow image
-    img_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "images", "smartyper_workflow.png")
+    img_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "images", "smartyper_workflow.jpg")
     if os.path.exists(img_path):
         pil_img_orig = Image.open(img_path)
         img_label = ctk.CTkLabel(page, text="")
