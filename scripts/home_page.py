@@ -71,7 +71,7 @@ def create_home(parent, app):
 
     header_label2 = ctk.CTkLabel(
         header_frame,
-        text="-- A smart & comprehensive platform for SNP & microtype genotyping, visualization from amplicon sequence data",
+        text="-- A smart, reference-free & unified platform for microhaplotype and micropeptype genotyping, visualization from amplicon sequence data",
         font=subtitle_font,
         fg_color="transparent",
         text_color=COLORS['text_secondary'],
@@ -90,7 +90,7 @@ def create_home(parent, app):
         {"title": "Genotyping", "desc": "\u2022Read raw amplicon sequence data (fastq.gz)\n\u2022Conduct read quality control\n\u2022Demultiplex reads based on locus's primer sequences\n\u2022Extract various features\n\u2022Predict zygosity & genotype\n\u2022Review & correct genotype on interactive genotype plot\n\u2022Based on software tool Seq2Type", "color": COLORS['primary'], "row": 0, "col": 0, "page": "genotyping"},
         {"title": "Microtyping", "desc": "\u2022Identify & visualize microtypes (microhaplotype & micropeptype)\n\u2022Align sequence & construct phylogenetic tree\n\u2022Visualize microtype & sequence alignment\n\u2022Visualize phylogenetic tree\n\u2022Generate microtype plot\n\u2022Based on output genotype file from Genotype module\n", "color": COLORS['accent'], "row": 0, "col": 1, "page": "microtyping"},
         {"title": "Machine Learning", "desc": "\u2022Train ML models\n\u2022Apply models to feature table\n\u2022Predict zygosity & genotype for smart genotyping\n\u2022Based on an existing genotype table\n\u2022This module is optional", "color": COLORS['success'], "row": 1, "col": 0, "page": "machine learning"},
-        {"title": "Project Managing", "desc": "\u2022Manage existing projects\n\u2022Review & reedit genotype\n\u2022Review microtype\n\n", "color": COLORS['workflow_gold'], "row": 1, "col": 1, "page": "project"}
+        {"title": "Project Management", "desc": "\u2022Manage existing projects\n\u2022Review & reedit genotype\n\u2022Review microtype\n\n", "color": COLORS['workflow_gold'], "row": 1, "col": 1, "page": "project"}
     ]
     def create_modern_card(parent, card_data, app):
         # Card with border color matching its main color
@@ -137,16 +137,77 @@ def create_home(parent, app):
     lower_panel.grid_columnconfigure(1, weight=1)
     lower_panel.grid_rowconfigure(0, weight=1)
 
-    contact_info = "Contact: Dr. Peng Liu\nEnvironment and Climate Change Canada\nEmail: peng.liu@ec.gc.ca"
-    citation_info = "Citation: Liu, P. et al. SmarTyper: towards smart SNP and microhaplotype genotyping. (2026).\nGithub: https://github.com/rocpengliu/SmarTyper"
+    contact_name = "Contact: Dr. Peng Liu"
+    contact_email = "peng.liu@ec.gc.ca"
+    contact_org = "Environment and Climate Change Canada"
+    citation_text = "Citation: Liu, P. et al. SmarTyper: a reference-free and unified platform for microhaplotype and micropeptype genotyping. (2026)."
+    github_text = "Github: https://github.com/rocpengliu/SmarTyper"
 
     contact_panel = ctk.CTkFrame(lower_panel, fg_color="transparent")
-    contact_panel.grid(row=0, column=0, sticky="nse", padx=(0, 10))
-    ctk.CTkLabel(contact_panel, text=contact_info, font=("Segoe UI", 11), text_color=COLORS['text_secondary'], fg_color="transparent", anchor="e", justify="right").pack(fill="both", expand=True, pady=1)
+    contact_panel.grid(row=0, column=0, sticky="ne", padx=(0, 10))
+    contact_panel.grid_columnconfigure(0, weight=1)
+
+    ctk.CTkLabel(
+        contact_panel,
+        text=contact_name,
+        font=("Segoe UI", 10),
+        text_color=COLORS['text_secondary'],
+        fg_color="transparent",
+        height=14,
+        anchor="e",
+        justify="right"
+    ).grid(row=0, column=0, sticky="e", pady=0)
+
+    email_label = ctk.CTkLabel(
+        contact_panel,
+        text=f"Email: {contact_email}",
+        font=("Segoe UI", 10),
+        text_color=COLORS['text_secondary'],
+        fg_color="transparent",
+        height=14,
+        anchor="e",
+        justify="right"
+    )
+    email_label.grid(row=1, column=0, sticky="e", pady=0)
+
+    ctk.CTkLabel(
+        contact_panel,
+        text=contact_org,
+        font=("Segoe UI", 10),
+        text_color=COLORS['text_secondary'],
+        fg_color="transparent",
+        height=14,
+        anchor="e",
+        justify="right"
+    ).grid(row=2, column=0, sticky="e", pady=0)
 
     citation_panel = ctk.CTkFrame(lower_panel, fg_color="transparent")
-    citation_panel.grid(row=0, column=1, sticky="nsw", padx=(10, 0))
-    ctk.CTkLabel(citation_panel, text=citation_info, font=("Segoe UI", 11), text_color=COLORS['text_secondary'], fg_color="transparent", anchor="w", justify="left").pack(fill="both", expand=True, pady=1)
+    citation_panel.grid(row=0, column=1, sticky="nw", padx=(10, 0))
+    citation_panel.grid_columnconfigure(0, weight=1)
+
+    citation_label = ctk.CTkLabel(
+        citation_panel,
+        text=citation_text,
+        font=("Segoe UI", 10),
+        text_color=COLORS['text_secondary'],
+        fg_color="transparent",
+        height=14,
+        anchor="w",
+        justify="left"
+    )
+    citation_label.grid(row=0, column=0, sticky="w", pady=0)
+
+    github_label = ctk.CTkLabel(
+        citation_panel,
+        text=github_text,
+        font=("Segoe UI", 10),
+        text_color=COLORS['text_secondary'],
+        fg_color="transparent",
+        height=14,
+        anchor="w",
+        justify="left"
+    )
+    github_label.grid(row=1, column=0, sticky="w", pady=0)
 
     return page
 
