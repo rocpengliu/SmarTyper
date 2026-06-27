@@ -66,7 +66,9 @@ def set_dpi_awareness():
         elif system == "Darwin":
             os.environ['TK_SILENCE_DEPRECATION'] = '1'
         elif system == "Linux":
-            os.environ['DISPLAY'] = 'localhost:0.0'
+            # Do not force DISPLAY on Linux. WSLg and native Ubuntu provide
+            # environment-specific display/wayland settings that should be preserved.
+            pass
     except AttributeError as ae:
         print(f"Could not set DPI awareness: module 'ctypes' has no attribute 'windll', {ae}")
     except Exception as e:
