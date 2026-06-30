@@ -51,23 +51,13 @@ python3 setup.py clean --all && python3 setup.py build_ext --inplace
 python3 smartyper.py
 ```
 
-### Optional: compare GUI environment in WSL vs native Ubuntu
-
-Run this command in both environments and compare outputs:
-
-```bash
-python3 smartyper.py --diagnose-gui
-```
-
-This reports display backend, Tk scaling, screen size, and whether the runtime is WSL.
-
-If fonts/UI scale look different between environments, you can set an explicit Tk scaling value:
-
-```bash
-SMARTYPER_TK_SCALING=1.0 python3 smartyper.py
-```
-
 ## Seq2Type as a standalone software tool
+run seq2type
+
+```bash
+python3 seq2type.py -i raw_combined/sample_1_R1.fastq.gz -I raw_combined/sample_1_R2.fastq.gz --loc loc_combined.txt --var snp --prefix sample_1 -w 12 -V
+
+```
 
 ```
 seq2type for genotyping
