@@ -51,11 +51,17 @@ python3 setup.py clean --all && python3 setup.py build_ext --inplace
 python3 smartyper.py
 ```
 
+### Step 6. Process your data
+
+Please try the example data in folder example_data and follow the tutorial https://github.com/rocpengliu/SmarTyper/blob/master/tutorial/smartyper_tutorial.pdf
+
+
 ## Seq2Type as a standalone software tool
 run seq2type
 
 ```bash
-python3 seq2type.py -i raw_combined/sample_1_R1.fastq.gz -I raw_combined/sample_1_R2.fastq.gz --loc loc_combined.txt --var snp --prefix sample_1 -w 12 -V
+cd example_data;
+python3 ../seq2type.py -i raw_data/sample_1_R1.fastq.gz -I raw_data/sample_1_R2.fastq.gz --loc loc_combined.txt --var snp --prefix sample_1 -w 12 -V
 
 ```
 
