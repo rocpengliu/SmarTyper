@@ -9,8 +9,6 @@ if platform.system() == "Windows":
 import customtkinter as ctk
 from customtkinter import CTkImage
 import tkinter as tk
-import argparse
-import json
 import os
 import multiprocessing as mp
 
@@ -34,57 +32,6 @@ from scripts.utils.colors import COLORS
 from PIL import Image, ImageTk, ImageOps, ImageEnhance
 from scripts.class_modules.class_modules import GenotypeClass
 ctk.set_appearance_mode("dark")
-
-
-def _is_wsl() -> bool:
-    if platform.system() != "Linux":
-        return False
-    release = platform.release().lower()
-    if "microsoft" in release or "wsl" in release:
-        return True
-    try:
-        with open("/proc/version", "r", encoding="utf-8") as f:
-            return "microsoft" in f.read().lower()
-    except OSError:
-        return False
-
-
-def collect_gui_diagnostics() -> dict:
-    info = {
-        "platform": platform.platform(),
-        "system": platform.system(),
-        "release": platform.release(),
-        "is_wsl": _is_wsl(),
-        "display": os.environ.get("DISPLAY", ""),
-        "wayland_display": os.environ.get("WAYLAND_DISPLAY", ""),
-        "xdg_session_type": os.environ.get("XDG_SESSION_TYPE", ""),
-        "gdk_backend": os.environ.get("GDK_BACKEND", ""),
-        "tk_scaling_env": os.environ.get("SMARTYPER_TK_SCALING", ""),
-    }
-
-    root = None
-    try:
-        root = tk.Tk()
-        root.withdraw()
-        root.update_idletasks()
-        info["tk_windowing_system"] = root.tk.call("tk", "windowingsystem")
-        info["tk_scaling"] = float(root.tk.call("tk", "scaling"))
-        info["tk_pixels_per_inch"] = float(root.winfo_fpixels("1i"))
-        info["screen_width"] = int(root.winfo_screenwidth())
-        info["screen_height"] = int(root.winfo_screenheight())
-        max_w, max_h = root.maxsize()
-        info["max_width"] = int(max_w)
-        info["max_height"] = int(max_h)
-    except Exception as e:
-        info["diagnostic_error"] = str(e)
-    finally:
-        if root is not None:
-            try:
-                root.destroy()
-            except Exception:
-                pass
-
-    return info
 
 class SmarTyperApp(ctk.CTk):
     def __init__(self):
@@ -210,41 +157,15 @@ class SmarTyperApp(ctk.CTk):
         self.right_panel.grid(row=0, column=1, sticky="nsew")
         self.deiconify()  # Show window only after everything is ready
 
-    def _maximize_window(self):
-        try:
-            self.state("zoomed")
-            return
-        except Exception:
-            pass
-
-        try:
-            self.attributes("-zoomed", True)
-            return
-        except Exception:
-            pass
-
-        # Last-resort maximize fallback that works across X11/Wayland variants.
-        try:
-            max_w, max_h = self.maxsize()
-            self.geometry(f"{max_w}x{max_h}+0+0")
-        except Exception:
-            pass
-
     def setup_window(self):
         screen_width=self.winfo_screenwidth()*0.4
         screen_height=self.winfo_screenheight()*0.6
         self.geometry(f"{screen_width}x{screen_height}")
-        self.minsize(1280, 720)
-
-        scaling_env = os.environ.get("SMARTYPER_TK_SCALING")
-        if scaling_env:
-            try:
-                self.tk.call("tk", "scaling", float(scaling_env))
-            except Exception:
-                pass
-
         # Maximize window on launch
-        self._maximize_window()
+        try:
+            self.state("zoomed")
+        except Exception:
+            self.attributes("-zoomed", True)
     def create_tabs(self):
         # Add logo/branding area
         brand_frame = ctk.CTkFrame(self.left_panel, fg_color="transparent")
@@ -413,18 +334,6 @@ class SmarTyperApp(ctk.CTk):
         ctk.set_appearance_mode(new_mode)
     
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="SmarTyper launcher")
-    parser.add_argument(
-        "--diagnose-gui",
-        action="store_true",
-        help="print GUI/runtime diagnostics for comparing WSL and native Ubuntu",
-    )
-    args = parser.parse_args()
-
-    if args.diagnose_gui:
-        print(json.dumps(collect_gui_diagnostics(), indent=2, sort_keys=True))
-        raise SystemExit(0)
-
     mp.set_start_method('spawn', force=True)
     app = SmarTyperApp()
     app.mainloop()
