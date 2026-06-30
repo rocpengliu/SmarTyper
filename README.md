@@ -53,7 +53,7 @@ python3 smartyper.py
 
 ### Step 6. Process your data
 
-Please try the example data in folder example_data and follow the tutorial https://github.com/rocpengliu/SmarTyper/blob/master/tutorial/smartyper_tutorial.pdf
+Please try the example data in folder example_data and follow the tutorial.
 
 
 ## Seq2Type as a standalone software tool
