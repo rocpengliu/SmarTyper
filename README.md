@@ -51,13 +51,13 @@ python3 setup.py clean --all && python3 setup.py build_ext --inplace
 python3 smartyper.py
 ```
 
+
 ### Step 6. Process your data
 
 Please try the example data in folder example_data and follow the tutorial.
 
 
-## Seq2Type as a standalone software tool
-run seq2type
+## Use Seq2Type engine as a standalone software tool for automated genotyping (not recommended).
 
 ```bash
 cd example_data;
