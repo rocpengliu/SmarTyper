@@ -81,7 +81,7 @@ const char* get_captured_cout(){
 void run_seqtyper(int argc, char* argv[]){
     // display version info if no argument is given
     if(argc == 1) {
-        std::cout << "Seq2Sat: an ultra-fast and comprehensive genetic variation identification tool for raw sequencing data." << endl << "version " << SEQ2SAT_VER << std::endl;
+        std::cout << "Seq2Sat: an ultra-fast and comprehensive genetic variation identification tool for raw sequencing data." << endl << "version " << SEQ2TYPER_VER << std::endl;
     }
     if (argc == 2 && strcmp(argv[1], "test")==0){
         UnitTest tester;
@@ -89,7 +89,7 @@ void run_seqtyper(int argc, char* argv[]){
         exit(-1);
     }
     if (argc == 2 && (strcmp(argv[1], "-v")==0 || strcmp(argv[1], "--version")==0)){
-        std::cout << "seq2sat " << SEQ2SAT_VER << std::endl;
+        std::cout << "seq2typer " << SEQ2TYPER_VER << std::endl;
         exit(-1);
     }
     cmdline::parser cmd;
@@ -580,7 +580,7 @@ void run_seqtyper(int argc, char* argv[]){
         std::cout << endl << "JSON report: " << opt->jsonFile << std::endl;
         std::cout << "HTML report: " << opt->htmlFile << std::endl;
         std::cout << endl << command << std::endl;
-        std::cout << "seq2sat v" << SEQ2SAT_VER << ", time used: " << (t2) - t1 << " seconds" << std::endl;
+        std::cout << "seq2typer v" << SEQ2TYPER_VER << ", time used: " << (t2) - t1 << " seconds" << std::endl;
 
     } else {
         opt->parseSampleTable();
@@ -664,7 +664,7 @@ void run_seqtyper(int argc, char* argv[]){
             std::cout << endl << "JSON report: " << opt->jsonFile << std::endl;
             std::cout << "HTML report: " << opt->htmlFile << std::endl;
             std::cout << endl << command << std::endl;
-            std::cout << "seq2sat v" << SEQ2SAT_VER << ", time used: " << (t3) - t2 << " seconds" << std::endl;
+            std::cout << "seq2typer v" << SEQ2TYPER_VER << ", time used: " << (t3) - t2 << " seconds" << std::endl;
         }
 
         //HtmlReporterAll hra(opt);
@@ -676,7 +676,7 @@ void run_seqtyper(int argc, char* argv[]){
         opt = NULL;
     }
     time_t t4 = time(NULL);
-    std::cout << "seq2sat v" << SEQ2SAT_VER << ", time used: " << (t4) - t1 << " seconds" << std::endl;
+    std::cout << "seq2typer v" << SEQ2TYPER_VER << ", time used: " << (t4) - t1 << " seconds" << std::endl;
 }
 
 extern "C"{

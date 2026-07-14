@@ -1504,6 +1504,6 @@ void HtmlReporter::printFooter(ofstream& ofs) {
     ofs << "\n</div>" << std::endl;
     ofs << "<div id='footer'> ";
     ofs << "<p>" << command << "</p>";
-    ofs << "Seq2Sat " << SEQ2SAT_VER << ", at " << getCurrentSystemTime() << " </div>";
+    ofs << "Seq2Typer " << SEQ2TYPER_VER << ", at " << getCurrentSystemTime() << " </div>";
     ofs << "</body></html>";
 }
