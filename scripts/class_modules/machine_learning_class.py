@@ -69,20 +69,20 @@ class MachineLearningClass:
                                dtype = {
                                    'sample': str,
                                    'locus': str,
-                                   'readt': int,
-                                   'read1': int,
-                                   'read2': int,
-                                   'read3': int,
                                    'rprop1': float,
                                    'rprop2': float,
                                    'rprop3': float,
                                    'mprop1': float,
                                    'mprop2': float,
-                                    'sprop': float,
-                                    'mut': int,
-                                    'indel': int,
-                                    'zygosity': int
+                                   'sprop': float
                                })
+            t_df.dropna(subset = ['sample', 'locus'], inplace = True)
+            integer_columns = ['readt', 'read1', 'read2', 'read3', 'mut', 'indel', 'zygosity']
+            for column in integer_columns:
+                values = pd.to_numeric(t_df[column], errors = 'raise')
+                if not np.isclose(values % 1, 0).all():
+                    raise ValueError(f"training file column '{column}' must contain whole numbers")
+                t_df[column] = values.astype(int)
             if t_df.shape[0] == 0:
                 modern_messagebox.showerror("Invalid Input", "training file must not be empty!")
                 raise ValueError("training file must not be empty")
