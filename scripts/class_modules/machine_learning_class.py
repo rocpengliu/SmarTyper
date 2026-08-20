@@ -149,6 +149,11 @@ class MachineLearningClass:
         pass_loc = 0
         failed_loc = 0
         if parameter_class.get_analtype() == "snp":
+            ml_training_ratio = parameter_class.get_ml_training_ratio()
+            skip_accuracy_output = ml_training_ratio == 1.0
+            self._mh_training_model_clf_dict = {}
+            self._mh_model_pred_accu_dict = {}
+            self._ml_loci_feature_importance_dict = {}
             print(f"starting to training model")
             with ProcessPoolExecutor() as executor:
                 futures = {}
@@ -159,7 +164,7 @@ class MachineLearningClass:
                         num_classes = (zygo_count > 0).sum()
                         min_class_size = zygo_count[zygo_count > 0].min()
                         if num_classes >= 2 and min_class_size >= 2:
-                            future = executor.submit(training_each_model_clf, locus_df, "snp", parameter_class.get_ml_training_ratio())
+                            future = executor.submit(training_each_model_clf, locus_df, "snp", ml_training_ratio)
                             futures[future] = (locus, zygo_count)
                             pass_loc += 1
                         else:
@@ -188,11 +193,12 @@ class MachineLearningClass:
                             log_func(f"Training model for marker {locus} completed...")
                         clf_accu = future.result()
                         self._mh_training_model_clf_dict[locus] = clf_accu[0]
-                        self._mh_model_pred_accu_dict[locus] = pd.DataFrame({'accuracy':clf_accu[1],
-                                                                             'totality': int(zygo_count.sum()),
-                                                                             'homo' : int(zygo_count.loc[1]),
-                                                                             'heter': int(zygo_count.loc[2]),
-                                                                             'inconclusive': int(zygo_count.loc[0])}, index=[0])
+                        if clf_accu[1] is not None:
+                            self._mh_model_pred_accu_dict[locus] = pd.DataFrame({'accuracy':clf_accu[1],
+                                                                                 'totality': int(zygo_count.sum()),
+                                                                                 'homo' : int(zygo_count.loc[1]),
+                                                                                 'heter': int(zygo_count.loc[2]),
+                                                                                 'inconclusive': int(zygo_count.loc[0])}, index=[0])
                         self._ml_loci_feature_importance_dict[locus] = clf_accu[2]
                         num_loc += 1
                         if num_loc % 10 == 0:
@@ -208,10 +214,18 @@ class MachineLearningClass:
                 log_func(f"Model training completed for {num_loc} markers, {pass_loc} markers passed for submission, {failed_loc} markers failed the training criteria.\n\n")
                 log_func("Model training completed.\n\n")
                 log_func("Starting to write accuracy file!")
-            if self.get_mh_model_pred_accu_dict() is not None and len(self.get_mh_model_pred_accu_dict()) > 0:
+            accuracy_path = os.path.join(parameter_class.get_mloutputdir(), "All_loci_accuracy.txt")
+            if skip_accuracy_output:
+                if os.path.exists(accuracy_path):
+                    os.remove(accuracy_path)
+                msg = "Training ratio is 1.0, skipping All_loci_accuracy.txt because no test set prediction was run."
+                print(msg)
+                if log_func is not None:
+                    log_func(msg)
+            elif self.get_mh_model_pred_accu_dict() is not None and len(self.get_mh_model_pred_accu_dict()) > 0:
                 # Keep locus as a column and drop the inner row index from concatenated frames.
                 com_df = pd.concat(self.get_mh_model_pred_accu_dict(), names = ['locus']).reset_index(level='locus').reset_index(drop=True)
-                com_df.to_csv(os.path.join(parameter_class.get_mloutputdir(), "All_loci_accuracy.txt"), sep = '\t', index = False)
+                com_df.to_csv(accuracy_path, sep = '\t', index = False)
             else:
                 msg = "No trained marker accuracy data available, skipping All_loci_accuracy.txt export."
                 print(msg)

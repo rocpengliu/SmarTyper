@@ -1047,13 +1047,21 @@ def init_sam_mar_ml(mars, samples):
 
 def training_each_model_clf(df, micro_type, ml_training_ratio):
     if micro_type == "snp":
+        if not 0 < ml_training_ratio <= 1:
+            raise ValueError("Training ratio must be greater than 0.0 and less than or equal to 1.0.")
+
         X_tot = df.drop(['locus', 'zygosity'], axis = 1)
         y = df['zygosity']
-        X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = (1 - ml_training_ratio), random_state = 42, stratify=y)
-        clf = GradientBoostingClassifier(random_state = 42)
-        clf.fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        accuracy = accuracy_score(y_test, y_pred)
+        if ml_training_ratio == 1.0:
+            clf = GradientBoostingClassifier(random_state = 42)
+            clf.fit(X_tot, y)
+            accuracy = None
+        else:
+            X_train,X_test, y_train, y_test = train_test_split(X_tot, y, test_size = (1 - ml_training_ratio), random_state = 42, stratify=y)
+            clf = GradientBoostingClassifier(random_state = 42)
+            clf.fit(X_train, y_train)
+            y_pred = clf.predict(X_test)
+            accuracy = accuracy_score(y_test, y_pred)
         importtances = clf.feature_importances_
         features = X_tot.columns
         feature_df = pd.DataFrame({
