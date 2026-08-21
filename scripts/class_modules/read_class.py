@@ -46,9 +46,24 @@ class ReadsClass:
         self._sam_reads_qual_dict[sam]=read_qual_dic
     def produce_reads_qual_pdf(self,sam,dir_path):
         #combined_df=pd.concat(read_qual_dic.values(),axis=0,ignore_index=True)
-        read_qual_dic=self._sam_reads_qual_dict[sam]
-        combined_dfs = [df.dropna(axis=1, how='all') for df in read_qual_dic.values()]
+        output_file = os.path.join(dir_path,f"{sam}_read_quality.pdf")
+        read_qual_dic=self._sam_reads_qual_dict.get(sam)
+        if not read_qual_dic:
+            self.save_empty_reads_qual_pdf(sam, output_file)
+            return
+        combined_dfs = [df.dropna(axis=1, how='all') for df in read_qual_dic.values() if df is not None and not df.empty]
+        if not combined_dfs:
+            self.save_empty_reads_qual_pdf(sam, output_file)
+            return
         combined_df = pd.concat(combined_dfs, axis=0, ignore_index=True)
+        required_columns = {'cycle', 'quality', 'filtering', 'read', 'base'}
+        if combined_df.empty or not required_columns.issubset(combined_df.columns):
+            self.save_empty_reads_qual_pdf(sam, output_file)
+            return
+        combined_df = combined_df.dropna(subset=['cycle', 'quality', 'filtering', 'read', 'base'])
+        if combined_df.empty:
+            self.save_empty_reads_qual_pdf(sam, output_file)
+            return
         gra=sns.FacetGrid(combined_df,col='filtering',row='read',hue='base',margin_titles=True)
         gra.map(sns.lineplot,'cycle','quality').add_legend()
         gra.set_axis_labels('Cycles','Quality score')
@@ -56,9 +71,17 @@ class ReadsClass:
         fig.set_size_inches(16,10)
         fig.suptitle(f'Quality score of {sam}',fontsize=14)
         plt.subplots_adjust(top=0.95)
-        gra.savefig(os.path.join(dir_path,f"{sam}_read_quality.pdf"))
+        gra.savefig(output_file)
         if fig is not None:
             plt.close()
+
+    def save_empty_reads_qual_pdf(self,sam,output_file):
+        fig, ax = plt.subplots(figsize=(16, 10))
+        ax.axis('off')
+        ax.text(0.5, 0.55, f"Quality score of {sam}", ha='center', va='center', fontsize=16)
+        ax.text(0.5, 0.45, "No read quality data available", ha='center', va='center', fontsize=12)
+        fig.savefig(output_file)
+        plt.close(fig)
             
     def extract_qual(self, jdata,idx,type,sam)->pd.DataFrame:
         filter_str=f"read{idx}_{type}_filtering"

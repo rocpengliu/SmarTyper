@@ -127,7 +127,7 @@ class GenotypeClass:
         markers = self.get_metadata().get_ref_markers_list()
         fpath = self.get_parameter().get_outputdir()
         print(f"starting to read output of sample: {sample}")
-        self.get_microhap().read_sam_genotype(sample,markers, fpath,anal_type, self.get_post_microhap(), self.get_machine_learning(), self.get_parameter())
+        self.get_microhap().read_sam_genotype(sample, markers, fpath,anal_type, self.get_post_microhap(), self.get_machine_learning(), self.get_parameter())
         run_frame.output_queue.put(f'reading sample {sample} genotype done!\n')
         self.get_microhap().pro_sam_mar_reads_distri_fig(sample,fpath,anal_type)
         run_frame.output_queue.put(f'reading sample {sample} reads done!\n')

@@ -9,7 +9,7 @@ import datetime
 import os
 from .results_geno_combo import update_genotype_tab
 import pdb
-from ..utils.utils_common import print_time, run_update_lock
+from ..utils.utils_common import print_time
 from ..utils.common import parent_button_size, child_button_size, bfont,bmfont,pnbuttonfont, header_font
 from ..utils.colors import COLORS
 from ..utils import modern_messagebox
@@ -117,32 +117,16 @@ def on_click_res(parent, footer_frame):
     parent.master.after(100, after_show)
 
 def update_log_text(run_frame):
-        if not run_frame.run_finished.is_set() or not run_frame.output_queue.empty():  # Check if there's still work to do
-            try:
-                # Try to perform an update if there's new data.
-                while not run_frame.output_queue.empty():
-                    try:
-                        message = run_frame.output_queue.get_nowait()
-                        if message.strip():
-                            cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
-                            time_stamped_msg = f"{cur_time}{message}"
-                            run_frame.after(0, lambda msg=time_stamped_msg: insert_to_log_text(run_frame, msg))
-                    except queue.Empty:
-                        break
-            except queue.Empty:
-                pass  # If we hit this, the queue is empty and we'll wait for next scheduled call.
-            finally:
-                # Wait for a bit before scheduling the next call.
-                #run_frame.after(10, update_log_text, run_frame)
-                pass
-        else:
-            # Cleanup if needed when run is finished, like enabling buttons or other controls.
-            # This is a good place to re-enable UI which has been frozen during the long-running task.
-            if not run_frame.output_queue.empty():
-                while not run_frame.output_queue.empty():
-                    run_frame.output_queue.get_nowait()
-                run_frame.output_queue.queue.clear()
-                del run_frame.output_queue
+    while True:
+        try:
+            message = run_frame.output_queue.get_nowait()
+        except queue.Empty:
+            break
+
+        if message.strip():
+            cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
+            time_stamped_msg = f"{cur_time}{message}"
+            insert_to_log_text(run_frame, time_stamped_msg)
 
 def insert_to_log_text(frame, msg):
     frame.log_text.configure(state="normal")
@@ -158,27 +142,33 @@ def insert_to_log_text(frame, msg):
             frame.log_file_handle.flush()  # Force write to disk immediately
         except Exception as e:
             print_time(f"Error writing to log file: {str(e)}")
+
+def format_duration(seconds):
+    seconds = max(0, int(seconds))
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{hours:02d}h:{minutes:02d}m:{seconds:02d}s"
     
 def update_timer(run_frame):
     if not run_frame.run_finished.is_set():
-        elapsed_time = int(time.time() - run_frame.start_time)
-        hours = elapsed_time // 3600
-        minutes = (elapsed_time % 3600) // 60
-        seconds = elapsed_time % 60
-        run_frame.timer_label.configure(text=f"Elapsed time: {hours:02d}h:{minutes:02d}m:{seconds:02d}s")
-        if run_frame.last_finished_sample_idx > 0:
-            if run_frame.last_finished_sample_idx == run_frame.tot_sams:
-                if(run_frame.progress_bar.get() < 1.0):
-                    run_frame.remain_time_label.configure(text=f"Estimated remaining time: waiting for finalizing...")
-                else:
-                    run_frame.remain_time_label.configure(text=f"Estimated remaining time: 0s")
+        elapsed_time = time.time() - run_frame.start_time
+        run_frame.timer_label.configure(text=f"Elapsed time: {format_duration(elapsed_time)}")
+        finished_samples = run_frame.last_finished_sample_idx
+        if finished_samples > 0:
+            if finished_samples >= run_frame.tot_sams:
+                run_frame.remain_time_label.configure(text=f"Estimated remaining time: waiting for finalizing...")
             else:
-                # During sample processing, keep counting down from the last completed-sample estimate.
-                remaining_time2 = max(0, int(run_frame.last_estimated_finished_time - elapsed_time))
-                rem_hours2 = remaining_time2 // 3600
-                rem_minutes2 = (remaining_time2 % 3600) // 60
-                rem_seconds2 = remaining_time2 % 60
-                run_frame.remain_time_label.configure(text=f"Estimated remaining time: {rem_hours2:02d}h:{rem_minutes2:02d}m:{rem_seconds2:02d}s")
+                sample_durations = getattr(run_frame, 'sample_durations', [])
+                if sample_durations:
+                    average_sample_time = sum(sample_durations) / len(sample_durations)
+                else:
+                    average_sample_time = elapsed_time / finished_samples
+                current_sample_elapsed = max(0, time.time() - getattr(run_frame, 'current_sample_start_time', time.time()))
+                current_sample_remaining = max(0, average_sample_time - current_sample_elapsed)
+                not_started_samples = max(0, run_frame.tot_sams - run_frame.cur_sam_idx)
+                remaining_time = current_sample_remaining + (average_sample_time * not_started_samples)
+                run_frame.remain_time_label.configure(text=f"Estimated remaining time: {format_duration(remaining_time)}")
         else:
             run_frame.remain_time_label.configure(text=f"Estimated remaining time: calculating...")
     else:
@@ -202,18 +192,49 @@ def update_progressbar(run_frame):
         run_frame.progress_bar.set(1.0)  # CTkProgressBar uses 0.0 to 1.0 (1.0 = 100%)
         run_frame.progress_label.configure(text=f"processing {str(run_frame.tot_sams)} out of {str(run_frame.tot_sams)} samples with {str(run_frame.tot_mars)} loci  (100%)")
 
+def drain_seqtyper_output(run_frame):
+    while True:
+        output = str(seqtyper_core.get_seqtyper_output())
+        if not output:
+            break
+        run_frame.output_queue.put(output)
+
 def capture_output(run_frame, sample_event):
     while not sample_event.is_set():
         output = str(seqtyper_core.get_seqtyper_output())
         if output:
             time.sleep(0.05)
-            with run_update_lock:
-                run_frame.output_queue.put(output)
+            run_frame.output_queue.put(output)
         else:
             time.sleep(0.05)
 
 def run_seqtyper(parent):
-    threading.Thread(target=lambda: target(parent), daemon=True).start()
+    target(parent)
+
+def poll_run_status(parent, run_frame):
+    update_timer(run_frame)
+    update_log_text(run_frame)
+    update_progressbar(run_frame)
+
+    if run_frame.run_finished.is_set() and run_frame.output_queue.empty():
+        if hasattr(run_frame, 'log_file_handle') and run_frame.log_file_handle:
+            try:
+                run_frame.log_file_handle.close()
+            except Exception as e:
+                print_time(f"Error closing log file: {str(e)}")
+            finally:
+                run_frame.log_file_handle = None
+
+        run_frame.master.footer_frame.next_button.configure(state='normal')
+        result_footer = parent.master.pages.get('results').footer_frame
+        if getattr(run_frame, 'run_error_message', None):
+            modern_messagebox.showerror(run_frame, "Error", run_frame.run_error_message)
+        elif getattr(run_frame, 'run_success_message', None):
+            modern_messagebox.showsuccess(run_frame, "Success", run_frame.run_success_message)
+            result_footer.next_button.configure(state='normal')
+        return
+
+    run_frame.after(50, poll_run_status, parent, run_frame)
 
 def target(parent):
     #pdb.set_trace()
@@ -281,9 +302,12 @@ def target(parent):
     run_frame.start_time = time.time()
     run_frame.cur_sam_idx = 0
     run_frame.last_finished_sample_idx = 0
-    run_frame.last_estimated_finished_time = 0
+    run_frame.current_sample_start_time = None
+    run_frame.sample_durations = []
     run_frame.tot_sams = len(run_frame.args_dir)
     run_frame.tot_mars = len(genoclass.get_metadata().get_ref_markers_list())
+    run_frame.run_error_message = None
+    run_frame.run_success_message = None
     
     # Set up real-time log file path
     output_dir = genoclass.get_parameter().get_outputdir()
@@ -297,40 +321,19 @@ def target(parent):
     
     run_thread = threading.Thread(target=run_wrapper, args=(parent, run_frame), daemon=True)
     run_thread.start()
-
-    # Ensure that run_frame is set correctly
-    if run_frame is not None:
-        while True:
-            time.sleep(0.05)
-            with run_update_lock:
-                update_timer(run_frame)
-                update_log_text(run_frame)
-                update_progressbar(run_frame)
-                if run_frame.run_finished.is_set():
-                    # Close log file handle when finished
-                    if hasattr(run_frame, 'log_file_handle') and run_frame.log_file_handle:
-                        try:
-                            run_frame.log_file_handle.close()
-                        except:
-                            pass
-                    run_frame.master.footer_frame.next_button.configure(state='normal')
-                    break
-    else:
-        print(f"Error: 'run_frame' is not initialized.")
+    poll_run_status(parent, run_frame)
 
 def run_wrapper(parent, run_frame):
     try:
         genoclass = parent.master.genotype_class
-        res_frame = parent.master.pages.get('results').footer_frame
-        res_frame.next_button.configure(state='disabled')
-        with run_update_lock:
-            run_frame.output_queue.put(f"Starting Seq2Type for genotyping!\n\n")
+        run_frame.output_queue.put(f"Starting Seq2Type for genotyping!\n\n")
         for index, (sample, arg_lst) in enumerate(run_frame.args_dir.items()):
-            with run_update_lock:
-                run_frame.cur_sam_idx = index + 1
-                run_frame.output_queue.put(f'---------------------------------------------------------start index: {index+1}--------------------------------------------------' + '\n')
-                run_frame.output_queue.put(f'Start to process sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
-                run_frame.output_queue.put(f'Running Seq2Type for sample: {sample}, this is slow and please be patient!\n')
+            drain_seqtyper_output(run_frame)
+            run_frame.cur_sam_idx = index + 1
+            run_frame.current_sample_start_time = time.time()
+            run_frame.output_queue.put(f'---------------------------------------------------------start index: {index+1}--------------------------------------------------' + '\n')
+            run_frame.output_queue.put(f'Start to process sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
+            run_frame.output_queue.put(f'Running Seq2Type for sample: {sample}, this is slow and please be patient!\n')
 
             # Per-sample event for capture thread
             sample_event = threading.Event()
@@ -341,32 +344,28 @@ def run_wrapper(parent, run_frame):
             # Signal capture thread to stop and wait for it
             sample_event.set()
             capture_thread.join()
+            drain_seqtyper_output(run_frame)
 
-            with run_update_lock:
-                run_frame.output_queue.put(f'reading sample {sample} outputs\n')
-                genoclass.read_sam_outputs(sample, run_frame)
-                run_frame.output_queue.put(f'Finish the processing sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
-                run_frame.output_queue.put(f'---------------------------------------------------------end index: {index+1}----------------------------------------------------' + '\n\n\n')
-                
-                run_frame.last_finished_sample_idx = run_frame.cur_sam_idx
-                run_frame.last_estimated_finished_time = max(1, int(time.time() - run_frame.start_time)) * run_frame.tot_sams / run_frame.last_finished_sample_idx
-        with run_update_lock:
-            run_frame.output_queue.put(f'starting to generate all sample figures\n')
+            run_frame.output_queue.put(f'reading sample {sample} outputs\n')
+            genoclass.read_sam_outputs(sample, run_frame)
+            run_frame.output_queue.put(f'Finish the processing sample: {sample}, {index+1} out of {run_frame.tot_sams} samples\n')
+            run_frame.output_queue.put(f'---------------------------------------------------------end index: {index+1}----------------------------------------------------' + '\n\n\n')
+            
+            run_frame.last_finished_sample_idx = run_frame.cur_sam_idx
+            sample_duration = time.time() - run_frame.current_sample_start_time
+            run_frame.sample_durations.append(sample_duration)
+        run_frame.output_queue.put(f'starting to generate all sample figures\n')
         if genoclass.get_parameter().is_pro_figure():
             genoclass.pro_all_sample_figs(run_frame.output_queue)
         
-        with run_update_lock:
-            run_frame.output_queue.put(f"Log file saved to: {run_frame.log_file_path}\n")
-            run_frame.output_queue.put("Congrats! Seq2Type ran successfully! Please click 'Next' to proceed.\n")
-            parent.master.after(0, lambda: modern_messagebox.showsuccess(run_frame, "Success", "Seq2Type ran successfully"))
-            parent.master.pages.get('results').footer_frame.next_button.configure(state='normal')
-            run_frame.run_finished.set()
+        run_frame.output_queue.put(f"Log file saved to: {run_frame.log_file_path}\n")
+        run_frame.output_queue.put("Congrats! Seq2Type ran successfully! Please click 'Next' to proceed.\n")
+        run_frame.run_success_message = "Seq2Type ran successfully"
+        run_frame.run_finished.set()
     except Exception as e:
         emsg = f"Error running Seq2Type: {str(e)}"
-        with run_update_lock:
-            run_frame.output_queue.put(emsg)
-        parent.master.after(0, lambda msg=emsg: modern_messagebox.showerror(run_frame, "Error", msg))
+        run_frame.output_queue.put(emsg)
+        run_frame.run_error_message = emsg
     finally:
         # Don't close file here - let main thread close it after processing all messages
-        with run_update_lock:
-            run_frame.run_finished.set()
+        run_frame.run_finished.set()
