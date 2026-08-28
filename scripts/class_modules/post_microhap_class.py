@@ -263,11 +263,11 @@ class PostMicrohapClass:
                             mar_microhap_df = pd.concat([tmp_pre_mar_mt_df, tmp_df], ignore_index=True)
                             tmp_mar_ref.set_mar_microhap_df(mar_microhap_df)
                             tmp_mar_ref.set_cur_mar_microhap_df(mar_microhap_df[mar_microhap_df['mh_seq'].isin(cur_mar_mh_seqs_set)].reset_index(drop=True))
-                            tmp_mar_ref.set_has_new_mh(True)
+                            #tmp_mar_ref.set_has_new_mh(True)
                         else:
                             tmp_mar_ref.set_mar_microhap_df(tmp_pre_mar_mt_df)
                             tmp_mar_ref.set_cur_mar_microhap_df(tmp_pre_mar_mt_df)
-                            tmp_mar_ref.set_has_new_mh(False)
+                            #tmp_mar_ref.set_has_new_mh(False)
                             
                         if tmp_pre_mar_mt_df is not None:
                             tmp_mar_ref.set_pre_mar_microhap_df(tmp_pre_mar_mt_df)

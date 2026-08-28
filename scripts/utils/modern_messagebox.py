@@ -143,6 +143,7 @@ class ModernMessageBox(ctk.CTkToplevel):
 
 def showinfo(parent, title, message):
     """Show an info message box"""
+    parent = parent or tk._default_root
     dialog = ModernMessageBox(parent, title, message, type="info")
     parent.wait_window(dialog)
     return dialog.result
@@ -150,6 +151,7 @@ def showinfo(parent, title, message):
 
 def showsuccess(parent, title, message):
     """Show a success message box"""
+    parent = parent or tk._default_root
     dialog = ModernMessageBox(parent, title, message, type="success")
     parent.wait_window(dialog)
     return dialog.result
@@ -157,6 +159,7 @@ def showsuccess(parent, title, message):
 
 def showerror(parent, title, message):
     """Show an error message box"""
+    parent = parent or tk._default_root
     dialog = ModernMessageBox(parent, title, message, type="error")
     parent.wait_window(dialog)
     return dialog.result
@@ -164,6 +167,7 @@ def showerror(parent, title, message):
 
 def showwarning(parent, title, message):
     """Show a warning message box"""
+    parent = parent or tk._default_root
     dialog = ModernMessageBox(parent, title, message, type="warning")
     parent.wait_window(dialog)
     return dialog.result

@@ -18,7 +18,7 @@ import traceback
 import numpy as np
 import pdb
 import copy
-from .modern_messagebox import ModernMessageBox
+from .modern_messagebox import ModernMessageBox, showerror as _mmb_showerror
 from scripts.class_modules.microtype_class import ComboMicroType
 
 
@@ -47,7 +47,7 @@ def load_pdf(file_path, canvas):
             y_offset += pix.height  # Increment y-offset by the height of the image
         canvas.configure(scrollregion=canvas.bbox("all"))  # Update scroll region after all images are loaded
     except Exception as e:
-        ModernMessageBox.showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
+        _mmb_showerror(canvas.master, "Error", f"Error loading PDF from {file_path}: {e}")
 
 def output_all_fig_tab(is_pro_fig,output_folder_path, markers,selected_sample,sam_microhap_dict_sam, sam_ml_dict_sam, sam_mar_snp_dict_sam, anal_type)->bool:
     #print(f"starting to output_all_fig_tab for {selected_sample}")
@@ -646,20 +646,20 @@ def split_codingpos(pos_str:str)->list:
     for x, y in nested_list:
         exon_len  = y - x
         if exon_len < 3:
-            ModernMessageBox.showerror(None, "Invalid Input", f"Exon length must be at least 3: {x}:{y}")
+            _mmb_showerror(None, "Invalid Input", f"Exon length must be at least 3: {x}:{y}")
             raise ValueError(f"Exon length must be at least 3: {x}:{y}")
         elif exon_len % 3 != 0:
-            ModernMessageBox.showerror(None, "Invalid Input", f"Exon length must be a multiple of 3: {x}:{y}")
+            _mmb_showerror(None, "Invalid Input", f"Exon length must be a multiple of 3: {x}:{y}")
             raise ValueError(f"Exon length must be a multiple of 3: {x}:{y}")
     print(f"splitted coding positions is {nested_list}")
     try:
         if all(isinstance(item, tuple) and all(isinstance(i, int) for i in item) for item in nested_list):
             return nested_list
         else:
-            ModernMessageBox.showerror(None, "Invalid Input", f"Invalid coding positions string: {pos_str}")
+            _mmb_showerror(None, "Invalid Input", f"Invalid coding positions string: {pos_str}")
             raise ValueError(f"Invalid coding positions string: {pos_str}")
     except ValueError as e:
-        ModernMessageBox.showerror(None, "Invalid Input", str(e))
+        _mmb_showerror(None, "Invalid Input", str(e))
         return None
 
 def get_triml_pos(out_lst, trimlpos):
