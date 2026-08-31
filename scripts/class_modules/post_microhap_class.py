@@ -375,6 +375,8 @@ class PostMicrohapClass:
                 mar_combo_mt = self.get_loc_ref_dict().get(mar, None).get_children_microtype_dict()
                 if mar_combo_mt is None:
                     continue
+                # DEBUG: uncomment to run synchronously in-process so breakpoints hit
+                # populate_each_mar_mp_dict(mar, records, mar_combo_mt)
                 future = executor.submit(populate_each_mar_mp_dict, mar, records, mar_combo_mt)
                 futures[future] = mar
                 sub_markers.append(mar)

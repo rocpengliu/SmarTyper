@@ -902,7 +902,7 @@ def populate_mar_sam_microhap(mar, samples, mar_mh_df, ref_mt, cur = True)->pd.D
                         mar_sam_micropep.append(aa_seq)
                     uniq_peps = sorted(list(set(mar_sam_micropep)))
                     for pep in mar_sam_micropep:
-                        mar_sam_micropep_id.append(uniq_peps.index(pep))
+                        mar_sam_micropep_id.append(uniq_peps.index(pep) + 1)
                     mar_sam_micropep_label = [f'mp_{i}' for i in mar_sam_micropep_id]
                 else:
                     mar_sam_micropep = [""] * len(mar_sam_microhap)
@@ -910,9 +910,9 @@ def populate_mar_sam_microhap(mar, samples, mar_mh_df, ref_mt, cur = True)->pd.D
                     mar_sam_micropep_id = [""] * len(mar_sam_microhap)
                 tmp_df=pd.DataFrame({
                                 'locus':[mar]*len(mar_sam_microhap),
-                                'mh_label':[f'mh_{i}' for i in range(len(mar_sam_microhap))],
+                                'mh_label':[f'mh_{i+1}' for i in range(len(mar_sam_microhap))],
                                 'mh_seq':mar_sam_microhap,
-                                'mh_id': [i for i in range(len(mar_sam_microhap))],
+                                'mh_id': [i+1 for i in range(len(mar_sam_microhap))],
                                 'mp_label':mar_sam_micropep_label,
                                 'mp_seq':mar_sam_micropep,
                                 'mp_id':mar_sam_micropep_id})
