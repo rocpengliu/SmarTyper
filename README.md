@@ -28,7 +28,7 @@ We have tested SmarTyper on Windows Subsystem for Linux 2 (WSL2) and on Linux sy
 sudo apt update
 sudo apt install python3-full python3-tk python3-pip mafft
 python3 -m pip install --upgrade pip
-python3 -m pip install --break-system-packages setuptools Cython customtkinter biopython pillow matplotlib dill logomaker seaborn joblib scikit-learn
+python3 -m pip install --break-system-packages setuptools Cython customtkinter biopython pillow matplotlib dill logomaker seaborn joblib scikit-learn pymupdf
 ```
 Note: `--break-system-packages` may be required on newer Ubuntu releases when installing into the system Python environment.
 
