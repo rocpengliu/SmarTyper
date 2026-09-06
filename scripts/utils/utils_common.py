@@ -13,6 +13,7 @@ import threading
 import datetime
 import pprint
 import traceback
+from .app_logger import log_action
 
 matplotlib_lock = threading.Lock()
 thread_lock = threading.Lock()
@@ -57,6 +58,7 @@ def print_time(var_name):
     with print_lock:
         cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
         pprint.pprint(f'{cur_time} {var_name}')
+    log_action(var_name)
 def set_dpi_awareness():
     """Set DPI awareness depending on the operating system."""
     system = platform.system()

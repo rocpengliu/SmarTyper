@@ -10,6 +10,7 @@ import os
 from .results_geno_combo import update_genotype_tab
 import pdb
 from ..utils.utils_common import print_time
+from ..utils.app_logger import log_action, log_parameters, log_run_summary
 from ..utils.common import parent_button_size, child_button_size, bfont,bmfont,pnbuttonfont, header_font
 from ..utils.colors import COLORS
 from ..utils import modern_messagebox
@@ -127,6 +128,7 @@ def update_log_text(run_frame):
             cur_time = datetime.datetime.now().strftime("[%H:%M:%S]: ")
             time_stamped_msg = f"{cur_time}{message}"
             insert_to_log_text(run_frame, time_stamped_msg)
+            log_action(message)
 
 def insert_to_log_text(frame, msg):
     frame.log_text.configure(state="normal")
@@ -296,6 +298,10 @@ def target(parent):
                 args_list.append(str(value))
         run_frame.args_dir[row["sample"]]=args_list
 
+    log_parameters(genoclass.get_parameter(), context="seq2type run")
+    for sample, args_list in run_frame.args_dir.items():
+        log_action(f"seqtyper command for sample {sample}: {' '.join(args_list)}")
+
     print_time(f"starting to run seq2type")
     run_frame.output_queue = queue.Queue()
     run_frame.run_finished = threading.Event()
@@ -360,6 +366,7 @@ def run_wrapper(parent, run_frame):
         
         run_frame.output_queue.put(f"Log file saved to: {run_frame.log_file_path}\n")
         run_frame.output_queue.put("Congrats! Seq2Type ran successfully! Please click 'Next' to proceed.\n")
+        log_run_summary(run_frame.start_time, context="seq2type run")
         run_frame.run_success_message = "Seq2Type ran successfully"
         run_frame.run_finished.set()
     except Exception as e:

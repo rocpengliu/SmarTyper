@@ -7,6 +7,7 @@ import os, datetime
 import threading, queue
 import traceback
 import time
+from ..utils.app_logger import log_action, log_parameters, log_run_summary
 
 def results_summary(parent):
     frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
@@ -147,7 +148,9 @@ def run_pool(parent):
             return
         def log_msg(msg):
             run_frame.log_queue.put(msg)
+            log_action(msg)
         run_frame.is_complete = False
+        log_parameters(genoclass.get_parameter(), context="result output run")
         update_timer(run_frame, start_time)
         log_msg(f'This process is memory intensive, it may take a while to finish. Please be patient and do not close the program.\n\n')
         log_msg(f"-------------------------------start step 1 out 2-----------------------------")
@@ -171,6 +174,7 @@ def run_pool(parent):
             log_msg(f"Genotyping processing failed. Please check the log for details.")
             run_frame.res_queue.put(("Genotyping processing failed. Please check the log for details.", go))
         log_msg(f"Total elapsed time: {int(mins)}m and {int(secs)}s.")
+        log_run_summary(start_time, context="result output run")
         run_frame.is_complete = True
     except Exception as e:
         traceback.print_exc()

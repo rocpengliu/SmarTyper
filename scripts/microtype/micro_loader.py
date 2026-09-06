@@ -7,6 +7,7 @@ from .micro_viewer import update_combox_from_others_micro
 from ..utils import modern_messagebox
 from ..utils.colors import COLORS
 from ..utils.common import parent_button_size, child_button_size, bfont, bmfont, brfont, header_font, pnbuttonfont, module_font
+from ..utils.app_logger import log_action, log_parameters, log_run_summary
 
 
 def micro_loader(parent):
@@ -214,9 +215,11 @@ def run_pool(genotype_class, body_frame):
     try:
         def log_msg(msg):
             body_frame.log_queue.put(msg)
-            
+            log_action(msg)
+
         body_frame.is_complete = False
         start_time = datetime.datetime.now()
+        log_parameters(genotype_class.get_parameter(), context="microtype run")
         log_msg("Starting microhap processing. This could be slow and please be patient.....\n\n")
         update_progressbar(body_frame, 1)
         update_timer(body_frame, start_time)
@@ -264,6 +267,7 @@ def run_pool(genotype_class, body_frame):
         elapsed_time = end_time - start_time
         mins, secs = divmod(elapsed_time.total_seconds(), 60)
         log_msg(f"Total elapsed time: {int(mins)}m {int(secs)}s")
+        log_run_summary(start_time, context="microtype run")
     except Exception as e:
         traceback.print_exc()
         log_msg(f"Error during microhap processing: {e}")

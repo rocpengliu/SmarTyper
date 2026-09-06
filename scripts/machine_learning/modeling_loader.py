@@ -7,7 +7,9 @@ from ..utils.colors import COLORS
 from ..utils.common import bfont, bmfont, brfont, bmfont, header_font, pnbuttonfont, confirm_button_font, fig_font, parent_button_size, child_button_size
 import pdb
 from ..utils.modern_messagebox import showsuccess, showerror
+from ..utils.app_logger import log_action, log_parameters, log_run_summary
 import threading
+import time
 
 def modeling_loader(parent):
     frame = ctk.CTkFrame(parent, fg_color=COLORS['background'])
@@ -137,7 +139,10 @@ def on_confirm(btn, frame, body_frame, genotype_class):
 def run_pool(genotype_class, body_frame):
     def log_msg(msg):
             body_frame.log_queue.put(msg)
+            log_action(msg)
+    log_parameters(genotype_class.get_parameter(), context="model training run")
     log_msg("Starting model training and this could take a while. Please be patient...\n\n")
+    start_time = time.time()
     try:
         go = genotype_class.get_machine_learning().training_model_clf(genotype_class.get_parameter(), log_func = log_msg)
         if go:
@@ -146,6 +151,7 @@ def run_pool(genotype_class, body_frame):
         else:
             log_msg("Model training failed. Please check the input files and try again.")
             body_frame.res_queue.put(("error", go))
+        log_run_summary(start_time, context="model training run")
     except Exception as e:
         error_msg = str(e)
         body_frame.after(0, lambda: showerror(body_frame, "Error", f"An error occurred during model training: {error_msg}"))

@@ -29,6 +29,7 @@ from scripts.machine_learning.machine_learning import create_ml_module
 from scripts.workflow.workflow import create_wkfl_module
 from scripts.tutorial.tutorial import create_tutorial_module
 from scripts.utils.colors import COLORS
+from scripts.utils.app_logger import log_app_start
 from PIL import Image, ImageTk, ImageOps, ImageEnhance
 from scripts.class_modules.class_modules import GenotypeClass
 ctk.set_appearance_mode("dark")
@@ -335,5 +336,6 @@ class SmarTyperApp(ctk.CTk):
     
 if __name__ == '__main__':
     mp.set_start_method('spawn', force=True)
+    log_app_start()
     app = SmarTyperApp()
     app.mainloop()

@@ -530,7 +530,7 @@ def on_bar_click(event, ax, bars, fig, sample, mar, genotab, genoclass):
     if event.inaxes == ax:
         micro_df = genoclass.get_microhap().get_sam_microhaps_dir().get(sample).get(mar)
         ml_df = genoclass.get_microhap().get_sam_mar_ml_dict().get(sample).get(mar)
-        print(f"sample: {sample} and marker: {mar} are selected")
+        print_time(f"sample: {sample} and marker: {mar} are selected")
         sam_mar_id=sample+"_"+mar
         if bars[0].contains(event)[0]:
             cur_fir_bar_col = bars[0].get_facecolor()
