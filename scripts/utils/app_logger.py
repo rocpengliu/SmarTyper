@@ -23,6 +23,12 @@ _app_start_time = time.time()
 _active_seconds = 0.0
 _active_lock = threading.Lock()
 
+# Only the process that launches the app (and calls log_app_start()) writes to a log file.
+# Spawned child processes (e.g. via multiprocessing 'spawn') inherit the parent's environment
+# where this flag is already set, so they skip file logging and the atexit shutdown summary.
+_SMARTYPER_LOG_MAIN_ENV = "SMARTYPER_LOG_MAIN"
+_is_main_process = os.environ.get(_SMARTYPER_LOG_MAIN_ENV) != "1"
+
 
 def _default_log_dir():
     # scripts/utils/app_logger.py -> project root/log
@@ -38,6 +44,11 @@ def get_logger():
     logger = logging.getLogger(_LOGGER_NAME)
     logger.setLevel(logging.DEBUG)
     logger.propagate = False
+
+    if not _is_main_process:
+        logger.addHandler(logging.NullHandler())
+        _logger = logger
+        return _logger
 
     log_dir = _default_log_dir()
     try:
@@ -367,6 +378,7 @@ def track_run(context=""):
 
 def log_app_start():
     """Mark the application start in the log; pairs with the automatic exit summary below."""
+    os.environ[_SMARTYPER_LOG_MAIN_ENV] = "1"
     log_action("SmarTyper application started")
     log_hardware_info()
 
@@ -411,4 +423,5 @@ def _log_app_shutdown():
 
 # Ensures the whole-project runtime and peak memory are recorded even if the
 # app is closed via the window manager rather than an explicit code path.
-atexit.register(_log_app_shutdown)
+if _is_main_process:
+    atexit.register(_log_app_shutdown)
