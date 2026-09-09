@@ -37,6 +37,7 @@ public:
     inline std::map<std::string, std::map<std::string, uint32>> getSubSeqsMap(){return subSeqsMap;};
     //static void merge(Options * & mOptions, std::vector<std::map<std::string, std::map < std::string, uint32>>> & totalSnpSeqMapVec);
     static void merge2(Options * & mOptions, std::vector<std::map<std::string, std::map < std::string, uint32>>> & totalSnpSeqMapVec);
+    static void merge3(Options * & mOptions, std::vector<std::map<std::string, std::map < std::string, uint32>>> & totalSnpSeqMapVec);
     static std::pair<bool, std::map<int, std::pair<Sequence, Sequence>>> doAlignment(Options * & mOptions, std::string readName, const char* & qData, int qLength, std::string targetName, const char* & tData, int tLength);
     static std::pair<bool, std::set<int>> doAlignment2(Options * & mOptions, std::string readName, const char* & qData, int qLength, std::string targetName, const char* & tData, int tLength);
     static void doScanVariance(Options * & mOptions, EdlibAlignResult & result, Variance & variance, const char* & qData, const char* & tData, const int position);

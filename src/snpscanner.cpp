@@ -1,4 +1,7 @@
 #include <valarray>
+#include <thread>
+#include <mutex>
+#include <atomic>
 
 #include "snpscanner.h"
 
@@ -102,7 +105,7 @@ void SnpScanner::groupScanVar(Read* & r1) {
         }
         bool goRP = false;
         int trimF = 0;
-        int fpMismatches = (int) edit_distance(locSnpItGrp->fp.mStr, r1->mSeq.mStr.substr(0, locSnpItGrp->fp.length()));
+        int fpMismatches = (int) edit_distance(locSnpItGrp->fp.mStr.c_str(), locSnpItGrp->fp.length(), r1->mSeq.mStr.c_str(), locSnpItGrp->fp.length());
         fpData = locSnpItGrp->fp.mStr.c_str();
         fpLength = locSnpItGrp->fp.length();
         auto endBoolF = doPrimerAlignment(fpData, fpLength, locSnpItGrp->name, readSeq, readLength, r1->mName, true);
@@ -124,7 +127,7 @@ void SnpScanner::groupScanVar(Read* & r1) {
 
         if (goRP) {
             MatchTrim mTrim;
-            int rpMismatches = (int) edit_distance(locSnpItGrp->rp.mStr, r1->mSeq.mStr.substr(r1->mSeq.length() - locSnpItGrp->rp.length()));
+            int rpMismatches = (int) edit_distance(locSnpItGrp->rp.mStr.c_str(), locSnpItGrp->rp.length(), r1->mSeq.mStr.c_str() + r1->mSeq.length() - locSnpItGrp->rp.length(), locSnpItGrp->rp.length());
             rpData = locSnpItGrp->rp.mStr.c_str();
             rpLength = locSnpItGrp->rp.length();
             auto endBoolR = doPrimerAlignment(rpData, rpLength, locSnpItGrp->name, readSeq, readLength, r1->mName, true);
@@ -1179,6 +1182,608 @@ void SnpScanner::merge2(Options *&mOptions, std::vector<std::map<std::string, st
             locSnpIt->aveErrorRate = getPer(stot, baseFreqMap.size(), false);
             *fout4 << (locSnpIt->aveErrorRate) << "\t" << locSnpIt->totReads << "\n";
         }
+    }
+
+    fout->flush();
+    fout->clear();
+    fout->close();
+    if (fout) {
+        delete fout;
+        fout = nullptr;
+    }
+
+    if (mOptions->verbose)
+        loginfo("Finished writing genotype table!");
+
+    fout2->flush();
+    fout2->clear();
+    fout2->close();
+    if (fout2) {
+        delete fout2;
+        fout2 = nullptr;
+    }
+
+    fout2_2->flush();
+    fout2_2->clear();
+    fout2_2->close();
+    if (fout2_2) {
+        delete fout2_2;
+        fout2_2  = nullptr;
+    }
+
+    if (mOptions->verbose)
+        loginfo("Finished writing ML haplotype table!");
+
+    fout3->flush();
+    fout3->clear();
+    fout3->close();
+    if (fout3 != nullptr) {
+        delete fout3;
+        fout3 = nullptr;
+    }
+    if (mOptions->verbose)
+        loginfo("Finished writing amplicon table!");
+
+    fout4->flush();
+    fout4->clear();
+    fout4->close();
+    if (fout4 != nullptr) {
+        delete fout4;
+        fout4 = nullptr;
+    }
+    if (mOptions->verbose)
+        loginfo("Finished writing error rate table!");
+}
+
+
+void SnpScanner::merge3(Options *&mOptions, std::vector<std::map<std::string, std::map<std::string, uint32>>> &totalSnpSeqMapVec) {
+    if (totalSnpSeqMapVec.empty()) {
+        return;
+    }
+
+    std::map<std::string, std::map<std::string, uint32>> tmpSnpSeqsMap; //merged all seqs;
+    for (const auto &it : totalSnpSeqMapVec) {
+        for (const auto &it2 : it) {
+            for (const auto &it3 : it2.second) {
+                tmpSnpSeqsMap[it2.first][it3.first] += (mOptions->isPaired() ? (2 * it3.second) : it3.second);
+            }
+        }
+    }
+
+    std::string sam_nm = basename(mOptions->prefix);
+    std::string foutName = mOptions->prefix + "_sample_snp.txt";
+    std::ofstream *fout = new std::ofstream();
+    fout->open(foutName.c_str(), std::ofstream::out);
+    if (!fout->is_open()) {
+        delete fout;
+        fout = nullptr;
+        error_exit("Can not open output file: " + foutName);
+    }
+    if (mOptions->verbose)
+        loginfo("Starting to write SNV table!");
+    *fout << "sample\tlocus\tposition\tallele1\tallele2\tallele3\treads\tproportion\ttotHapReads\tnew\tconclusive\n";
+    //*fout << "#Locus\tPosition\tGenotype\tNumReads\tRatio\tTotHaploReads\tNew\tConclusive\n";
+
+    std::string foutName2 = mOptions->prefix + "_sample_haplotype.txt";
+    std::ofstream *fout2 = new std::ofstream();
+    fout2->open(foutName2.c_str(), std::ofstream::out);
+    if (!fout2->is_open()) {
+        delete fout2;
+        fout2 = nullptr;
+        error_exit("Can not open output file: " + foutName2);
+    }
+    if (mOptions->verbose)
+        loginfo("Starting to write haplotype table!");
+
+    //*fout2 << "#Locus\tAllele\tBaseChange\tNumReads\tAlleleReadsPer\tVarRatio\tTotalReads\tReadsPer\tConclusive\tZygosity\tIndel\tSequence\n";
+    *fout2 << "sample\tlocus\tallele\treadt\tread\trprop\tmprop\tsprop\tmut\tindel\tzygosity\tbaseChange\tmh_seq\n";
+
+
+    std::string foutName2_2 = mOptions->prefix + "_sample_ml.txt";
+    std::ofstream *fout2_2 = new std::ofstream();
+    fout2_2->open(foutName2_2.c_str(), std::ofstream::out);
+    if (!fout2_2->is_open()) {
+        delete fout2_2;
+        fout2_2 = nullptr;
+        error_exit("Can not open output file: " + foutName2_2);
+    }
+    if (mOptions->verbose)
+        loginfo("Starting to write ML haplotype table!");
+
+    *fout2_2 << "sample\tlocus\treadt\tread1\tread2\tread3\trprop1\trprop2\trprop3\tmprop1\tmprop2\tsprop\tmut\tindel\tzygosity\n";
+
+    std::string foutName3 = mOptions->prefix + "_sample_amplicon.txt";
+    std::ofstream *fout3 = new std::ofstream();
+    fout3->open(foutName3.c_str(), std::ofstream::out);
+    if (!fout3->is_open()) {
+        delete fout3;
+        fout3 = nullptr;
+        error_exit("Can not open output file: " + foutName3);
+    }
+    if (mOptions->verbose)
+        loginfo("Starting to write amplicon table!");
+    //*fout3 << "#Locus\tNumReads\tTotalReads\tReadRatio\tBaseChange\tLength\tSequence\n";
+    *fout3 << "sample\tlocus\treadt\treads\tprop\tbaseChange\tlen\tmh_seq\n";
+    std::string foutName4 = mOptions->prefix + "_sample_error_rate.txt";
+    std::ofstream *fout4 = new std::ofstream();
+    fout4->open(foutName4.c_str(), std::ofstream::out);
+    if (!fout4->is_open()) {
+        delete fout4;
+        fout4 = nullptr;
+        error_exit("Can not open output file: " + foutName4);
+    }
+    if (mOptions->verbose)
+        loginfo("Starting to write error rate table!");
+    //*fout4 << "#Locus\tErrorRate\tAverage\tTotalReads\n";
+    *fout4 << "sample\tlocus\terrorRate\taverage\treadt\n";
+
+    // Each locus is independent (distinct key in refLocMap), so the per-locus
+    // alignment/genotyping work below can run concurrently. Only the output
+    // streams (fout..fout4) are shared, so writes to them are serialized with
+    // ioMutex. Work is pulled dynamically via nextIdx since alignment cost
+    // varies a lot per locus (indels, number of haplotypes), which balances
+    // load better than splitting the keys into fixed-size static chunks.
+    std::vector<std::string> locusKeys;
+    locusKeys.reserve(tmpSnpSeqsMap.size());
+    for (const auto &it : tmpSnpSeqsMap) {
+        locusKeys.push_back(it.first);
+    }
+
+    std::mutex ioMutex;
+    std::atomic<size_t> nextIdx(0);
+    unsigned int numThreads = std::max(1, mOptions->thread);
+    numThreads = (unsigned int) std::min<size_t>(numThreads, std::max<size_t>(1, locusKeys.size()));
+
+    auto worker = [&]() {
+    LocSnp2 *locSnpIt = nullptr;
+    while (true) {
+        size_t curIdx = nextIdx.fetch_add(1);
+        if (curIdx >= locusKeys.size()) break;
+        const std::string &locusName = locusKeys[curIdx];
+        if (mOptions->mLocSnps.refLocMap.find(locusName) == mOptions->mLocSnps.refLocMap.end()) {
+            continue;
+        }
+        const std::map<std::string, uint32> &seqMap = tmpSnpSeqsMap.at(locusName);
+        if (seqMap.empty()) continue;
+        locSnpIt = &(mOptions->mLocSnps.refLocMap.at(locusName));
+        std::map<std::string, uint32> tmpMap;
+        if (locSnpIt->trimPos.first == 0 && locSnpIt->trimPos.second == 0) {
+            tmpMap = seqMap;
+        } else {
+            for (const auto it2 : seqMap) {
+                std::string str = "";
+                bool trimmed = false;
+                if (locSnpIt->trimPos.first != 0) {
+                    if ((locSnpIt->trimPos.first + locSnpIt->ref.length() + locSnpIt->trimPos.second) <= it2.first.length()) {
+                        str = it2.first.substr(locSnpIt->trimPos.first);
+                        trimmed = true;
+                    } else {
+                        continue;
+                    }
+                } else {
+                    str = it2.first;
+                }
+
+                if (locSnpIt->trimPos.second != 0) {
+                    if (trimmed) {
+                        if ((locSnpIt->ref.length() + locSnpIt->trimPos.second) <= str.length()) {
+                            str = str.substr(0, str.length() - locSnpIt->trimPos.second);
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        if ((locSnpIt->trimPos.first + locSnpIt->ref.length() + locSnpIt->trimPos.second) <= str.length()) {
+                            str = str.substr(0, str.length() - locSnpIt->trimPos.second);
+                        } else {
+                            continue;
+                        }
+                    }
+                }
+                tmpMap[str] += it2.second;
+            }
+        }
+
+        if (tmpMap.empty()) continue;
+
+        locSnpIt->seqVarVec.reserve(tmpMap.size());
+        std::map<int, std::map<char, int>> baseFreqMap;
+
+        for (const auto &it2 : tmpMap) {
+            locSnpIt->totReads += it2.second;
+            if (it2.second > locSnpIt->maxReads) {
+                locSnpIt->maxReads = it2.second;
+            }
+            const char *target = locSnpIt->ref.mStr.c_str();
+            int targetLength = locSnpIt->ref.length();
+            const char *readSeq = it2.first.c_str();
+            int readLength = it2.first.length();
+            auto mapPair = doAlignment2(mOptions, "read", readSeq, readLength, locSnpIt->name, target, targetLength);
+            SeqVar tmpSeqVar;
+            tmpSeqVar.seq = it2.first;
+            tmpSeqVar.numReads = it2.second;
+            if (mapPair.first) { // no indel
+                tmpSeqVar.snpSet = mapPair.second;
+                for (int i = 0; i < it2.first.length(); i++) {
+                    baseFreqMap[i][it2.first[i]] += it2.second;
+                }
+            } else { // has indel;
+                if (targetLength == readLength){
+                    std::pair<bool, std::set<int>> elpset = edit_distance2(it2.first, locSnpIt->ref.mStr);
+                    if (elpset.first) {
+                        float percent = static_cast<float>(elpset.second.size()) / readLength;
+                        if (percent > 0.1){
+                            tmpSeqVar.indel = true;
+                        } else {
+                            tmpSeqVar.snpSet = elpset.second;
+                            for (int i = 0; i < it2.first.length(); i++) {
+                                baseFreqMap[i][it2.first[i]] += it2.second;
+                            }
+                        }
+                    }
+                } else {
+                    tmpSeqVar.indel = true;
+                }
+            }
+            locSnpIt->seqVarVec.push_back(tmpSeqVar);
+        }
+
+        if (locSnpIt->seqVarVec.empty()) {
+            locSnpIt->seqVarVec.clear();
+            baseFreqMap.clear();
+            continue;
+        }
+
+        std::sort(locSnpIt->seqVarVec.begin(), locSnpIt->seqVarVec.end(), [](const SeqVar & L, const SeqVar & R) {
+            return L.numReads > R.numReads;
+        });
+
+        if (locSnpIt->seqVarVec.size() == 1) {
+            locSnpIt->genoStr3 = "homo";
+            locSnpIt->ratioHaplo = 1.0;
+            locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+            locSnpIt->status.first.first = locSnpIt->seqVarVec.at(0).indel;
+
+            locSnpIt->totHaploReads = locSnpIt->seqVarVec.at(0).numReads;
+            if (locSnpIt->status.second) {
+                baseFreqMap.clear();
+            } else {
+                //locSnpIt->snpPosSetHaplo = locSnpIt->refSnpPosSet;
+                locSnpIt->snpPosSetHaplo.insert(locSnpIt->seqVarVec.at(0).snpSet.begin(), locSnpIt->seqVarVec.at(0).snpSet.end());
+                for (int pos = 0; pos < locSnpIt->seqVarVec.at(0).seq.length(); pos++) {
+                    baseFreqMap[pos][locSnpIt->seqVarVec.at(0).seq[pos]] = 0;
+                }
+            }
+        } else {
+            double ratio = getPer(locSnpIt->seqVarVec.at(0).numReads, (locSnpIt->seqVarVec.at(0).numReads + locSnpIt->seqVarVec.at(1).numReads), false);
+            locSnpIt->ratioHaplo = ratio;
+            locSnpIt->ratioHaplo2 = locSnpIt->getHaploReadsRatio2();
+            const char *rchar1 = locSnpIt->seqVarVec.at(0).seq.c_str();
+            const char *rchar2 = locSnpIt->seqVarVec.at(1).seq.c_str();
+            auto mapPair2 = doAlignment2(mOptions, "read1", rchar1, locSnpIt->seqVarVec.at(0).seq.length(), "read2", rchar2, locSnpIt->seqVarVec.at(1).seq.length());
+            locSnpIt->status.second = !mapPair2.first;
+            locSnpIt->status.first.first = locSnpIt->seqVarVec.at(0).indel;
+            locSnpIt->status.first.second = locSnpIt->seqVarVec.at(1).indel;
+            std::set<int> goSet;
+            bool go = true;
+            if (mapPair2.first) {//no indel
+                goSet.insert(mapPair2.second.begin(), mapPair2.second.end());
+            } else {
+                if (locSnpIt->seqVarVec.at(0).seq.length() == locSnpIt->seqVarVec.at(1).seq.length()) {//no indel
+                    std::pair<bool, std::set<int>> pset = edit_distance2(locSnpIt->seqVarVec.at(0).seq, locSnpIt->seqVarVec.at(1).seq);
+                    if(pset.first){
+                        float percent = static_cast<float>(pset.second.size()) / locSnpIt->seqVarVec.at(1).seq.length();
+                        if (percent > 0.1){
+                            go = false;
+                        } else {
+                            goSet.insert(pset.second.begin(), pset.second.end());
+                        }
+                    } else {
+                        go = false;  // should not happen;
+                    }
+                } else {
+                    go = false;
+                }
+            }
+
+            if(go){
+                if (goSet.size() == 1) {  // one snp;
+                    if (ratio >= mOptions->mLocSnps.mLocSnpOptions.smProp1H) {
+                        locSnpIt->genoStr3 = "homo"; // also include if it is heter against the ref, eg, ref: AA, target: CC;
+                        locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                        locSnpIt->getBestRatio();//don't move, it must be done this step.
+                    } else if (ratio <= mOptions->mLocSnps.mLocSnpOptions.smProp1L) {
+                        locSnpIt->getBestRatio();
+                        if (locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele) {
+                            locSnpIt->genoStr3 = "inconclusive";
+                        } else {
+                            if(locSnpIt->seqVarVec.size() > 2){
+                                if(locSnpIt->ratioHaplo2 >= mOptions->mLocSnps.mLocSnpOptions.mProp2){
+                                    locSnpIt->genoStr3 = "heter";
+                                } else {
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                }
+                            } else {
+                                locSnpIt->genoStr3 = "heter";
+                            }
+                        }
+                    } else {
+                        locSnpIt->getBestRatio();
+                        if(locSnpIt->ratioHaplo3 == 0.0){
+                            locSnpIt->genoStr3 = "inconclusive";
+                        } else {
+                            if(locSnpIt->ratioHaplo3 >= mOptions->mLocSnps.mLocSnpOptions.smProp1H){
+                                locSnpIt->genoStr3 = "homo";
+                                locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                            } else if (locSnpIt->ratioHaplo3 <= mOptions->mLocSnps.mLocSnpOptions.smProp1L) {
+                                if(locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele){
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                } else {
+                                    if (locSnpIt->seqVarVec.size() > 2) {
+                                        if(locSnpIt->ratioHaplo2 > mOptions->mLocSnps.mLocSnpOptions.mProp2){
+                                            locSnpIt->genoStr3 = "heter";
+                                        } else {
+                                            locSnpIt->genoStr3 = "inconclusive";
+                                        }
+                                    } else {
+                                        locSnpIt->genoStr3 = "heter";
+                                    }
+                                }
+                            } else {
+                                locSnpIt->genoStr3 = "inconclusive";
+                            }
+                        }
+                    }
+                } else if (goSet.size() > 1) {  // > 1 snp;
+                    if (ratio >= mOptions->mLocSnps.mLocSnpOptions.mmProp1H) {
+                        locSnpIt->genoStr3 = "homo"; // also include if it is heter against the ref, eg, ref: AA, target: CC;
+                        //locSnpIt->ratioHaplo = 1; // if the ratioHaplo for homo is not 1, it should have the seq erros
+                        locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                        locSnpIt->getBestRatio();
+                    } else if (ratio <= mOptions->mLocSnps.mLocSnpOptions.mmProp1L) {
+                        locSnpIt->getBestRatio();
+                        if(locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele){
+                            locSnpIt->genoStr3 = "inconclusive";
+                        } else {
+                            if (locSnpIt->seqVarVec.size() > 2) {
+                                if(locSnpIt->ratioHaplo2 > mOptions->mLocSnps.mLocSnpOptions.mProp2){
+                                    locSnpIt->genoStr3 = "heter";
+                                } else {
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                }
+                            } else {
+                                locSnpIt->genoStr3 = "heter";
+                            }
+                        }
+                    } else {
+                        locSnpIt->getBestRatio();
+                        if(locSnpIt->ratioHaplo3 == 0.0){
+                            locSnpIt->genoStr3 = "inconclusive";
+                        } else {
+                            if(locSnpIt->ratioHaplo3 >= mOptions->mLocSnps.mLocSnpOptions.mmProp1H){
+                                locSnpIt->genoStr3 = "homo";
+                                locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                            } else if (locSnpIt->ratioHaplo3 <= mOptions->mLocSnps.mLocSnpOptions.smProp1L) {
+                                if(locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele){
+                                    locSnpIt->genoStr3 = "inconclusive";
+                                } else {
+                                    if (locSnpIt->seqVarVec.size() > 2) {
+                                        if (locSnpIt->ratioHaplo2 >= mOptions->mLocSnps.mLocSnpOptions.mProp2) {
+                                            locSnpIt->genoStr3 = "heter";
+                                        } else {
+                                            locSnpIt->genoStr3 = "inconclusive";
+                                        }
+                                    } else {
+                                        locSnpIt->genoStr3 = "heter";
+                                    }
+                                }
+                            } else {
+                                locSnpIt->genoStr3 = "inconclusive";
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (ratio >= mOptions->mLocSnps.mLocSnpOptions.mmProp1H) {// 5 / 5 + x >= 0.9
+                        locSnpIt->genoStr3 = "homo"; // also include if it is heter against the ref, eg, ref: AA, target: CC;
+                        //locSnpIt->ratioHaplo = 1; // if the ratioHaplo for homo is not 1, it should have the seq erros
+                        locSnpIt->status.second = locSnpIt->seqVarVec.at(0).indel;
+                        locSnpIt->getBestRatio();
+                } else if(ratio <= mOptions->mLocSnps.mLocSnpOptions.mmProp1L){
+                    locSnpIt->getBestRatio();
+                    if (locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele) {
+                        locSnpIt->genoStr3 = "inconclusive";
+                    } else {
+                        locSnpIt->genoStr3 = "heter";
+                    }
+                } else {
+                    locSnpIt->getBestRatio();
+                    locSnpIt->genoStr3 = "inconclusive";
+                }
+            }
+
+            if (locSnpIt->genoStr3 == "homo") {
+                locSnpIt->totHaploReads = locSnpIt->seqVarVec.at(0).numReads;
+                if (locSnpIt->status.first.first) {
+                    baseFreqMap.clear();
+                } else {
+                    locSnpIt->snpPosSetHaplo.insert(locSnpIt->seqVarVec.at(0).snpSet.begin(), locSnpIt->seqVarVec.at(0).snpSet.end());
+                    for (int pos = 0; pos < locSnpIt->seqVarVec.at(0).seq.length(); pos++) {
+                        baseFreqMap[pos][locSnpIt->seqVarVec.at(0).seq[pos]] = 0;
+                    }
+                }
+            } else {
+                locSnpIt->totHaploReads = locSnpIt->seqVarVec.at(0).numReads + locSnpIt->seqVarVec.at(1).numReads;
+                if (locSnpIt->status.second) {
+                    if (locSnpIt->status.first.first && locSnpIt->status.first.second) {
+                        //h1 Y, h2 Y;
+                        baseFreqMap.clear();
+                    } else if (locSnpIt->status.first.first && !locSnpIt->status.first.second) {// h1 Y, h2, N
+                        baseFreqMap.clear();
+                    } else if (!locSnpIt->status.first.first && locSnpIt->status.first.second) {
+                        baseFreqMap.clear();
+                    } else {
+
+                    }
+                } else {
+                    if (locSnpIt->status.first.first && locSnpIt->status.first.second) {
+                        baseFreqMap.clear();
+                    } else if (locSnpIt->status.first.first && !locSnpIt->status.first.second) {// h1 Y, h2, N
+                        baseFreqMap.clear();
+                    } else if (!locSnpIt->status.first.first && locSnpIt->status.first.second) {
+                        baseFreqMap.clear();
+                    } else {
+                        locSnpIt->snpPosSet.insert(goSet.begin(), goSet.end());
+                        //locSnpIt->snpPosSetHaplo = locSnpIt->refSnpPosSet;
+                        locSnpIt->snpPosSetHaplo.insert(locSnpIt->seqVarVec.at(0).snpSet.begin(), locSnpIt->seqVarVec.at(0).snpSet.end());
+                        locSnpIt->snpPosSetHaplo.insert(locSnpIt->seqVarVec.at(1).snpSet.begin(), locSnpIt->seqVarVec.at(1).snpSet.end());
+                        locSnpIt->snpPosSetHaplo.insert(goSet.begin(), goSet.end());
+                        for (int pos = 0; pos < locSnpIt->seqVarVec.at(0).seq.length(); pos++) {
+                            baseFreqMap[pos][locSnpIt->seqVarVec.at(0).seq[pos]] = 0;
+                            baseFreqMap[pos][locSnpIt->seqVarVec.at(1).seq[pos]] = 0;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (locSnpIt->totReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Locus || locSnpIt->maxReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele) {
+            locSnpIt->genoStr3 = "inconclusive";
+            if (locSnpIt->genoStr3 == "heter"){
+                if(locSnpIt->seqVarVec.size() > 1 && locSnpIt->seqVarVec.at(1).numReads < mOptions->mLocSnps.mLocSnpOptions.minReads4Allele){
+                    locSnpIt->genoStr3 = "inconclusive";
+                }
+            }
+        }
+
+        if (locSnpIt->genoStr3 == "homo") {
+            if (!locSnpIt->status.first.first) {
+                for (const auto & its : locSnpIt->snpPosSetHaplo) {
+                    if(its >= locSnpIt->ref.length() || its >= locSnpIt->seqVarVec.at(0).seq.length()){
+                        continue;
+                    }
+                    locSnpIt->ssnpsMap[its] = SSimSnp(locSnpIt->seqVarVec.at(0).seq[its], locSnpIt->seqVarVec.at(0).seq[its], 'g');
+                }
+            }
+        } else {
+            if (locSnpIt->seqVarVec.size() > 1 && !locSnpIt->status.first.first && !locSnpIt->status.first.second && !locSnpIt->status.second) {
+                for (const auto & its : locSnpIt->snpPosSetHaplo) {
+                    //3 comparisions;
+                    if (its >= locSnpIt->ref.length() || its >= locSnpIt->seqVarVec.at(0).seq.length() || its >= locSnpIt->seqVarVec.at(1).seq.length()) {
+                        continue;
+                    }
+                    locSnpIt->ssnpsMap[its] = SSimSnp(locSnpIt->seqVarVec.at(0).seq[its], locSnpIt->seqVarVec.at(1).seq[its],
+                                                          locSnpIt->refSnpPosSet.find(its) == locSnpIt->refSnpPosSet.end() ? 'o' : 'r');
+                }
+            }
+        }
+
+        for (size_t i = 0; i < locSnpIt->seqVarVec.size(); i++) {
+            if (locSnpIt->seqVarVec.at(i).indel) {
+                continue;
+            }
+            if (i < 2) {
+                locSnpIt->snpPosSet.insert(locSnpIt->seqVarVec.at(i).snpSet.begin(), locSnpIt->seqVarVec.at(i).snpSet.end());
+            } else {
+                if (i < mOptions->mLocSnps.mLocSnpOptions.maxRVs4Align) {
+                    locSnpIt->snpPosSet.insert(locSnpIt->seqVarVec.at(i).snpSet.begin(), locSnpIt->seqVarVec.at(i).snpSet.end());
+                } else {
+                    break;
+                }
+            }
+        }
+
+        locSnpIt->snpPosSet.insert(locSnpIt->snpPosSetHaplo.begin(), locSnpIt->snpPosSetHaplo.end());
+
+        // Only serialize the actual file writes below; all the CPU-heavy
+        // alignment/genotyping work above ran without holding this lock.
+        std::lock_guard<std::mutex> ioLock(ioMutex);
+        for (int i = 0; i < locSnpIt->seqVarVec.size(); i++) {
+            *fout3 << sam_nm << "\t" << locSnpIt->name << "\t" << locSnpIt->totReads << "\t" << locSnpIt->getVarReads(i) << "\t" << 
+                    getPer(locSnpIt->getVarReads(i), locSnpIt->totReads, false) << "\t" << locSnpIt->getSnpStr(i) << "\t" << locSnpIt->seqVarVec.at(i).seq.length() << "\t" << locSnpIt->seqVarVec.at(i).seq << "\n";
+        }
+
+        if (mOptions->mLocSnps.mLocSnpOptions.maxRVs4Align <= locSnpIt->seqVarVec.size()) {
+            locSnpIt->seqVarVec.erase(locSnpIt->seqVarVec.begin() + mOptions->mLocSnps.mLocSnpOptions.maxRVs4Align, locSnpIt->seqVarVec.end());
+        }
+
+        if (!locSnpIt->ssnpsMap.empty()) {
+            for (const auto & itss : locSnpIt->ssnpsMap) {
+                *fout << sam_nm << "\t" << locSnpIt->name << "\t" << (itss.first + locSnpIt->trimPos.first) << "\t";
+                if (locSnpIt->genoStr3 == "homo") {
+                    *fout << itss.second.snp1 << "\t" << itss.second.snp1 << "\t" << itss.second.snp2 << "\t" << locSnpIt->getHaploReads() << "\t";
+                } else {
+                    *fout <<  itss.second.snp1 << "\t" << itss.second.snp2 << "\t" << itss.second.snp2 << "\t" << locSnpIt->getHaploReads() << "|" << locSnpIt->getHaploReads(true) << "\t";
+                }
+                *fout << locSnpIt->ratioHaplo << "\t" << locSnpIt->totHaploReads << "\t" <<
+                        (locSnpIt->refSnpPosSet.find(itss.first) == locSnpIt->refSnpPosSet.end() ? "Y" : "N") << "\t" << (locSnpIt->genoStr3 == "inconclusive" ? "N" : "Y") << "\n";
+            }
+        }
+
+        if (locSnpIt->genoStr3 == "homo") {
+            *fout2  << sam_nm << "\t" << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->totReads << "\t" << locSnpIt->getVarReads(0) << "\t" << getPer(locSnpIt->getVarReads(0), locSnpIt->totReads, false) << "\t" << 
+            locSnpIt->getHaploReadsRatio(0) << "\t" << locSnpIt->ratioHaplo3 << "\t" << locSnpIt->getNumDouMut(0) << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" << 
+                    locSnpIt->genoStr3 << "\t" <<  locSnpIt->getSnpStr(0) << "\t" << locSnpIt->seqVarVec.at(0).seq << "\n";
+            if(locSnpIt->seqVarVec.size() > 1){
+                *fout2  << sam_nm << "\t" << locSnpIt->name << "\t" << "2" << "\t" << locSnpIt->totReads << "\t" << locSnpIt->getVarReads(1) << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads, false) << "\t" << 
+                 locSnpIt->getHaploReadsRatio2(0) << "\t" << locSnpIt->ratioHaplo3 << "\t" << "0|0" << "\t" << (locSnpIt->status.first.second ? "Y" : "N") << "\t" << 
+                    locSnpIt->genoStr3 << "\t" << locSnpIt->getSnpStr(1) << "\t" << locSnpIt->seqVarVec.at(1).seq << "\n";
+            }
+        } else {
+            *fout2  << sam_nm << "\t" << locSnpIt->name << "\t" << "1" << "\t" << locSnpIt->totReads << "\t" << locSnpIt->getVarReads(0) << "\t" << getPer(locSnpIt->getVarReads(0), locSnpIt->totReads, false) << "\t" << 
+            locSnpIt->getHaploReadsRatio(0) << "\t" << locSnpIt->ratioHaplo3 << "\t" << locSnpIt->getNumDouMut(0) << "\t" << (locSnpIt->status.first.first ? "Y" : "N") << "\t" << 
+                    locSnpIt->genoStr3 << "\t" << locSnpIt->getHaploStr() << "\t" << locSnpIt->seqVarVec.at(0).seq << "\n";
+            if (locSnpIt->seqVarVec.size() > 1) {
+                *fout2  << sam_nm << "\t" << locSnpIt->name << "\t" << "2" << "\t" << locSnpIt->totReads << "\t" << locSnpIt->getVarReads(1) << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads, false) << "\t" << 
+                locSnpIt->getHaploReadsRatio2(0) << "\t" << locSnpIt->ratioHaplo3 << "\t" << locSnpIt->getNumDouMut(1) << "\t" << (locSnpIt->status.first.second ? "Y" : "N") << "\t" << 
+                    locSnpIt->genoStr3 << "\t" << locSnpIt->getHaploStr() << "\t" << locSnpIt->seqVarVec.at(1).seq << "\n";
+            }
+        }
+
+        //*fout2_2 << "sample\tlocus\treadt\tread1\tread2\tread3\trprop1\trprop2\trprop3\tmprop1\tmprop2\tsprop\tmut\tindel\tzygosity\tconclusive\tbasechange\tseq1\tseq2\tseq3\n";
+        if (locSnpIt->genoStr3 == "homo") {
+            *fout2_2 << sam_nm << "\t" << locSnpIt->name << "\t" <<
+                    locSnpIt->totReads << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getVarReads(1) << "\t" << locSnpIt->getVarReads(2) << "\t" <<
+                    getPer(locSnpIt->getVarReads(0), locSnpIt->totReads, false) << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads, false) << "\t" << getPer(locSnpIt->getVarReads(2), locSnpIt->totReads, false) << "\t" <<
+                    locSnpIt->getHaploReadsRatio(0) << "\t" << locSnpIt->getHaploReadsRatio2(0) << "\t" << locSnpIt->ratioHaplo3 << "\t" << locSnpIt->getNumSnps() << "\t" << (locSnpIt->status.first.first ? 1 : 0) << "\t" << 1 << "\n";
+                    //locSnpIt->getHaploStr() << "\t" << locSnpIt->seqVarVec.at(0).seq << "\t" << (locSnpIt->seqVarVec.size() > 1 ? locSnpIt->seqVarVec.at(1).seq : "") << "\t" << (locSnpIt->seqVarVec.size() > 2 ? locSnpIt->seqVarVec.at(2).seq : "") << "\n";
+        } else {
+            *fout2_2 << sam_nm << "\t" << locSnpIt->name << "\t" <<
+                    locSnpIt->totReads << "\t" << locSnpIt->getVarReads(0) << "\t" << locSnpIt->getVarReads(1) << "\t" << locSnpIt->getVarReads(2) << "\t" <<
+                    getPer(locSnpIt->getVarReads(0), locSnpIt->totReads, false) << "\t" << getPer(locSnpIt->getVarReads(1), locSnpIt->totReads, false) << "\t" << getPer(locSnpIt->getVarReads(2), locSnpIt->totReads, false) << "\t" <<
+                    locSnpIt->getHaploReadsRatio(0) << "\t" << locSnpIt->getHaploReadsRatio2(0) << "\t" << locSnpIt->ratioHaplo3 << "\t" << locSnpIt->getNumSnps() << "\t" << (locSnpIt->status.second ? 1 : 0) << "\t" << (locSnpIt->genoStr3 == "heter" ? 2 : 0) << "\n";
+                    // locSnpIt->getHaploStr() << "\t" << locSnpIt->seqVarVec.at(0).seq << "\t" << (locSnpIt->seqVarVec.size() > 1 ? locSnpIt->seqVarVec.at(1).seq : "") << "\t" << (locSnpIt->seqVarVec.size() > 2 ? locSnpIt->seqVarVec.at(2).seq : "") << "\n";
+        }
+
+        if (!baseFreqMap.empty()) {
+            *fout4 << sam_nm << "\t" << locSnpIt->name << "\t";
+            double stot = 0.0;
+            for (const auto & itb : baseFreqMap) {
+                int tot = 0;
+                for (const auto & itb2 : itb.second) {
+                    tot += itb2.second;
+                }
+                double per = getPer(tot, locSnpIt->totReads, false);
+                stot += per;
+                locSnpIt->baseErrorMap[itb.first] = per;
+                if (&itb == &(*baseFreqMap.rbegin())) {
+                    *fout4 << per << "\t";
+                } else {
+                    *fout4 << per << ";";
+                }
+            }
+            locSnpIt->aveErrorRate = getPer(stot, baseFreqMap.size(), false);
+            *fout4 << (locSnpIt->aveErrorRate) << "\t" << locSnpIt->totReads << "\n";
+        }
+    }
+    };
+
+    std::vector<std::thread> mergeThreads;
+    mergeThreads.reserve(numThreads);
+    for (unsigned int t = 0; t < numThreads; t++) {
+        mergeThreads.emplace_back(worker);
+    }
+    for (auto &th : mergeThreads) {
+        th.join();
     }
 
     fout->flush();

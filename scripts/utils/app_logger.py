@@ -8,7 +8,6 @@ history of commands, parameters and software output can be reviewed later.
 import atexit
 import datetime
 import logging
-import logging.handlers
 import os
 import platform
 import shutil
@@ -59,7 +58,7 @@ def get_logger():
     _log_path = os.path.join(log_dir, f"smartyper_{datetime.datetime.fromtimestamp(_app_start_time).strftime('%Y%m%d_%H%M%S')}.log")
 
     formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
-    handler = logging.handlers.RotatingFileHandler(_log_path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8")
+    handler = logging.FileHandler(_log_path, encoding="utf-8")
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
