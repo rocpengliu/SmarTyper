@@ -1,6 +1,7 @@
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 import glob
+import os
 from pathlib import Path
 from setuptools.command.build_ext import build_ext as _build_ext
 
@@ -16,7 +17,8 @@ class build_ext(_build_ext):
                 pass
 
 # Define compiler and linker flags.
-extra_compile_args = ["-std=c++11", "-g"]
+opt_flags = os.environ.get("SMARTYPER_OPT_FLAGS", "-O3").split()
+extra_compile_args = ["-std=c++11", "-g"] + opt_flags
 extra_link_args = ["-lstdc++", "-lz"]  # Assuming you need to link with zlib (-lz).
 
 # Define macros to prevent the _Float128 etc. definitions.
