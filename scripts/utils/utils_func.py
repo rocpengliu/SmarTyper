@@ -195,12 +195,11 @@ def produce_fig_sam_mar_pdf(output_folder_path, markers, sam_microhap_dict_sam, 
                 )
                 ax.tick_params(axis="x", labelsize=6)
                 ax.tick_params(axis="y", labelsize=6)
-                fig.subplots_adjust(hspace=0.8)
-                fig.suptitle(f"Genotypes of sample {selected_sample}")
-                fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 # print(f"Thread {threading.current_thread().name}: Finished to process sample: {selected_sample} in index: {i} for marker: {loc}")
 
             if fig is not None:
+                fig.subplots_adjust(hspace=0.8)
+                fig.suptitle(f"Genotypes of sample {selected_sample}")
                 fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
                 pdf.savefig(fig)
@@ -265,15 +264,15 @@ def produce_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap_dict,
                     except Exception as plot_err:
                         print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                         traceback.print_exc()
-                    fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of locus {selected_marker}")
-                    fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 # Blank remaining axes (if any)
                 total_plots = len(page_samples)
                 for blank_j in range(total_plots, max_plots_per_page):
                     row = blank_j // ncols
                     col = blank_j % ncols
                     axes[row, col].axis("off")
+                fig.subplots_adjust(hspace=0.8)
+                fig.suptitle(f"Genotypes of locus {selected_marker}")
+                fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
                 pdf.savefig(fig)
                 plt.close(fig)
@@ -339,15 +338,15 @@ def produce_micro_fig_mar_sam_pdf_pool(output_folder_path, samples, sam_microhap
                     except Exception as plot_err:
                         print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                         traceback.print_exc()
-                    fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"{micotype} of locus {selected_marker}")
-                    fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 # Blank remaining axes (if any)
                 total_plots = len(page_samples)
                 for blank_j in range(total_plots, max_plots_per_page):
                     row = blank_j // ncols
                     col = blank_j % ncols
                     axes[row, col].axis("off")
+                fig.subplots_adjust(hspace=0.8)
+                fig.suptitle(f"{micotype} of locus {selected_marker}")
+                fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
                 pdf.savefig(fig)
                 plt.close(fig)
@@ -413,15 +412,15 @@ def produce_micro_fig_sam_mar_pdf_pool(output_folder_path, mars, mar_microhap_di
                     except Exception as plot_err:
                         print(f"{mar} / {selected_sample}: plotting error: {plot_err}")
                         traceback.print_exc()
-                    fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of sample {selected_sample}")
-                    fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 # Blank remaining axes (if any)
                 total_plots = len(page_mars)
                 for blank_j in range(total_plots, max_plots_per_page):
                     row = blank_j // ncols
                     col = blank_j % ncols
                     axes[row, col].axis("off")
+                fig.subplots_adjust(hspace=0.8)
+                fig.suptitle(f"Genotypes of sample {selected_sample}")
+                fig.text(0.08, 0.5, "Number of reads", va="center", rotation="vertical")
                 fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
                 pdf.savefig(fig)
                 plt.close(fig)
@@ -486,17 +485,17 @@ def produce_fig_mar_sam_pdf(output_folder_path, samples, sam_microhap_dict, sele
                     except Exception as plot_err:
                         print(f"{sam} / {selected_marker}: plotting error: {plot_err}")
                         traceback.print_exc()
-                    fig.subplots_adjust(hspace=0.8)
-                    fig.suptitle(f"Genotypes of locus {selected_marker}")
-                    fig.text(
-                        0.08, 0.5, "Number of reads", va="center", rotation="vertical"
-                    )
                 # Blank remaining axes (if any)
                 total_plots = len(page_samples)
                 for blank_j in range(total_plots, max_plots_per_page):
                     row = blank_j // ncols
                     col = blank_j % ncols
                     axes[row, col].axis("off")
+                fig.subplots_adjust(hspace=0.8)
+                fig.suptitle(f"Genotypes of locus {selected_marker}")
+                fig.text(
+                    0.08, 0.5, "Number of reads", va="center", rotation="vertical"
+                )
                 fig.text(0.5, 0.01, f"Page {tot_pages + 1}", ha="center", fontsize=8)
                 pdf.savefig(fig)
                 plt.close(fig)
@@ -881,8 +880,9 @@ def populate_mar_sam_microhap(mar, samples, mar_mh_df, ref_mt, cur = True)->pd.D
     try:
         if cur:
             mar_sam_microhap=set()#microhap seqs
+            mar_sam_microhap_groups = mar_mh_df.groupby('sample', sort=False)
             for sam in samples:
-                mar_sam_microhap_df = mar_mh_df.loc[mar_mh_df['sample'] == sam]
+                mar_sam_microhap_df = mar_sam_microhap_groups.get_group(sam)
                 zygo= mar_sam_microhap_df['zygosity'].iloc[0]
                 if zygo == "homo":
                     mar_sam_microhap.add(mar_sam_microhap_df['mh_seq'].iloc[0])
@@ -936,8 +936,9 @@ def populate_each_mar_mp_dict(mar, records, mar_combo_mt) -> tuple:
     cur_mar_mp_df = pd.DataFrame.from_records(records)
     if cur_mar_mp_df.empty:
         return final_sam_cur_mp_dict, final_sam_cur_mp_sim_dict
+    cur_mar_mp_groups = cur_mar_mp_df.groupby('sample', sort=False)
     for sam in sorted(cur_mar_mp_df['sample'].unique()):
-        tmp_df = cur_mar_mp_df[cur_mar_mp_df['sample'] == sam].reset_index(drop=True)
+        tmp_df = cur_mar_mp_groups.get_group(sam).reset_index(drop=True)
         zygo = tmp_df['zygosity'].iloc[0]
         if zygo == 'homo':
             tmp_df.loc[0, 'baseChange'] = ""
@@ -979,14 +980,22 @@ def populate_each_mar_mp_dict(mar, records, mar_combo_mt) -> tuple:
         tmp_df.drop(columns=['mh_seq'], inplace=True)
         final_sam_cur_mp_dict[sam] = tmp_df
         tmp_sim_df = tmp_df[['sample', 'allele', 'zygosity']].copy()
-        sim_df = pd.DataFrame(columns=['sample', f'{mar}_allele1', f'{mar}_allele2'])
         zygo = tmp_sim_df['zygosity'].iloc[0]
         if zygo == 'homo':
-            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[0]]], columns=sim_df.columns)], ignore_index=True)
+            sim_df = pd.DataFrame(
+                [[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[0]]],
+                columns=['sample', f'{mar}_allele1', f'{mar}_allele2'],
+            )
         elif zygo == 'heter':
-            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[1]]], columns=sim_df.columns)], ignore_index=True)
+            sim_df = pd.DataFrame(
+                [[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[1]]],
+                columns=['sample', f'{mar}_allele1', f'{mar}_allele2'],
+            )
         else:
-            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, '-9', '-9']], columns=sim_df.columns)], ignore_index=True)
+            sim_df = pd.DataFrame(
+                [[sam, '-9', '-9']],
+                columns=['sample', f'{mar}_allele1', f'{mar}_allele2'],
+            )
         final_sam_cur_mp_sim_dict[sam] = sim_df
     return final_sam_cur_mp_dict, final_sam_cur_mp_sim_dict
 
@@ -996,18 +1005,27 @@ def populate_each_mar_mh_dict(mar, records) -> tuple:
     cur_mar_mh_df = pd.DataFrame.from_records(records)
     if cur_mar_mh_df.empty:
         return final_sam_cur_mh_dict, final_sam_cur_mh_sim_dict
+    cur_mar_mh_groups = cur_mar_mh_df.groupby('sample', sort=False)
     for sam in sorted(cur_mar_mh_df['sample'].unique()):
-        tmp_df = cur_mar_mh_df[cur_mar_mh_df['sample'] == sam].reset_index(drop=True)
+        tmp_df = cur_mar_mh_groups.get_group(sam).reset_index(drop=True)
         final_sam_cur_mh_dict[sam] = tmp_df
         tmp_sim_df = tmp_df[['sample', 'allele', 'zygosity']].copy()
         zygo = tmp_sim_df['zygosity'].iloc[0]
-        sim_df = pd.DataFrame(columns=['sample', f'{mar}_allele1', f'{mar}_allele2'])
         if zygo == "homo":
-            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[0]]], columns=sim_df.columns)], ignore_index=True)
+            sim_df = pd.DataFrame(
+                [[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[0]]],
+                columns=['sample', f'{mar}_allele1', f'{mar}_allele2'],
+            )
         elif zygo == "heter":
-            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[1]]], columns=sim_df.columns)], ignore_index=True)
+            sim_df = pd.DataFrame(
+                [[sam, tmp_sim_df['allele'].iloc[0], tmp_sim_df['allele'].iloc[1]]],
+                columns=['sample', f'{mar}_allele1', f'{mar}_allele2'],
+            )
         else:
-            sim_df = pd.concat([sim_df, pd.DataFrame([[sam, '-9', '-9']], columns=sim_df.columns)], ignore_index=True)
+            sim_df = pd.DataFrame(
+                [[sam, '-9', '-9']],
+                columns=['sample', f'{mar}_allele1', f'{mar}_allele2'],
+            )
         
         # if zygo == 'homo':
         #     if tmp_sim_df.shape[0] == 1:

@@ -236,7 +236,7 @@ def poll_run_status(parent, run_frame):
             result_footer.next_button.configure(state='normal')
         return
 
-    run_frame.after(50, poll_run_status, parent, run_frame)
+    run_frame.after(200, poll_run_status, parent, run_frame)
 
 def target(parent):
     #pdb.set_trace()

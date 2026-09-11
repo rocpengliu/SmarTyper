@@ -141,10 +141,8 @@ class PostMicrohapClass:
         tmp_df = tmp_df.reindex(columns=['sample'] + [col for col in tmp_df.columns if col != 'sample'])
         mar_dict={}
         if tmp_df.shape[0] !=0:
-            markers=tmp_df['locus'].unique()
-            if len(markers) > 0:
-                for mar in markers:
-                    mar_dict[mar] = tmp_df[tmp_df['locus']==mar]
+            for mar, mar_df in tmp_df.groupby('locus', sort=False):
+                mar_dict[mar] = mar_df
         return mar_dict
 
     def populate_one_microhap_dict(self, parameter_class, metadata_class, cur = True, log_func = None)->bool:
@@ -159,13 +157,21 @@ class PostMicrohapClass:
             samples = sorted(parent_mh_df['sample'].unique()) if cur else []
             mar_df_dict = {}
             num_mars = 0
+            parent_mar_groups = parent_mh_df.groupby('locus', sort=False)
             with ProcessPoolExecutor(max_workers=n_threads, mp_context=ctx) as executor:
-                futures={executor.submit(populate_mar_sam_microhap,
-                                         mar, 
-                                         samples, 
-                                         parent_mh_df[parent_mh_df['locus']==mar].reset_index(drop=True), 
-                                         self.get_loc_ref_dict().get(mar, None),
-                                         cur): mar for mar in markers}
+                futures = {}
+                for mar in markers:
+                    if mar not in parent_mar_groups.indices:
+                        continue
+                    future = executor.submit(
+                        populate_mar_sam_microhap,
+                        mar,
+                        samples,
+                        parent_mar_groups.get_group(mar).reset_index(drop=True),
+                        self.get_loc_ref_dict().get(mar, None),
+                        cur,
+                    )
+                    futures[future] = mar
                 for future in as_completed(futures):
                     mar = futures[future]
                     try:
@@ -349,6 +355,7 @@ class PostMicrohapClass:
         com_markers = []
         ctx = mp.get_context("spawn")  # safest across OSes
         num_mars = 0
+        cur_mar_groups = cur_mp_df.groupby('locus', sort=False)
         with ProcessPoolExecutor( max_workers=parameter_class.get_thread(), mp_context=ctx) as executor:
             for mar, mar_value in self.get_loc_ref_dict().items():
                 if not mar_value.get_has_exon():
@@ -361,9 +368,9 @@ class PostMicrohapClass:
                 )
                 if not mp_lookup_table_dict:
                     continue
-                cur_mar_mp_df = cur_mp_df[cur_mp_df['locus'] == mar].copy()
-                if cur_mar_mp_df.empty:
+                if mar not in cur_mar_groups.indices:
                     continue
+                cur_mar_mp_df = cur_mar_groups.get_group(mar).copy()
                 cur_mar_mp_df['mp_seq'] = (cur_mar_mp_df['mh_seq'].map(mp_lookup_table_dict).fillna(''))
                 cur_mar_mp_df['mp_label'] = (cur_mar_mp_df['mp_seq'].map(mp_lookup_label_table_dict).fillna('-9'))
                 cur_mar_mp_df['allele'] = cur_mar_mp_df['mp_label']
@@ -419,6 +426,7 @@ class PostMicrohapClass:
         com_markers = []
         ctx = mp.get_context("spawn")  # safest across OSes
         num_mars = 0
+        cur_mar_groups = cur_mh_df.groupby('locus', sort=False)
         with ProcessPoolExecutor( max_workers=parameter_class.get_thread(), mp_context=ctx) as executor:
             for mar, mar_value in self.get_loc_ref_dict().items():
                 mh_lookup_table_dict = (
@@ -428,9 +436,9 @@ class PostMicrohapClass:
                 )
                 if not mh_lookup_table_dict:
                     continue
-                cur_mar_mh_df = cur_mh_df[cur_mh_df['locus'] == mar].copy()
-                if cur_mar_mh_df.empty:
+                if mar not in cur_mar_groups.indices:
                     continue
+                cur_mar_mh_df = cur_mar_groups.get_group(mar).copy()
                 cur_mar_mh_df['allele'] = (cur_mar_mh_df['mh_seq'].map(mh_lookup_table_dict).fillna('-9'))
                 # 🔑 serialize explicitly, must convert to records for multiple threading
                 records = cur_mar_mh_df.to_dict(orient='records')
@@ -475,7 +483,8 @@ class PostMicrohapClass:
             self._final_micropep_df.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_cur_mp_table.txt"), sep = '\t', index = False)
 
         final_cur_sim_mp_df_list = []
-        for i, (mar, df) in enumerate(final_cur_sim_mp_dict.items()):
+        for i, mar in enumerate(sorted(final_cur_sim_mp_dict)):
+            df = final_cur_sim_mp_dict[mar]
             if i == 0:
                 final_cur_sim_mp_df_list.append(df)
             else:
@@ -497,7 +506,8 @@ class PostMicrohapClass:
             self._final_microhap_df.to_csv(os.path.join(parameter_class.get_post_microhap_output_dir(), "All_cur_mh_table.txt"), sep = '\t', index = False)
 
         final_cur_sim_mh_df_list = []
-        for i, (mar, df) in enumerate(final_cur_sim_mh_dict.items()):
+        for i, mar in enumerate(sorted(final_cur_sim_mh_dict)):
+            df = final_cur_sim_mh_dict[mar]
             if i == 0:
                 final_cur_sim_mh_df_list.append(df)
             else:

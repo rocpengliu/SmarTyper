@@ -154,11 +154,12 @@ class MicroHapClass:
                                  })
         else:
             print_time(f"Warning: Sample {sample} {type} file not found")
+        locus_df_map = {locus: locus_df for locus, locus_df in tmp_df.groupby('locus', sort=False)} if not tmp_df.empty else {}
         num_reads=0
         for mar in mars:
             #mar_ref = post_microhap_class.get_loc_ref_dict().get(mar, None)
             if os.path.isfile(file):
-                tmp = tmp_df.query(f'locus == "{mar}"')
+                tmp = locus_df_map.get(mar)
                 if tmp is None or tmp.empty:
                     mars_amplicon[mar] = pd.DataFrame(columns=micro_amplicon_df_columns)
                     row0=micro_amplicon_df_empty_row[:]
@@ -213,13 +214,14 @@ class MicroHapClass:
                                  })
         else:
             print_time(f"Warning: Sample {sample} mh file not found")
+        locus_df_map = {locus: locus_df for locus, locus_df in tmp_df.groupby('locus', sort=False)} if not tmp_df.empty else {}
         for mar in mars:
             mar_ref = post_microhap_class.get_loc_ref_dict().get(mar, None)
             ref_seq = ""
             if mar_ref is not None:
                 ref_seq = mar_ref.get_cur_dna_ref()
             if os.path.isfile(file):
-                tmp = tmp_df.query(f'locus == "{mar}"')
+                tmp = locus_df_map.get(mar)
                 if tmp is None or tmp.empty:
                     mh_amplicon[mar] = pd.DataFrame(columns=micro_microhap_df_columns)
                     row0=micro_microhap_df_empty_row[:]
@@ -313,10 +315,11 @@ class MicroHapClass:
         else:
             print_time(f"Warning: {sample} ml file is not found!")
             return ml_mar_dict
+        locus_df_map = {locus: locus_df for locus, locus_df in tmp_df.groupby('locus', sort=False)} if not tmp_df.empty else {}
         
         for mar in mars:
-            tmp_mar_df = tmp_df[tmp_df['locus'] == mar]
-            if not tmp_mar_df.empty:
+            tmp_mar_df = locus_df_map.get(mar)
+            if tmp_mar_df is not None and not tmp_mar_df.empty:
                 ml_mar_dict[mar] = tmp_mar_df.head(1)
         print_time(f"finished to read ml file for sample: {sample}")
         return ml_mar_dict
@@ -346,10 +349,11 @@ class MicroHapClass:
         else:
             print_time(f"Warning: {sample} snp file is not found!")
             return mar_snp_dict
+        locus_df_map = {locus: locus_df for locus, locus_df in tmp_df.groupby('locus', sort=False)} if not tmp_df.empty else {}
         
         for mar in mars:
-            tmp_mar_df = tmp_df[tmp_df['locus'] == mar]
-            if not tmp_mar_df.empty:
+            tmp_mar_df = locus_df_map.get(mar)
+            if tmp_mar_df is not None and not tmp_mar_df.empty:
                 mar_snp_dict[mar] = tmp_mar_df
         print_time(f"finished to read snp file for sample: {sample}")
         return mar_snp_dict
