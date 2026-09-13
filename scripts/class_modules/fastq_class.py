@@ -1,5 +1,11 @@
 import os
 
+def _as_filename(value):
+    # sample tables may carry NaN/None for a missing read column
+    if value is None or not isinstance(value, (str, bytes, os.PathLike)):
+        return ""
+    return value
+
 class FastqFile:
     def __init__(self, dirpath, fname, suffix1="_R1_001.fastq.gz", suffix2="_R2_001.fastq.gz", pe = True):
         self.dirpath = dirpath
@@ -43,8 +49,8 @@ class FastqFileSimple:
         self.id = id
         self.dirpath = dirpath
         self.name = fname
-        self.read1=read1
-        self.read2=read2
+        self.read1=_as_filename(read1)
+        self.read2=_as_filename(read2)
         self.read1_size = self.__get_file_size(False, pe)
         self.read2_size = self.__get_file_size(True, pe)
         self.status=False
@@ -52,13 +58,15 @@ class FastqFileSimple:
     
     def __get_file_size(self, sec = False, pe = True):
         if sec and pe:
-            read2file = os.path.join(self.dirpath, self.read2)
-            if os.path.isfile(read2file):
-                return os.path.getsize(read2file)
+            if self.read2:
+                read2file = os.path.join(self.dirpath, self.read2)
+                if os.path.isfile(read2file):
+                    return os.path.getsize(read2file)
         else:
-            read1file = os.path.join(self.dirpath, self.read1)
-            if os.path.isfile(read1file):
-                return os.path.getsize(read1file)
+            if self.read1:
+                read1file = os.path.join(self.dirpath, self.read1)
+                if os.path.isfile(read1file):
+                    return os.path.getsize(read1file)
         return 0
     
     def readable_size(self, sec = False):
