@@ -105,35 +105,35 @@ void SnpScanner::groupScanVar(Read* & r1) {
         }
         bool goRP = false;
         int trimF = 0;
-        int fpMismatches = (int) edit_distance(locSnpItGrp->fp.mStr.c_str(), locSnpItGrp->fp.length(), r1->mSeq.mStr.c_str(), locSnpItGrp->fp.length());
+        int fpMismatches = 0;
         
-        if(fpMismatches != 0){
+        if(!mOptions->nanopore_default){
+            fpMismatches = (int) edit_distance(locSnpItGrp->fp.mStr.c_str(), locSnpItGrp->fp.length(), r1->mSeq.mStr.c_str(), locSnpItGrp->fp.length());
+            if(fpMismatches > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq){
+                continue;
+            } else {
+                trimF = locSnpItGrp->fp.length();
+                goRP = true;
+            }
+        } else {
             fpData = locSnpItGrp->fp.mStr.c_str();
             fpLength = locSnpItGrp->fp.length();
             auto endBoolF = doPrimerAlignment(fpData, fpLength, locSnpItGrp->name, readSeq, readLength, r1->mName, true);
-            if(std::min(fpMismatches, get<0>(endBoolF)) > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq){
+            fpMismatches = get<0>(endBoolF);
+            if(fpMismatches > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq){
                 continue;
             } else {
-                if(fpMismatches < get<0>(endBoolF)){
-                    trimF = locSnpItGrp->fp.length();
-                    goRP = true;
-                } else {
-                    fpMismatches = get<0>(endBoolF);
-                    if (get<2>(endBoolF) && (get<1>(endBoolF) <= r1->length())) {
-                        if ((get<1>(endBoolF) + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length()) <= r1->mSeq.length()) {
-                            trimF = get<1>(endBoolF);
-                            goRP = true;
-                        } else {
-                            continue;
-                        }
+                if (get<2>(endBoolF) && (get<1>(endBoolF) <= r1->length())) {
+                    if ((get<1>(endBoolF) + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length()) <= r1->mSeq.length()) {
+                        trimF = get<1>(endBoolF);
+                        goRP = true;
                     } else {
                         continue;
                     }
+                } else {
+                    continue;
                 }
             }
-        } else {
-            trimF = locSnpItGrp->fp.length();
-            goRP = true;
         }
         
         // fpData = locSnpItGrp->fp.mStr.c_str();
@@ -157,38 +157,37 @@ void SnpScanner::groupScanVar(Read* & r1) {
 
         if (goRP) {
             MatchTrim mTrim;
-            int rpMismatches = (int) edit_distance(locSnpItGrp->rp.mStr.c_str(), locSnpItGrp->rp.length(), r1->mSeq.mStr.c_str() + r1->mSeq.length() - locSnpItGrp->rp.length(), locSnpItGrp->rp.length());
-            if(rpMismatches != 0) {
+            int rpMismatches = 0;
+            if(!mOptions->nanopore_default){
+                rpMismatches = (int) edit_distance(locSnpItGrp->rp.mStr.c_str(), locSnpItGrp->rp.length(), r1->mSeq.mStr.c_str() + r1->mSeq.length() - locSnpItGrp->rp.length(), locSnpItGrp->rp.length());
+                if(rpMismatches > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq){
+                    continue;
+                } else {
+                    mTrim.totMismatches = fpMismatches + rpMismatches;
+                    mTrim.trimF = trimF;
+                    mTrim.trimedRefLenth = r1->mSeq.length() - trimF - locSnpItGrp->rp.mStr.length();
+                    locMap[locSnpItGrp->name] = mTrim;
+                }
+            } else {
                 rpData = locSnpItGrp->rp.mStr.c_str();
                 rpLength = locSnpItGrp->rp.length();
                 auto endBoolR = doPrimerAlignment(rpData, rpLength, locSnpItGrp->name, readSeq, readLength, r1->mName, true);
-                if(std::min(rpMismatches, get<0>(endBoolR)) > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq){
+                rpMismatches = get<0>(endBoolR);
+                if(rpMismatches > mOptions->mLocSnps.mLocSnpOptions.maxMismatchesPSeq){
                     continue;
                 } else {
-                    if(rpMismatches < get<0>(endBoolR)) {
+                    if (get<2>(endBoolR) && (get<1>(endBoolR) <= r1->mSeq.mStr.length()) &&
+                        ((trimF + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length()) <= get<1>(endBoolR))) {
                         mTrim.totMismatches = fpMismatches + rpMismatches;
                         mTrim.trimF = trimF;
-                        mTrim.trimedRefLenth = r1->mSeq.length() - trimF - locSnpItGrp->rp.mStr.length();
+                        mTrim.trimedRefLenth = get<1>(endBoolR) - trimF - locSnpItGrp->rp.mStr.length();
                         locMap[locSnpItGrp->name] = mTrim;
                     } else {
-                        rpMismatches = get<0>(endBoolR);
-                        if (get<2>(endBoolR) && (get<1>(endBoolR) <= r1->mSeq.mStr.length()) &&
-                            ((trimF + locSnpItGrp->ft.length() + locSnpItGrp->ref.length() + locSnpItGrp->rt.length() + locSnpItGrp->rp.length()) <= get<1>(endBoolR))) {
-                            mTrim.totMismatches = fpMismatches + rpMismatches;
-                            mTrim.trimF = trimF;
-                            mTrim.trimedRefLenth = get<1>(endBoolR) - trimF - locSnpItGrp->rp.mStr.length();
-                            locMap[locSnpItGrp->name] = mTrim;
-                        } else {
-                            continue;
-                        }
+                        continue;
                     }
                 }
-            } else {
-                mTrim.totMismatches = fpMismatches + rpMismatches;
-                mTrim.trimF = trimF;
-                mTrim.trimedRefLenth = r1->mSeq.length() - trimF - locSnpItGrp->rp.mStr.length();
-                locMap[locSnpItGrp->name] = mTrim;
             }
+
             if(mTrim.totMismatches == 0){
                 break;
             }

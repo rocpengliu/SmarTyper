@@ -259,6 +259,7 @@ def target(parent):
     subargs['thread'] = genoclass.get_parameter().get_thread()
     subargs['average_qual'] = genoclass.get_parameter().get_average_qual()
     subargs['length_required'] = genoclass.get_parameter().get_length_required()
+    subargs['nanopore_default'] = genoclass.get_parameter().get_nanopore_default()
     if genoclass.get_parameter().get_sex_analysis():
         subargs['sex'] = genoclass.get_parameter().get_sexfile()
         subargs['maxMismatchesSexPSeq'] = genoclass.get_parameter().get_maxMismatchesPSeqSex()
