@@ -1,0 +1,1924 @@
+2026-09-16 09:59:11 [INFO] SmarTyper application started
+2026-09-16 09:59:11 [INFO] Hardware: OS = Ubuntu 24.04.4 LTS (Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39, x86_64), Python = 3.12.3, CPU = 12th Gen Intel(R) Core(TM) i5-1245U, CPU speed = 2496.0 MHz, CPU threads = 12, total memory = 31.04 GB, available memory = 28.1 GB, memory speed = unavailable (requires root/dmidecode), memory = unavailable (requires root/dmidecode), memory bandwidth = 2015.2 MB/s (measured copy throughput), disk total = 1006.85 GB, disk free = 878.11 GB, disk drive = Msft Virtual Disk, disk speed = 725.7 MB/s (measured write throughput)
+2026-09-16 10:00:53 [INFO] Starting genotype tab update...
+2026-09-16 10:00:53 [INFO] No assigned reads found, skipping genotype tab update.
+2026-09-16 10:00:53 [INFO] Starting genotype tab update...
+2026-09-16 10:00:53 [INFO] No assigned reads found, skipping genotype tab update.
+2026-09-16 10:01:00 [INFO] reading loci file: /home/liup/project/data/smartyper/par/mn/loci.txt
+2026-09-16 10:01:00 [INFO] total 120 markers read from loci file
+2026-09-16 10:01:00 [INFO] total 120 markers read from loci file
+2026-09-16 10:01:12 [INFO] begain to initiate sam_mar_dict
+2026-09-16 10:01:12 [INFO] begain to initiate dicts
+2026-09-16 10:01:12 [INFO] finished to initiate assigned_reads_dict
+2026-09-16 10:01:13 [INFO] finished to initiate sam_mar_ml_dir
+2026-09-16 10:01:13 [INFO] finished to initiate sam_micro_dir
+2026-09-16 10:01:13 [INFO] finished to initiate sam_amp_dir
+2026-09-16 10:01:13 [INFO] finished to initiate dicts
+2026-09-16 10:01:13 [INFO] finished to initiate sam_mar_dict
+2026-09-16 10:01:13 [INFO] Parameters snapshot - seq2type run
+2026-09-16 10:01:13 [INFO]   analtype = snp
+2026-09-16 10:01:13 [INFO]   seqtype = pe
+2026-09-16 10:01:13 [INFO]   sexfile = 
+2026-09-16 10:01:13 [INFO]   locifile = /home/liup/project/data/smartyper/par/mn/loci.txt
+2026-09-16 10:01:13 [INFO]   inputdir = /home/liup/project/data/smartyper/par/mn/raw
+2026-09-16 10:01:13 [INFO]   outputdir = /home/liup/project/data/smartyper/par/mn/out
+2026-09-16 10:01:13 [INFO]   projectdir = 
+2026-09-16 10:01:13 [INFO]   samplefile = /home/liup/project/data/smartyper/par/mn/sample.txt
+2026-09-16 10:01:13 [INFO]   mlinputfile = 
+2026-09-16 10:01:13 [INFO]   mloutputdir = 
+2026-09-16 10:01:13 [INFO]   mlmodelinputfile = 
+2026-09-16 10:01:13 [INFO]   mlmodel = False
+2026-09-16 10:01:13 [INFO]   num_samples = 0
+2026-09-16 10:01:13 [INFO]   project_genotype_model = False
+2026-09-16 10:01:13 [INFO]   project_microtype_model = False
+2026-09-16 10:01:13 [INFO]   outputgenotypeproject = project_genotype_session.dill
+2026-09-16 10:01:13 [INFO]   outputmicrotypeproject = project_microtype_session.dill
+2026-09-16 10:01:13 [INFO]   maxMismatchesPSeq = 4
+2026-09-16 10:01:13 [INFO]   minReads4Locus = 30
+2026-09-16 10:01:13 [INFO]   minReads4Allele = 10
+2026-09-16 10:01:13 [INFO]   smProp1H = 0.8
+2026-09-16 10:01:13 [INFO]   smProp1L = 0.72
+2026-09-16 10:01:13 [INFO]   mmProp1H = 0.8
+2026-09-16 10:01:13 [INFO]   mmProp1L = 0.78
+2026-09-16 10:01:13 [INFO]   mProp2 = 0.7
+2026-09-16 10:01:13 [INFO]   maxRVs4Align = 6
+2026-09-16 10:01:13 [INFO]   maxMismatchesPSeqSex = 4
+2026-09-16 10:01:13 [INFO]   maxMismatchesRefSeqSex = 4
+2026-09-16 10:01:13 [INFO]   yxRatio = 0.0001
+2026-09-16 10:01:13 [INFO]   minReadsSexAllele = 10
+2026-09-16 10:01:13 [INFO]   minReadsSexVariant = 5
+2026-09-16 10:01:13 [INFO]   sex_analysis = False
+2026-09-16 10:01:13 [INFO]   nanopore_default = False
+2026-09-16 10:01:13 [INFO]   revcomloci = False
+2026-09-16 10:01:13 [INFO]   revcomsex = False
+2026-09-16 10:01:13 [INFO]   average_qual = 20
+2026-09-16 10:01:13 [INFO]   length_required = 30
+2026-09-16 10:01:13 [INFO]   thread = 10
+2026-09-16 10:01:13 [INFO]   cur_microhap_input_file = 
+2026-09-16 10:01:13 [INFO]   pre_microhap_input_file = 
+2026-09-16 10:01:13 [INFO]   post_microhap_output_dir = 
+2026-09-16 10:01:13 [INFO]   include_pre_mh = True
+2026-09-16 10:01:13 [INFO]   has_pre_mh = False
+2026-09-16 10:01:13 [INFO]   pro_figure = True
+2026-09-16 10:01:13 [INFO]   ml_training_ratio = 0.8
+2026-09-16 10:01:13 [INFO] seqtyper command for sample SRR10717716: seqtyper --var snp --loc /home/liup/project/data/smartyper/par/mn/loci.txt --minReads4Locus 30 --maxMismatchesPSeq 4 --thread 10 --average_qual 20 --length_required 30 --smProp1H 0.8 --smProp1L 0.72 --mmProp1H 0.8 --mmProp1L 0.78 --mProp2 0.7 --minReads4Allele 10 --maxRVs4Align 6 --prefix /home/liup/project/data/smartyper/par/mn/out/SRR10717716 --in1 /home/liup/project/data/smartyper/par/mn/raw/SRR10717716_R1.fastq.gz --in2 /home/liup/project/data/smartyper/par/mn/raw/SRR10717716_R2.fastq.gz --verbose
+2026-09-16 10:01:13 [INFO] seqtyper command for sample SRR10717717: seqtyper --var snp --loc /home/liup/project/data/smartyper/par/mn/loci.txt --minReads4Locus 30 --maxMismatchesPSeq 4 --thread 10 --average_qual 20 --length_required 30 --smProp1H 0.8 --smProp1L 0.72 --mmProp1H 0.8 --mmProp1L 0.78 --mProp2 0.7 --minReads4Allele 10 --maxRVs4Align 6 --prefix /home/liup/project/data/smartyper/par/mn/out/SRR10717717 --in1 /home/liup/project/data/smartyper/par/mn/raw/SRR10717717_R1.fastq.gz --in2 /home/liup/project/data/smartyper/par/mn/raw/SRR10717717_R2.fastq.gz --verbose
+2026-09-16 10:01:13 [INFO] starting to run seq2type
+2026-09-16 10:01:13 [INFO] Starting Seq2Type for genotyping!
+
+
+2026-09-16 10:01:13 [INFO] ---------------------------------------------------------start index: 1--------------------------------------------------
+
+2026-09-16 10:01:13 [INFO] Start to process sample: SRR10717716, 1 out of 2 samples
+
+2026-09-16 10:01:13 [INFO] Running Seq2Type for sample: SRR10717716, this is slow and please be patient!
+
+2026-09-16 10:01:14 [INFO] Reading locus file: /home/liup/project/data/smartyper/par/mn/loci.txt
+
+2026-09-16 10:01:14 [INFO] Read loci of: 120
+
+2026-09-16 10:01:14 [INFO] start to load data
+
+2026-09-16 10:01:16 [INFO] all reads loaded, start to monitor thread status
+
+2026-09-16 10:01:17 [INFO] thread 10 is processing the 20 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 6 is processing the 21 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 8 is processing the 22 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 4 is processing the 23 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 2 is processing the 24 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 3 is processing the 25 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 9 is processing the 26 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 5 is processing the 27 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 7 is processing the 28 / 352 pack
+
+2026-09-16 10:01:17 [INFO] thread 1 is processing the 29 / 352 pack
+
+2026-09-16 10:01:18 [INFO] thread 10 is processing the 30 / 352 pack
+
+2026-09-16 10:01:18 [INFO] thread 6 is processing the 31 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 3 is processing the 32 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 4 is processing the 33 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 8 is processing the 34 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 5 is processing the 35 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 9 is processing the 36 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 7 is processing the 37 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 2 is processing the 38 / 352 pack
+
+2026-09-16 10:01:19 [INFO] thread 1 is processing the 39 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 10 is processing the 40 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 6 is processing the 41 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 3 is processing the 42 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 5 is processing the 43 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 8 is processing the 44 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 2 is processing the 45 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 4 is processing the 46 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 7 is processing the 47 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 9 is processing the 48 / 352 pack
+
+2026-09-16 10:01:20 [INFO] thread 1 is processing the 49 / 352 pack
+
+2026-09-16 10:01:21 [INFO] thread 1 is processing the 50 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 10 is processing the 51 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 6 is processing the 52 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 7 is processing the 53 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 8 is processing the 54 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 3 is processing the 55 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 5 is processing the 56 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 2 is processing the 57 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 4 is processing the 58 / 352 pack
+
+2026-09-16 10:01:22 [INFO] thread 9 is processing the 59 / 352 pack
+
+2026-09-16 10:01:23 [INFO] thread 1 is processing the 60 / 352 pack
+
+2026-09-16 10:01:23 [INFO] thread 3 is processing the 61 / 352 pack
+
+2026-09-16 10:01:23 [INFO] thread 5 is processing the 62 / 352 pack
+
+2026-09-16 10:01:23 [INFO] thread 10 is processing the 63 / 352 pack
+
+2026-09-16 10:01:23 [INFO] thread 6 is processing the 64 / 352 pack
+
+2026-09-16 10:01:24 [INFO] thread 8 is processing the 65 / 352 pack
+
+2026-09-16 10:01:24 [INFO] thread 7 is processing the 66 / 352 pack
+
+2026-09-16 10:01:24 [INFO] thread 2 is processing the 67 / 352 pack
+
+2026-09-16 10:01:24 [INFO] thread 4 is processing the 68 / 352 pack
+
+2026-09-16 10:01:24 [INFO] thread 9 is processing the 69 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 1 is processing the 70 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 3 is processing the 71 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 8 is processing the 72 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 6 is processing the 73 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 10 is processing the 74 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 5 is processing the 75 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 7 is processing the 76 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 2 is processing the 77 / 352 pack
+
+2026-09-16 10:01:25 [INFO] thread 4 is processing the 78 / 352 pack
+
+2026-09-16 10:01:26 [INFO] thread 9 is processing the 79 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 3 is processing the 80 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 1 is processing the 81 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 10 is processing the 82 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 8 is processing the 83 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 6 is processing the 84 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 7 is processing the 85 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 2 is processing the 86 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 5 is processing the 87 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 4 is processing the 88 / 352 pack
+
+2026-09-16 10:01:27 [INFO] thread 9 is processing the 89 / 352 pack
+
+2026-09-16 10:01:28 [INFO] thread 3 is processing the 90 / 352 pack
+
+2026-09-16 10:01:28 [INFO] thread 1 is processing the 91 / 352 pack
+
+2026-09-16 10:01:28 [INFO] thread 6 is processing the 92 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 10 is processing the 93 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 7 is processing the 94 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 2 is processing the 95 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 5 is processing the 96 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 8 is processing the 97 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 4 is processing the 98 / 352 pack
+
+2026-09-16 10:01:29 [INFO] thread 9 is processing the 99 / 352 pack
+
+2026-09-16 10:01:30 [INFO] thread 1 is processing the 100 / 352 pack
+
+2026-09-16 10:01:30 [INFO] thread 6 is processing the 101 / 352 pack
+
+2026-09-16 10:01:30 [INFO] thread 3 is processing the 102 / 352 pack
+
+2026-09-16 10:01:30 [INFO] thread 10 is processing the 103 / 352 pack
+
+2026-09-16 10:01:30 [INFO] thread 7 is processing the 104 / 352 pack
+
+2026-09-16 10:01:30 [INFO] thread 2 is processing the 105 / 352 pack
+
+2026-09-16 10:01:31 [INFO] thread 5 is processing the 106 / 352 pack
+
+2026-09-16 10:01:31 [INFO] thread 8 is processing the 107 / 352 pack
+
+2026-09-16 10:01:31 [INFO] thread 4 is processing the 108 / 352 pack
+
+2026-09-16 10:01:31 [INFO] thread 9 is processing the 109 / 352 pack
+
+2026-09-16 10:01:32 [INFO] thread 1 is processing the 110 / 352 pack
+
+2026-09-16 10:01:32 [INFO] thread 6 is processing the 111 / 352 pack
+
+2026-09-16 10:01:32 [INFO] thread 3 is processing the 112 / 352 pack
+
+2026-09-16 10:01:32 [INFO] thread 10 is processing the 113 / 352 pack
+
+2026-09-16 10:01:32 [INFO] thread 2 is processing the 114 / 352 pack
+
+2026-09-16 10:01:33 [INFO] thread 7 is processing the 115 / 352 pack
+
+2026-09-16 10:01:33 [INFO] thread 5 is processing the 116 / 352 pack
+
+2026-09-16 10:01:33 [INFO] thread 8 is processing the 117 / 352 pack
+
+2026-09-16 10:01:33 [INFO] thread 4 is processing the 118 / 352 pack
+
+2026-09-16 10:01:33 [INFO] thread 9 is processing the 119 / 352 pack
+
+2026-09-16 10:01:34 [INFO] thread 6 is processing the 120 / 352 pack
+
+2026-09-16 10:01:34 [INFO] thread 1 is processing the 121 / 352 pack
+
+2026-09-16 10:01:34 [INFO] thread 3 is processing the 122 / 352 pack
+
+2026-09-16 10:01:34 [INFO] thread 2 is processing the 123 / 352 pack
+
+2026-09-16 10:01:34 [INFO] thread 10 is processing the 124 / 352 pack
+
+2026-09-16 10:01:35 [INFO] thread 5 is processing the 125 / 352 pack
+
+2026-09-16 10:01:35 [INFO] thread 7 is processing the 126 / 352 pack
+
+2026-09-16 10:01:35 [INFO] thread 8 is processing the 127 / 352 pack
+
+2026-09-16 10:01:35 [INFO] thread 4 is processing the 128 / 352 pack
+
+2026-09-16 10:01:35 [INFO] thread 9 is processing the 129 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 1 is processing the 130 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 6 is processing the 131 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 3 is processing the 132 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 2 is processing the 133 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 10 is processing the 134 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 7 is processing the 135 / 352 pack
+
+2026-09-16 10:01:36 [INFO] thread 5 is processing the 136 / 352 pack
+
+2026-09-16 10:01:37 [INFO] thread 8 is processing the 137 / 352 pack
+
+2026-09-16 10:01:37 [INFO] thread 4 is processing the 138 / 352 pack
+
+2026-09-16 10:01:37 [INFO] thread 9 is processing the 139 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 1 is processing the 140 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 3 is processing the 141 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 6 is processing the 142 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 2 is processing the 143 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 10 is processing the 144 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 5 is processing the 145 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 7 is processing the 146 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 8 is processing the 147 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 9 is processing the 148 / 352 pack
+
+2026-09-16 10:01:38 [INFO] thread 4 is processing the 149 / 352 pack
+
+2026-09-16 10:01:39 [INFO] thread 1 is processing the 150 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 3 is processing the 151 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 6 is processing the 152 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 2 is processing the 153 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 10 is processing the 154 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 5 is processing the 155 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 7 is processing the 156 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 8 is processing the 157 / 352 pack
+
+2026-09-16 10:01:40 [INFO] thread 9 is processing the 158 / 352 pack
+
+2026-09-16 10:01:41 [INFO] thread 4 is processing the 159 / 352 pack
+
+2026-09-16 10:01:41 [INFO] thread 1 is processing the 160 / 352 pack
+
+2026-09-16 10:01:41 [INFO] thread 3 is processing the 161 / 352 pack
+
+2026-09-16 10:01:41 [INFO] thread 6 is processing the 162 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 2 is processing the 163 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 10 is processing the 164 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 7 is processing the 165 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 8 is processing the 166 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 5 is processing the 167 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 9 is processing the 168 / 352 pack
+
+2026-09-16 10:01:42 [INFO] thread 4 is processing the 169 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 1 is processing the 170 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 2 is processing the 171 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 3 is processing the 172 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 6 is processing the 173 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 10 is processing the 174 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 7 is processing the 175 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 5 is processing the 176 / 352 pack
+
+2026-09-16 10:01:43 [INFO] thread 8 is processing the 177 / 352 pack
+
+2026-09-16 10:01:44 [INFO] thread 9 is processing the 178 / 352 pack
+
+2026-09-16 10:01:44 [INFO] thread 4 is processing the 179 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 1 is processing the 180 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 2 is processing the 181 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 3 is processing the 182 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 5 is processing the 183 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 6 is processing the 184 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 7 is processing the 185 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 10 is processing the 186 / 352 pack
+
+2026-09-16 10:01:45 [INFO] thread 8 is processing the 187 / 352 pack
+
+2026-09-16 10:01:46 [INFO] thread 4 is processing the 188 / 352 pack
+
+2026-09-16 10:01:46 [INFO] thread 9 is processing the 189 / 352 pack
+
+2026-09-16 10:01:46 [INFO] thread 2 is processing the 190 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 1 is processing the 191 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 6 is processing the 192 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 5 is processing the 193 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 3 is processing the 194 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 7 is processing the 195 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 10 is processing the 196 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 8 is processing the 197 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 9 is processing the 198 / 352 pack
+
+2026-09-16 10:01:47 [INFO] thread 4 is processing the 199 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 6 is processing the 200 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 5 is processing the 201 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 1 is processing the 202 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 2 is processing the 203 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 3 is processing the 204 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 7 is processing the 205 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 8 is processing the 206 / 352 pack
+
+2026-09-16 10:01:48 [INFO] thread 10 is processing the 207 / 352 pack
+
+2026-09-16 10:01:49 [INFO] thread 9 is processing the 208 / 352 pack
+
+2026-09-16 10:01:49 [INFO] thread 4 is processing the 209 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 1 is processing the 210 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 2 is processing the 211 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 5 is processing the 212 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 6 is processing the 213 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 3 is processing the 214 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 8 is processing the 215 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 7 is processing the 216 / 352 pack
+
+2026-09-16 10:01:50 [INFO] thread 10 is processing the 217 / 352 pack
+
+2026-09-16 10:01:51 [INFO] thread 9 is processing the 218 / 352 pack
+
+2026-09-16 10:01:51 [INFO] thread 4 is processing the 219 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 2 is processing the 220 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 1 is processing the 221 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 5 is processing the 222 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 6 is processing the 223 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 3 is processing the 224 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 7 is processing the 225 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 8 is processing the 226 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 10 is processing the 227 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 4 is processing the 228 / 352 pack
+
+2026-09-16 10:01:52 [INFO] thread 9 is processing the 229 / 352 pack
+
+2026-09-16 10:01:53 [INFO] thread 1 is processing the 230 / 352 pack
+
+2026-09-16 10:01:53 [INFO] thread 5 is processing the 231 / 352 pack
+
+2026-09-16 10:01:53 [INFO] thread 2 is processing the 232 / 352 pack
+
+2026-09-16 10:01:53 [INFO] thread 6 is processing the 233 / 352 pack
+
+2026-09-16 10:01:53 [INFO] thread 3 is processing the 234 / 352 pack
+
+2026-09-16 10:01:54 [INFO] thread 7 is processing the 235 / 352 pack
+
+2026-09-16 10:01:54 [INFO] thread 10 is processing the 236 / 352 pack
+
+2026-09-16 10:01:54 [INFO] thread 8 is processing the 237 / 352 pack
+
+2026-09-16 10:01:54 [INFO] thread 9 is processing the 238 / 352 pack
+
+2026-09-16 10:01:54 [INFO] thread 4 is processing the 239 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 1 is processing the 240 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 2 is processing the 241 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 6 is processing the 242 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 5 is processing the 243 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 3 is processing the 244 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 10 is processing the 245 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 8 is processing the 246 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 7 is processing the 247 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 9 is processing the 248 / 352 pack
+
+2026-09-16 10:01:55 [INFO] thread 4 is processing the 249 / 352 pack
+
+2026-09-16 10:01:56 [INFO] thread 5 is processing the 250 / 352 pack
+
+2026-09-16 10:01:56 [INFO] thread 6 is processing the 251 / 352 pack
+
+2026-09-16 10:01:56 [INFO] thread 1 is processing the 252 / 352 pack
+
+2026-09-16 10:01:56 [INFO] thread 2 is processing the 253 / 352 pack
+
+2026-09-16 10:01:57 [INFO] thread 3 is processing the 254 / 352 pack
+
+2026-09-16 10:01:57 [INFO] thread 8 is processing the 255 / 352 pack
+
+2026-09-16 10:01:57 [INFO] thread 10 is processing the 256 / 352 pack
+
+2026-09-16 10:01:57 [INFO] thread 9 is processing the 257 / 352 pack
+
+2026-09-16 10:01:57 [INFO] thread 7 is processing the 258 / 352 pack
+
+2026-09-16 10:01:57 [INFO] thread 4 is processing the 259 / 352 pack
+
+2026-09-16 10:01:58 [INFO] thread 5 is processing the 260 / 352 pack
+
+2026-09-16 10:01:58 [INFO] thread 6 is processing the 261 / 352 pack
+
+2026-09-16 10:01:58 [INFO] thread 2 is processing the 262 / 352 pack
+
+2026-09-16 10:01:58 [INFO] thread 1 is processing the 263 / 352 pack
+
+2026-09-16 10:01:58 [INFO] thread 3 is processing the 264 / 352 pack
+
+2026-09-16 10:01:59 [INFO] thread 8 is processing the 265 / 352 pack
+
+2026-09-16 10:01:59 [INFO] thread 10 is processing the 266 / 352 pack
+
+2026-09-16 10:01:59 [INFO] thread 7 is processing the 267 / 352 pack
+
+2026-09-16 10:01:59 [INFO] thread 9 is processing the 268 / 352 pack
+
+2026-09-16 10:01:59 [INFO] thread 4 is processing the 269 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 5 is processing the 270 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 6 is processing the 271 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 1 is processing the 272 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 2 is processing the 273 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 8 is processing the 274 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 3 is processing the 275 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 10 is processing the 276 / 352 pack
+
+2026-09-16 10:02:00 [INFO] thread 7 is processing the 277 / 352 pack
+
+2026-09-16 10:02:01 [INFO] thread 9 is processing the 278 / 352 pack
+
+2026-09-16 10:02:01 [INFO] thread 4 is processing the 279 / 352 pack
+
+2026-09-16 10:02:01 [INFO] thread 5 is processing the 280 / 352 pack
+
+2026-09-16 10:02:01 [INFO] thread 6 is processing the 281 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 2 is processing the 282 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 1 is processing the 283 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 8 is processing the 284 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 3 is processing the 285 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 10 is processing the 286 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 7 is processing the 287 / 352 pack
+
+2026-09-16 10:02:02 [INFO] thread 9 is processing the 288 / 352 pack
+
+2026-09-16 10:02:03 [INFO] thread 4 is processing the 289 / 352 pack
+
+2026-09-16 10:02:03 [INFO] thread 5 is processing the 290 / 352 pack
+
+2026-09-16 10:02:03 [INFO] thread 6 is processing the 291 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 2 is processing the 292 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 1 is processing the 293 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 8 is processing the 294 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 3 is processing the 295 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 10 is processing the 296 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 7 is processing the 297 / 352 pack
+
+2026-09-16 10:02:04 [INFO] thread 9 is processing the 298 / 352 pack
+
+2026-09-16 10:02:05 [INFO] thread 4 is processing the 299 / 352 pack
+
+2026-09-16 10:02:05 [INFO] thread 5 is processing the 300 / 352 pack
+
+2026-09-16 10:02:05 [INFO] thread 2 is processing the 301 / 352 pack
+
+2026-09-16 10:02:05 [INFO] thread 6 is processing the 302 / 352 pack
+
+2026-09-16 10:02:06 [INFO] thread 1 is processing the 303 / 352 pack
+
+2026-09-16 10:02:06 [INFO] thread 8 is processing the 304 / 352 pack
+
+2026-09-16 10:02:06 [INFO] thread 3 is processing the 305 / 352 pack
+
+2026-09-16 10:02:06 [INFO] thread 10 is processing the 306 / 352 pack
+
+2026-09-16 10:02:06 [INFO] thread 9 is processing the 307 / 352 pack
+
+2026-09-16 10:02:07 [INFO] thread 7 is processing the 308 / 352 pack
+
+2026-09-16 10:02:07 [INFO] thread 4 is processing the 309 / 352 pack
+
+2026-09-16 10:02:08 [INFO] thread 5 is processing the 310 / 352 pack
+
+2026-09-16 10:02:08 [INFO] thread 2 is processing the 311 / 352 pack
+
+2026-09-16 10:02:08 [INFO] thread 6 is processing the 312 / 352 pack
+
+2026-09-16 10:02:08 [INFO] thread 1 is processing the 313 / 352 pack
+
+2026-09-16 10:02:08 [INFO] thread 8 is processing the 314 / 352 pack
+
+2026-09-16 10:02:09 [INFO] thread 3 is processing the 315 / 352 pack
+
+2026-09-16 10:02:09 [INFO] thread 7 is processing the 316 / 352 pack
+
+2026-09-16 10:02:09 [INFO] thread 10 is processing the 317 / 352 pack
+
+2026-09-16 10:02:09 [INFO] thread 9 is processing the 318 / 352 pack
+
+2026-09-16 10:02:09 [INFO] thread 4 is processing the 319 / 352 pack
+
+2026-09-16 10:02:10 [INFO] thread 5 is processing the 320 / 352 pack
+
+2026-09-16 10:02:10 [INFO] thread 6 is processing the 321 / 352 pack
+
+2026-09-16 10:02:10 [INFO] thread 1 is processing the 322 / 352 pack
+
+2026-09-16 10:02:10 [INFO] thread 2 is processing the 323 / 352 pack
+
+2026-09-16 10:02:10 [INFO] thread 8 is processing the 324 / 352 pack
+
+2026-09-16 10:02:11 [INFO] thread 10 is processing the 325 / 352 pack
+
+2026-09-16 10:02:11 [INFO] thread 3 is processing the 326 / 352 pack
+
+2026-09-16 10:02:11 [INFO] thread 7 is processing the 327 / 352 pack
+
+2026-09-16 10:02:11 [INFO] thread 9 is processing the 328 / 352 pack
+
+2026-09-16 10:02:11 [INFO] thread 4 is processing the 329 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 5 is processing the 330 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 6 is processing the 331 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 2 is processing the 332 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 1 is processing the 333 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 8 is processing the 334 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 7 is processing the 335 / 352 pack
+
+2026-09-16 10:02:12 [INFO] thread 10 is processing the 336 / 352 pack
+
+2026-09-16 10:02:13 [INFO] thread 3 is processing the 337 / 352 pack
+
+2026-09-16 10:02:13 [INFO] thread 9 is processing the 338 / 352 pack
+
+2026-09-16 10:02:13 [INFO] thread 4 is processing the 339 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 5 is processing the 340 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 6 is processing the 341 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 2 is processing the 342 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 1 is processing the 343 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 8 is processing the 344 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 10 is processing the 345 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 3 is processing the 346 / 352 pack
+
+2026-09-16 10:02:14 [INFO] thread 7 is processing the 347 / 352 pack
+
+2026-09-16 10:02:15 [INFO] thread 9 is processing the 348 / 352 pack
+
+2026-09-16 10:02:15 [INFO] thread 4 is processing the 349 / 352 pack
+
+2026-09-16 10:02:16 [INFO] thread 5 is processing the 350 / 352 pack
+
+2026-09-16 10:02:16 [INFO] thread 2 is processing the 351 / 352 pack
+
+2026-09-16 10:02:16 [INFO] thread 1 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 1 finished
+
+2026-09-16 10:02:16 [INFO] thread 6 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 6 finished
+
+2026-09-16 10:02:16 [INFO] thread 8 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 8 finished
+
+2026-09-16 10:02:16 [INFO] thread 10 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 10 finished
+
+2026-09-16 10:02:16 [INFO] thread 3 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 3 finished
+
+2026-09-16 10:02:16 [INFO] thread 7 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 7 finished
+
+2026-09-16 10:02:16 [INFO] thread 9 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 9 finished
+
+2026-09-16 10:02:16 [INFO] thread 4 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 4 finished
+
+2026-09-16 10:02:16 [INFO] thread 2 data processing completed
+
+2026-09-16 10:02:16 [INFO] thread 2 finished
+
+2026-09-16 10:02:17 [INFO] thread 5 data processing completed
+
+2026-09-16 10:02:17 [INFO] thread 5 finished
+
+2026-09-16 10:02:17 [INFO] /home/liup/project/data/smartyper/par/mn/out/SRR10717716_output_reads.fastq.gz writer finished
+
+2026-09-16 10:02:17 [INFO] start to generate reports
+
+2026-09-16 10:02:17 [INFO] starting to read geno output file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] starting to read ml output file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] starting to read ml file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] finished to read ml file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] starting to read microhap output file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] starting to read sample SRR10717716 mh file
+2026-09-16 10:02:17 [INFO] finished to read sample SRR10717716 mh file
+2026-09-16 10:02:17 [INFO] starting to read amplicon output file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] starting to read sample SRR10717716 amplicon file
+2026-09-16 10:02:17 [INFO] Starting to write SNV table!
+
+2026-09-16 10:02:17 [INFO] Starting to write haplotype table!
+
+2026-09-16 10:02:17 [INFO] Starting to write ML haplotype table!
+
+2026-09-16 10:02:17 [INFO] Starting to write amplicon table!
+
+2026-09-16 10:02:17 [INFO] Starting to write error rate table!
+
+2026-09-16 10:02:17 [INFO] Finished writing genotype table!
+
+2026-09-16 10:02:17 [INFO] Finished writing ML haplotype table!
+
+2026-09-16 10:02:17 [INFO] Finished writing amplicon table!
+
+2026-09-16 10:02:17 [INFO] Finished writing error rate table!
+
+2026-09-16 10:02:17 [INFO] Duplication rate: 22.73%
+
+2026-09-16 10:02:17 [INFO] Insert size peak (evaluated by paired-end reads): 200
+
+2026-09-16 10:02:17 [INFO] finished to read sample SRR10717716 amplicon file
+2026-09-16 10:02:17 [INFO] starting to read snp file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] starting to read snp file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] finished to read snp file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] finished to read geno output file for sample: SRR10717716
+2026-09-16 10:02:17 [INFO] Finished Json report
+
+2026-09-16 10:02:17 [INFO] Finished Html report
+
+2026-09-16 10:02:17 [INFO] JSON report: /home/liup/project/data/smartyper/par/mn/out/SRR10717716.json
+
+2026-09-16 10:02:17 [INFO] HTML report: /home/liup/project/data/smartyper/par/mn/out/SRR10717716.html
+
+2026-09-16 10:02:17 [INFO] seqtyper --var snp --loc /home/liup/project/data/smartyper/par/mn/loci.txt --minReads4Locus 30 --maxMismatchesPSeq 4 --thread 10 --average_qual 20 --length_required 30 --smProp1H 0.8 --smProp1L 0.72 --mmProp1H 0.8 --mmProp1L 0.78 --mProp2 0.7 --minReads4Allele 10 --maxRVs4Align 6 --prefix /home/liup/project/data/smartyper/par/mn/out/SRR10717716 --in1 /home/liup/project/data/smartyper/par/mn/raw/SRR10717716_R1.fastq.gz --in2 /home/liup/project/data/smartyper/par/mn/raw/SRR10717716_R2.fastq.gz --verbose 
+
+2026-09-16 10:02:17 [INFO] seq2typer v2.1.0.0, time used: 64 seconds
+
+2026-09-16 10:02:17 [INFO] seq2typer v2.1.0.0, time used: 64 seconds
+
+2026-09-16 10:02:17 [INFO] reading sample SRR10717716 outputs
+
+2026-09-16 10:02:17 [INFO] reading sample SRR10717716 genotype done!
+
+2026-09-16 10:02:18 [INFO] reading sample SRR10717716 reads done!
+
+2026-09-16 10:02:18 [INFO] reading sample SRR10717716 jason file done!
+
+2026-09-16 10:02:19 [INFO] ploting sample SRR10717716 reads quality done!
+
+2026-09-16 10:02:19 [INFO] Finish the processing sample: SRR10717716, 1 out of 2 samples
+
+2026-09-16 10:02:19 [INFO] ---------------------------------------------------------end index: 1----------------------------------------------------
+
+
+
+2026-09-16 10:02:19 [INFO] ---------------------------------------------------------start index: 2--------------------------------------------------
+
+2026-09-16 10:02:19 [INFO] Start to process sample: SRR10717717, 2 out of 2 samples
+
+2026-09-16 10:02:19 [INFO] Running Seq2Type for sample: SRR10717717, this is slow and please be patient!
+
+2026-09-16 10:02:19 [INFO] Reading locus file: /home/liup/project/data/smartyper/par/mn/loci.txt
+
+2026-09-16 10:02:19 [INFO] Read loci of: 120
+
+2026-09-16 10:02:19 [INFO] start to load data
+
+2026-09-16 10:02:22 [INFO] all reads loaded, start to monitor thread status
+
+2026-09-16 10:02:23 [INFO] thread 3 is processing the 20 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 5 is processing the 21 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 6 is processing the 22 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 7 is processing the 23 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 9 is processing the 24 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 4 is processing the 25 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 1 is processing the 26 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 2 is processing the 27 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 8 is processing the 28 / 422 pack
+
+2026-09-16 10:02:23 [INFO] thread 10 is processing the 29 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 7 is processing the 30 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 3 is processing the 31 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 5 is processing the 32 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 6 is processing the 33 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 9 is processing the 34 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 1 is processing the 35 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 2 is processing the 36 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 4 is processing the 37 / 422 pack
+
+2026-09-16 10:02:25 [INFO] thread 8 is processing the 38 / 422 pack
+
+2026-09-16 10:02:26 [INFO] thread 10 is processing the 39 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 7 is processing the 40 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 5 is processing the 41 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 3 is processing the 42 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 9 is processing the 43 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 1 is processing the 44 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 6 is processing the 45 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 2 is processing the 46 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 4 is processing the 47 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 8 is processing the 48 / 422 pack
+
+2026-09-16 10:02:27 [INFO] thread 10 is processing the 49 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 7 is processing the 50 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 3 is processing the 51 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 5 is processing the 52 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 9 is processing the 53 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 6 is processing the 54 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 1 is processing the 55 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 2 is processing the 56 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 8 is processing the 57 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 4 is processing the 58 / 422 pack
+
+2026-09-16 10:02:29 [INFO] thread 10 is processing the 59 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 10 is processing the 60 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 3 is processing the 61 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 7 is processing the 62 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 9 is processing the 63 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 5 is processing the 64 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 6 is processing the 65 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 8 is processing the 66 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 2 is processing the 67 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 4 is processing the 68 / 422 pack
+
+2026-09-16 10:02:31 [INFO] thread 1 is processing the 69 / 422 pack
+
+2026-09-16 10:02:32 [INFO] thread 10 is processing the 70 / 422 pack
+
+2026-09-16 10:02:32 [INFO] thread 3 is processing the 71 / 422 pack
+
+2026-09-16 10:02:32 [INFO] thread 7 is processing the 72 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 4 is processing the 73 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 6 is processing the 74 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 2 is processing the 75 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 9 is processing the 76 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 5 is processing the 77 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 8 is processing the 78 / 422 pack
+
+2026-09-16 10:02:33 [INFO] thread 1 is processing the 79 / 422 pack
+
+2026-09-16 10:02:34 [INFO] thread 10 is processing the 80 / 422 pack
+
+2026-09-16 10:02:34 [INFO] thread 3 is processing the 81 / 422 pack
+
+2026-09-16 10:02:34 [INFO] thread 7 is processing the 82 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 4 is processing the 83 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 2 is processing the 84 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 8 is processing the 85 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 5 is processing the 86 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 6 is processing the 87 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 9 is processing the 88 / 422 pack
+
+2026-09-16 10:02:35 [INFO] thread 1 is processing the 89 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 10 is processing the 90 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 3 is processing the 91 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 7 is processing the 92 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 6 is processing the 93 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 8 is processing the 94 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 2 is processing the 95 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 5 is processing the 96 / 422 pack
+
+2026-09-16 10:02:36 [INFO] thread 4 is processing the 97 / 422 pack
+
+2026-09-16 10:02:37 [INFO] thread 1 is processing the 98 / 422 pack
+
+2026-09-16 10:02:37 [INFO] thread 9 is processing the 99 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 10 is processing the 100 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 3 is processing the 101 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 6 is processing the 102 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 7 is processing the 103 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 8 is processing the 104 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 4 is processing the 105 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 2 is processing the 106 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 5 is processing the 107 / 422 pack
+
+2026-09-16 10:02:38 [INFO] thread 1 is processing the 108 / 422 pack
+
+2026-09-16 10:02:39 [INFO] thread 9 is processing the 109 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 3 is processing the 110 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 6 is processing the 111 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 10 is processing the 112 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 7 is processing the 113 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 2 is processing the 114 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 4 is processing the 115 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 5 is processing the 116 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 8 is processing the 117 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 1 is processing the 118 / 422 pack
+
+2026-09-16 10:02:40 [INFO] thread 9 is processing the 119 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 3 is processing the 120 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 6 is processing the 121 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 2 is processing the 122 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 7 is processing the 123 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 8 is processing the 124 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 4 is processing the 125 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 5 is processing the 126 / 422 pack
+
+2026-09-16 10:02:42 [INFO] thread 10 is processing the 127 / 422 pack
+
+2026-09-16 10:02:43 [INFO] thread 1 is processing the 128 / 422 pack
+
+2026-09-16 10:02:43 [INFO] thread 9 is processing the 129 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 3 is processing the 130 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 6 is processing the 131 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 7 is processing the 132 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 2 is processing the 133 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 4 is processing the 134 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 10 is processing the 135 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 5 is processing the 136 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 8 is processing the 137 / 422 pack
+
+2026-09-16 10:02:44 [INFO] thread 9 is processing the 138 / 422 pack
+
+2026-09-16 10:02:45 [INFO] thread 1 is processing the 139 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 3 is processing the 140 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 6 is processing the 141 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 7 is processing the 142 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 8 is processing the 143 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 2 is processing the 144 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 5 is processing the 145 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 4 is processing the 146 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 10 is processing the 147 / 422 pack
+
+2026-09-16 10:02:46 [INFO] thread 9 is processing the 148 / 422 pack
+
+2026-09-16 10:02:47 [INFO] thread 1 is processing the 149 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 3 is processing the 150 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 6 is processing the 151 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 7 is processing the 152 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 2 is processing the 153 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 5 is processing the 154 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 8 is processing the 155 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 4 is processing the 156 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 10 is processing the 157 / 422 pack
+
+2026-09-16 10:02:48 [INFO] thread 9 is processing the 158 / 422 pack
+
+2026-09-16 10:02:49 [INFO] thread 1 is processing the 159 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 3 is processing the 160 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 6 is processing the 161 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 7 is processing the 162 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 2 is processing the 163 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 8 is processing the 164 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 5 is processing the 165 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 4 is processing the 166 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 10 is processing the 167 / 422 pack
+
+2026-09-16 10:02:50 [INFO] thread 9 is processing the 168 / 422 pack
+
+2026-09-16 10:02:51 [INFO] thread 1 is processing the 169 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 3 is processing the 170 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 2 is processing the 171 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 6 is processing the 172 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 7 is processing the 173 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 8 is processing the 174 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 4 is processing the 175 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 5 is processing the 176 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 10 is processing the 177 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 9 is processing the 178 / 422 pack
+
+2026-09-16 10:02:52 [INFO] thread 1 is processing the 179 / 422 pack
+
+2026-09-16 10:02:53 [INFO] thread 3 is processing the 180 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 6 is processing the 181 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 2 is processing the 182 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 8 is processing the 183 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 7 is processing the 184 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 4 is processing the 185 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 5 is processing the 186 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 10 is processing the 187 / 422 pack
+
+2026-09-16 10:02:54 [INFO] thread 9 is processing the 188 / 422 pack
+
+2026-09-16 10:02:55 [INFO] thread 1 is processing the 189 / 422 pack
+
+2026-09-16 10:02:55 [INFO] thread 3 is processing the 190 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 2 is processing the 191 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 6 is processing the 192 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 7 is processing the 193 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 8 is processing the 194 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 4 is processing the 195 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 5 is processing the 196 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 10 is processing the 197 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 9 is processing the 198 / 422 pack
+
+2026-09-16 10:02:56 [INFO] thread 1 is processing the 199 / 422 pack
+
+2026-09-16 10:02:57 [INFO] thread 3 is processing the 200 / 422 pack
+
+2026-09-16 10:02:57 [INFO] thread 6 is processing the 201 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 2 is processing the 202 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 7 is processing the 203 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 4 is processing the 204 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 8 is processing the 205 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 5 is processing the 206 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 10 is processing the 207 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 9 is processing the 208 / 422 pack
+
+2026-09-16 10:02:58 [INFO] thread 1 is processing the 209 / 422 pack
+
+2026-09-16 10:02:59 [INFO] thread 3 is processing the 210 / 422 pack
+
+2026-09-16 10:02:59 [INFO] thread 6 is processing the 211 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 2 is processing the 212 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 4 is processing the 213 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 8 is processing the 214 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 7 is processing the 215 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 5 is processing the 216 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 10 is processing the 217 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 1 is processing the 218 / 422 pack
+
+2026-09-16 10:03:00 [INFO] thread 9 is processing the 219 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 3 is processing the 220 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 8 is processing the 221 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 6 is processing the 222 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 2 is processing the 223 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 7 is processing the 224 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 4 is processing the 225 / 422 pack
+
+2026-09-16 10:03:01 [INFO] thread 5 is processing the 226 / 422 pack
+
+2026-09-16 10:03:02 [INFO] thread 10 is processing the 227 / 422 pack
+
+2026-09-16 10:03:02 [INFO] thread 1 is processing the 228 / 422 pack
+
+2026-09-16 10:03:02 [INFO] thread 9 is processing the 229 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 3 is processing the 230 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 2 is processing the 231 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 8 is processing the 232 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 6 is processing the 233 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 7 is processing the 234 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 4 is processing the 235 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 10 is processing the 236 / 422 pack
+
+2026-09-16 10:03:03 [INFO] thread 5 is processing the 237 / 422 pack
+
+2026-09-16 10:03:04 [INFO] thread 1 is processing the 238 / 422 pack
+
+2026-09-16 10:03:04 [INFO] thread 9 is processing the 239 / 422 pack
+
+2026-09-16 10:03:04 [INFO] thread 3 is processing the 240 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 2 is processing the 241 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 6 is processing the 242 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 8 is processing the 243 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 7 is processing the 244 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 4 is processing the 245 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 10 is processing the 246 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 5 is processing the 247 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 1 is processing the 248 / 422 pack
+
+2026-09-16 10:03:05 [INFO] thread 9 is processing the 249 / 422 pack
+
+2026-09-16 10:03:06 [INFO] thread 3 is processing the 250 / 422 pack
+
+2026-09-16 10:03:06 [INFO] thread 2 is processing the 251 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 8 is processing the 252 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 6 is processing the 253 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 7 is processing the 254 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 4 is processing the 255 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 5 is processing the 256 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 10 is processing the 257 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 1 is processing the 258 / 422 pack
+
+2026-09-16 10:03:07 [INFO] thread 9 is processing the 259 / 422 pack
+
+2026-09-16 10:03:08 [INFO] thread 3 is processing the 260 / 422 pack
+
+2026-09-16 10:03:08 [INFO] thread 2 is processing the 261 / 422 pack
+
+2026-09-16 10:03:08 [INFO] thread 8 is processing the 262 / 422 pack
+
+2026-09-16 10:03:08 [INFO] thread 6 is processing the 263 / 422 pack
+
+2026-09-16 10:03:09 [INFO] thread 4 is processing the 264 / 422 pack
+
+2026-09-16 10:03:09 [INFO] thread 5 is processing the 265 / 422 pack
+
+2026-09-16 10:03:09 [INFO] thread 7 is processing the 266 / 422 pack
+
+2026-09-16 10:03:09 [INFO] thread 10 is processing the 267 / 422 pack
+
+2026-09-16 10:03:09 [INFO] thread 1 is processing the 268 / 422 pack
+
+2026-09-16 10:03:10 [INFO] thread 9 is processing the 269 / 422 pack
+
+2026-09-16 10:03:10 [INFO] thread 3 is processing the 270 / 422 pack
+
+2026-09-16 10:03:10 [INFO] thread 2 is processing the 271 / 422 pack
+
+2026-09-16 10:03:11 [INFO] thread 6 is processing the 272 / 422 pack
+
+2026-09-16 10:03:11 [INFO] thread 4 is processing the 273 / 422 pack
+
+2026-09-16 10:03:11 [INFO] thread 5 is processing the 274 / 422 pack
+
+2026-09-16 10:03:11 [INFO] thread 8 is processing the 275 / 422 pack
+
+2026-09-16 10:03:11 [INFO] thread 7 is processing the 276 / 422 pack
+
+2026-09-16 10:03:11 [INFO] thread 10 is processing the 277 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 1 is processing the 278 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 9 is processing the 279 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 3 is processing the 280 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 2 is processing the 281 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 8 is processing the 282 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 4 is processing the 283 / 422 pack
+
+2026-09-16 10:03:12 [INFO] thread 6 is processing the 284 / 422 pack
+
+2026-09-16 10:03:13 [INFO] thread 5 is processing the 285 / 422 pack
+
+2026-09-16 10:03:13 [INFO] thread 7 is processing the 286 / 422 pack
+
+2026-09-16 10:03:13 [INFO] thread 10 is processing the 287 / 422 pack
+
+2026-09-16 10:03:13 [INFO] thread 1 is processing the 288 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 9 is processing the 289 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 3 is processing the 290 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 2 is processing the 291 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 8 is processing the 292 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 4 is processing the 293 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 6 is processing the 294 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 5 is processing the 295 / 422 pack
+
+2026-09-16 10:03:14 [INFO] thread 7 is processing the 296 / 422 pack
+
+2026-09-16 10:03:15 [INFO] thread 10 is processing the 297 / 422 pack
+
+2026-09-16 10:03:15 [INFO] thread 1 is processing the 298 / 422 pack
+
+2026-09-16 10:03:15 [INFO] thread 9 is processing the 299 / 422 pack
+
+2026-09-16 10:03:15 [INFO] thread 3 is processing the 300 / 422 pack
+
+2026-09-16 10:03:16 [INFO] thread 2 is processing the 301 / 422 pack
+
+2026-09-16 10:03:16 [INFO] thread 8 is processing the 302 / 422 pack
+
+2026-09-16 10:03:16 [INFO] thread 4 is processing the 303 / 422 pack
+
+2026-09-16 10:03:16 [INFO] thread 5 is processing the 304 / 422 pack
+
+2026-09-16 10:03:16 [INFO] thread 6 is processing the 305 / 422 pack
+
+2026-09-16 10:03:16 [INFO] thread 7 is processing the 306 / 422 pack
+
+2026-09-16 10:03:17 [INFO] thread 1 is processing the 307 / 422 pack
+
+2026-09-16 10:03:17 [INFO] thread 10 is processing the 308 / 422 pack
+
+2026-09-16 10:03:17 [INFO] thread 9 is processing the 309 / 422 pack
+
+2026-09-16 10:03:17 [INFO] thread 3 is processing the 310 / 422 pack
+
+2026-09-16 10:03:17 [INFO] thread 2 is processing the 311 / 422 pack
+
+2026-09-16 10:03:17 [INFO] thread 8 is processing the 312 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 4 is processing the 313 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 6 is processing the 314 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 5 is processing the 315 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 7 is processing the 316 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 1 is processing the 317 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 10 is processing the 318 / 422 pack
+
+2026-09-16 10:03:18 [INFO] thread 9 is processing the 319 / 422 pack
+
+2026-09-16 10:03:19 [INFO] thread 3 is processing the 320 / 422 pack
+
+2026-09-16 10:03:19 [INFO] thread 2 is processing the 321 / 422 pack
+
+2026-09-16 10:03:19 [INFO] thread 8 is processing the 322 / 422 pack
+
+2026-09-16 10:03:19 [INFO] thread 4 is processing the 323 / 422 pack
+
+2026-09-16 10:03:20 [INFO] thread 6 is processing the 324 / 422 pack
+
+2026-09-16 10:03:20 [INFO] thread 5 is processing the 325 / 422 pack
+
+2026-09-16 10:03:20 [INFO] thread 7 is processing the 326 / 422 pack
+
+2026-09-16 10:03:20 [INFO] thread 1 is processing the 327 / 422 pack
+
+2026-09-16 10:03:20 [INFO] thread 10 is processing the 328 / 422 pack
+
+2026-09-16 10:03:20 [INFO] thread 9 is processing the 329 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 3 is processing the 330 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 2 is processing the 331 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 4 is processing the 332 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 6 is processing the 333 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 8 is processing the 334 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 5 is processing the 335 / 422 pack
+
+2026-09-16 10:03:21 [INFO] thread 7 is processing the 336 / 422 pack
+
+2026-09-16 10:03:22 [INFO] thread 10 is processing the 337 / 422 pack
+
+2026-09-16 10:03:22 [INFO] thread 1 is processing the 338 / 422 pack
+
+2026-09-16 10:03:22 [INFO] thread 9 is processing the 339 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 3 is processing the 340 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 2 is processing the 341 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 6 is processing the 342 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 4 is processing the 343 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 8 is processing the 344 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 5 is processing the 345 / 422 pack
+
+2026-09-16 10:03:23 [INFO] thread 7 is processing the 346 / 422 pack
+
+2026-09-16 10:03:24 [INFO] thread 10 is processing the 347 / 422 pack
+
+2026-09-16 10:03:24 [INFO] thread 1 is processing the 348 / 422 pack
+
+2026-09-16 10:03:24 [INFO] thread 9 is processing the 349 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 3 is processing the 350 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 2 is processing the 351 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 6 is processing the 352 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 4 is processing the 353 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 5 is processing the 354 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 8 is processing the 355 / 422 pack
+
+2026-09-16 10:03:25 [INFO] thread 7 is processing the 356 / 422 pack
+
+2026-09-16 10:03:26 [INFO] thread 10 is processing the 357 / 422 pack
+
+2026-09-16 10:03:26 [INFO] thread 1 is processing the 358 / 422 pack
+
+2026-09-16 10:03:26 [INFO] thread 9 is processing the 359 / 422 pack
+
+2026-09-16 10:03:26 [INFO] thread 3 is processing the 360 / 422 pack
+
+2026-09-16 10:03:26 [INFO] thread 2 is processing the 361 / 422 pack
+
+2026-09-16 10:03:27 [INFO] thread 6 is processing the 362 / 422 pack
+
+2026-09-16 10:03:27 [INFO] thread 4 is processing the 363 / 422 pack
+
+2026-09-16 10:03:27 [INFO] thread 5 is processing the 364 / 422 pack
+
+2026-09-16 10:03:27 [INFO] thread 8 is processing the 365 / 422 pack
+
+2026-09-16 10:03:27 [INFO] thread 7 is processing the 366 / 422 pack
+
+2026-09-16 10:03:28 [INFO] thread 1 is processing the 367 / 422 pack
+
+2026-09-16 10:03:28 [INFO] thread 10 is processing the 368 / 422 pack
+
+2026-09-16 10:03:28 [INFO] thread 9 is processing the 369 / 422 pack
+
+2026-09-16 10:03:28 [INFO] thread 3 is processing the 370 / 422 pack
+
+2026-09-16 10:03:28 [INFO] thread 2 is processing the 371 / 422 pack
+
+2026-09-16 10:03:29 [INFO] thread 6 is processing the 372 / 422 pack
+
+2026-09-16 10:03:29 [INFO] thread 4 is processing the 373 / 422 pack
+
+2026-09-16 10:03:29 [INFO] thread 5 is processing the 374 / 422 pack
+
+2026-09-16 10:03:29 [INFO] thread 8 is processing the 375 / 422 pack
+
+2026-09-16 10:03:29 [INFO] thread 7 is processing the 376 / 422 pack
+
+2026-09-16 10:03:30 [INFO] thread 1 is processing the 377 / 422 pack
+
+2026-09-16 10:03:30 [INFO] thread 10 is processing the 378 / 422 pack
+
+2026-09-16 10:03:30 [INFO] thread 9 is processing the 379 / 422 pack
+
+2026-09-16 10:03:30 [INFO] thread 3 is processing the 380 / 422 pack
+
+2026-09-16 10:03:30 [INFO] thread 2 is processing the 381 / 422 pack
+
+2026-09-16 10:03:31 [INFO] thread 6 is processing the 382 / 422 pack
+
+2026-09-16 10:03:31 [INFO] thread 4 is processing the 383 / 422 pack
+
+2026-09-16 10:03:31 [INFO] thread 5 is processing the 384 / 422 pack
+
+2026-09-16 10:03:31 [INFO] thread 7 is processing the 385 / 422 pack
+
+2026-09-16 10:03:31 [INFO] thread 8 is processing the 386 / 422 pack
+
+2026-09-16 10:03:32 [INFO] thread 1 is processing the 387 / 422 pack
+
+2026-09-16 10:03:32 [INFO] thread 10 is processing the 388 / 422 pack
+
+2026-09-16 10:03:32 [INFO] thread 2 is processing the 389 / 422 pack
+
+2026-09-16 10:03:32 [INFO] thread 9 is processing the 390 / 422 pack
+
+2026-09-16 10:03:32 [INFO] thread 3 is processing the 391 / 422 pack
+
+2026-09-16 10:03:32 [INFO] thread 6 is processing the 392 / 422 pack
+
+2026-09-16 10:03:33 [INFO] thread 4 is processing the 393 / 422 pack
+
+2026-09-16 10:03:33 [INFO] thread 5 is processing the 394 / 422 pack
+
+2026-09-16 10:03:33 [INFO] thread 7 is processing the 395 / 422 pack
+
+2026-09-16 10:03:33 [INFO] thread 8 is processing the 396 / 422 pack
+
+2026-09-16 10:03:33 [INFO] thread 1 is processing the 397 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 10 is processing the 398 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 2 is processing the 399 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 9 is processing the 400 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 3 is processing the 401 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 6 is processing the 402 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 4 is processing the 403 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 5 is processing the 404 / 422 pack
+
+2026-09-16 10:03:34 [INFO] thread 7 is processing the 405 / 422 pack
+
+2026-09-16 10:03:35 [INFO] thread 8 is processing the 406 / 422 pack
+
+2026-09-16 10:03:35 [INFO] thread 1 is processing the 407 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 2 is processing the 408 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 10 is processing the 409 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 9 is processing the 410 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 3 is processing the 411 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 6 is processing the 412 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 4 is processing the 413 / 422 pack
+
+2026-09-16 10:03:36 [INFO] thread 5 is processing the 414 / 422 pack
+
+2026-09-16 10:03:37 [INFO] thread 7 is processing the 415 / 422 pack
+
+2026-09-16 10:03:37 [INFO] thread 8 is processing the 416 / 422 pack
+
+2026-09-16 10:03:37 [INFO] thread 1 is processing the 417 / 422 pack
+
+2026-09-16 10:03:38 [INFO] thread 2 is processing the 418 / 422 pack
+
+2026-09-16 10:03:38 [INFO] thread 10 is processing the 419 / 422 pack
+
+2026-09-16 10:03:38 [INFO] thread 3 is processing the 420 / 422 pack
+
+2026-09-16 10:03:38 [INFO] thread 9 is processing the 421 / 422 pack
+
+2026-09-16 10:03:38 [INFO] thread 6 data processing completed
+
+2026-09-16 10:03:38 [INFO] thread 6 finished
+
+2026-09-16 10:03:38 [INFO] thread 4 data processing completed
+
+2026-09-16 10:03:38 [INFO] thread 4 finished
+
+2026-09-16 10:03:38 [INFO] thread 9 data processing completed
+
+2026-09-16 10:03:38 [INFO] thread 9 finished
+
+2026-09-16 10:03:38 [INFO] thread 5 data processing completed
+
+2026-09-16 10:03:38 [INFO] thread 5 finished
+
+2026-09-16 10:03:39 [INFO] thread 7 data processing completed
+
+2026-09-16 10:03:39 [INFO] thread 7 finished
+
+2026-09-16 10:03:39 [INFO] thread 8 data processing completed
+
+2026-09-16 10:03:39 [INFO] thread 8 finished
+
+2026-09-16 10:03:39 [INFO] thread 1 data processing completed
+
+2026-09-16 10:03:39 [INFO] thread 1 finished
+
+2026-09-16 10:03:39 [INFO] thread 2 data processing completed
+
+2026-09-16 10:03:39 [INFO] thread 2 finished
+
+2026-09-16 10:03:39 [INFO] thread 10 data processing completed
+
+2026-09-16 10:03:39 [INFO] thread 10 finished
+
+2026-09-16 10:03:39 [INFO] thread 3 data processing completed
+
+2026-09-16 10:03:39 [INFO] thread 3 finished
+
+2026-09-16 10:03:39 [INFO] /home/liup/project/data/smartyper/par/mn/out/SRR10717717_output_reads.fastq.gz writer finished
+
+2026-09-16 10:03:39 [INFO] starting to read geno output file for sample: SRR10717717
+2026-09-16 10:03:39 [INFO] starting to read ml output file for sample: SRR10717717
+2026-09-16 10:03:39 [INFO] starting to read ml file for sample: SRR10717717
+2026-09-16 10:03:39 [INFO] finished to read ml file for sample: SRR10717717
+2026-09-16 10:03:39 [INFO] starting to read microhap output file for sample: SRR10717717
+2026-09-16 10:03:39 [INFO] starting to read sample SRR10717717 mh file
+2026-09-16 10:03:40 [INFO] finished to read sample SRR10717717 mh file
+2026-09-16 10:03:40 [INFO] starting to read amplicon output file for sample: SRR10717717
+2026-09-16 10:03:40 [INFO] starting to read sample SRR10717717 amplicon file
+2026-09-16 10:03:40 [INFO] start to generate reports
+
+2026-09-16 10:03:40 [INFO] Starting to write SNV table!
+
+2026-09-16 10:03:40 [INFO] Starting to write haplotype table!
+
+2026-09-16 10:03:40 [INFO] Starting to write ML haplotype table!
+
+2026-09-16 10:03:40 [INFO] Starting to write amplicon table!
+
+2026-09-16 10:03:40 [INFO] Starting to write error rate table!
+
+2026-09-16 10:03:40 [INFO] finished to read sample SRR10717717 amplicon file
+2026-09-16 10:03:40 [INFO] starting to read snp file for sample: SRR10717717
+2026-09-16 10:03:40 [INFO] starting to read snp file for sample: SRR10717717
+2026-09-16 10:03:40 [INFO] finished to read snp file for sample: SRR10717717
+2026-09-16 10:03:40 [INFO] finished to read geno output file for sample: SRR10717717
+2026-09-16 10:03:40 [INFO] Finished writing genotype table!
+
+2026-09-16 10:03:40 [INFO] Finished writing ML haplotype table!
+
+2026-09-16 10:03:40 [INFO] Finished writing amplicon table!
+
+2026-09-16 10:03:40 [INFO] Finished writing error rate table!
+
+2026-09-16 10:03:40 [INFO] Duplication rate: 22.1363%
+
+2026-09-16 10:03:40 [INFO] Insert size peak (evaluated by paired-end reads): 203
+
+2026-09-16 10:03:40 [INFO] Finished Json report
+
+2026-09-16 10:03:40 [INFO] Finished Html report
+
+2026-09-16 10:03:40 [INFO] JSON report: /home/liup/project/data/smartyper/par/mn/out/SRR10717717.json
+
+2026-09-16 10:03:40 [INFO] HTML report: /home/liup/project/data/smartyper/par/mn/out/SRR10717717.html
+
+2026-09-16 10:03:40 [INFO] seqtyper --var snp --loc /home/liup/project/data/smartyper/par/mn/loci.txt --minReads4Locus 30 --maxMismatchesPSeq 4 --thread 10 --average_qual 20 --length_required 30 --smProp1H 0.8 --smProp1L 0.72 --mmProp1H 0.8 --mmProp1L 0.78 --mProp2 0.7 --minReads4Allele 10 --maxRVs4Align 6 --prefix /home/liup/project/data/smartyper/par/mn/out/SRR10717717 --in1 /home/liup/project/data/smartyper/par/mn/raw/SRR10717717_R1.fastq.gz --in2 /home/liup/project/data/smartyper/par/mn/raw/SRR10717717_R2.fastq.gz --verbose 
+
+2026-09-16 10:03:40 [INFO] seq2typer v2.1.0.0, time used: 81 seconds
+
+2026-09-16 10:03:40 [INFO] seq2typer v2.1.0.0, time used: 81 seconds
+
+2026-09-16 10:03:40 [INFO] reading sample SRR10717717 outputs
+
+2026-09-16 10:03:40 [INFO] reading sample SRR10717717 genotype done!
+
+2026-09-16 10:03:41 [INFO] reading sample SRR10717717 reads done!
+
+2026-09-16 10:03:41 [INFO] reading sample SRR10717717 jason file done!
+
+2026-09-16 10:03:41 [INFO] starting to produce sample quality fig
+2026-09-16 10:03:41 [INFO] ploting sample SRR10717717 reads quality done!
+
+2026-09-16 10:03:41 [INFO] Finish the processing sample: SRR10717717, 2 out of 2 samples
+
+2026-09-16 10:03:41 [INFO] ---------------------------------------------------------end index: 2----------------------------------------------------
+
+
+
+2026-09-16 10:03:41 [INFO] starting to generate all sample figures
+
+2026-09-16 10:03:41 [INFO] starting to generate quality fig for all samples with 10 threads
+
+2026-09-16 10:03:41 [INFO] starting to produce sample quality fig!
+
+2026-09-16 10:03:43 [INFO] finished to combined_dic for quality fig!
+
+2026-09-16 10:03:43 [INFO] starting to facetgrid for quality fig!
+
+2026-09-16 10:03:44 [INFO] finished plotting quality fig!
+
+2026-09-16 10:03:44 [INFO] finished to produce sample quality fig
+2026-09-16 10:03:44 [INFO] starting to produce sample read distribution fig
+2026-09-16 10:03:44 [INFO] finished to produce sample quality fig!
+
+2026-09-16 10:03:44 [INFO] finished to generate quality fig for all samples
+
+2026-09-16 10:03:44 [INFO] starting to generate reads distributions fig for all samples with 10 threads
+
+2026-09-16 10:03:44 [INFO] starting to produce sample read distribution fig!
+
+2026-09-16 10:03:46 [INFO] finish to produce sample read distribution fig
+2026-09-16 10:03:46 [INFO] Run summary - seq2type run: step elapsed time = 152.78s, total session time so far = 275.80s, total active time so far = 152.78s, peak memory = 1712.89 MB
+2026-09-16 10:03:46 [INFO] finished to produce sample read distribution fig!
+
+2026-09-16 10:03:46 [INFO] finished to generate all reads distributions fig for all samples
+
+2026-09-16 10:03:46 [INFO] Log file saved to: /home/liup/project/data/smartyper/par/mn/out/smartyper_log.txt
+
+2026-09-16 10:03:46 [INFO] Congrats! Seq2Type ran successfully! Please click 'Next' to proceed.
+
+2026-09-16 10:04:43 [INFO] updating genotype tab from job runner
+2026-09-16 10:04:43 [INFO] Starting genotype tab update...
+2026-09-16 10:04:43 [INFO] Result type: sample
+2026-09-16 10:04:43 [INFO] selected sample: SRR10717716, markers: 120
+2026-09-16 10:04:43 [INFO] selected sample: SRR10717716
+2026-09-16 10:04:45 [INFO] Figures length: 120
+2026-09-16 10:04:45 [INFO] Finished processing all figures and tables, displaying genotype tab page...
+2026-09-16 10:04:59 [INFO] Starting genotype tab update...
+2026-09-16 10:04:59 [INFO] Result type: sample
+2026-09-16 10:04:59 [INFO] selected sample: SRR10717717, markers: 120
+2026-09-16 10:04:59 [INFO] selected sample: SRR10717717
+2026-09-16 10:05:01 [INFO] Figures length: 120
+2026-09-16 10:05:01 [INFO] Finished processing all figures and tables, displaying genotype tab page...
+2026-09-16 10:05:53 [INFO] Parameters snapshot - result output run
+2026-09-16 10:05:53 [INFO]   analtype = snp
+2026-09-16 10:05:53 [INFO]   seqtype = pe
+2026-09-16 10:05:53 [INFO]   sexfile = 
+2026-09-16 10:05:53 [INFO]   locifile = /home/liup/project/data/smartyper/par/mn/loci.txt
+2026-09-16 10:05:53 [INFO]   inputdir = /home/liup/project/data/smartyper/par/mn/raw
+2026-09-16 10:05:53 [INFO]   outputdir = /home/liup/project/data/smartyper/par/mn/out
+2026-09-16 10:05:53 [INFO]   projectdir = 
+2026-09-16 10:05:53 [INFO]   samplefile = /home/liup/project/data/smartyper/par/mn/sample.txt
+2026-09-16 10:05:53 [INFO]   mlinputfile = 
+2026-09-16 10:05:53 [INFO]   mloutputdir = 
+2026-09-16 10:05:53 [INFO]   mlmodelinputfile = 
+2026-09-16 10:05:53 [INFO]   mlmodel = False
+2026-09-16 10:05:53 [INFO]   num_samples = 0
+2026-09-16 10:05:53 [INFO]   project_genotype_model = False
+2026-09-16 10:05:53 [INFO]   project_microtype_model = False
+2026-09-16 10:05:53 [INFO]   outputgenotypeproject = project_genotype_session.dill
+2026-09-16 10:05:53 [INFO]   outputmicrotypeproject = project_microtype_session.dill
+2026-09-16 10:05:53 [INFO]   maxMismatchesPSeq = 4
+2026-09-16 10:05:53 [INFO]   minReads4Locus = 30
+2026-09-16 10:05:53 [INFO]   minReads4Allele = 10
+2026-09-16 10:05:53 [INFO]   smProp1H = 0.8
+2026-09-16 10:05:53 [INFO]   smProp1L = 0.72
+2026-09-16 10:05:53 [INFO]   mmProp1H = 0.8
+2026-09-16 10:05:53 [INFO]   mmProp1L = 0.78
+2026-09-16 10:05:53 [INFO]   mProp2 = 0.7
+2026-09-16 10:05:53 [INFO]   maxRVs4Align = 6
+2026-09-16 10:05:53 [INFO]   maxMismatchesPSeqSex = 4
+2026-09-16 10:05:53 [INFO]   maxMismatchesRefSeqSex = 4
+2026-09-16 10:05:53 [INFO]   yxRatio = 0.0001
+2026-09-16 10:05:53 [INFO]   minReadsSexAllele = 10
+2026-09-16 10:05:53 [INFO]   minReadsSexVariant = 5
+2026-09-16 10:05:53 [INFO]   sex_analysis = False
+2026-09-16 10:05:53 [INFO]   nanopore_default = False
+2026-09-16 10:05:53 [INFO]   revcomloci = False
+2026-09-16 10:05:53 [INFO]   revcomsex = False
+2026-09-16 10:05:53 [INFO]   average_qual = 20
+2026-09-16 10:05:53 [INFO]   length_required = 30
+2026-09-16 10:05:53 [INFO]   thread = 10
+2026-09-16 10:05:53 [INFO]   cur_microhap_input_file = 
+2026-09-16 10:05:53 [INFO]   pre_microhap_input_file = 
+2026-09-16 10:05:53 [INFO]   post_microhap_output_dir = 
+2026-09-16 10:05:53 [INFO]   include_pre_mh = True
+2026-09-16 10:05:53 [INFO]   has_pre_mh = False
+2026-09-16 10:05:53 [INFO]   pro_figure = True
+2026-09-16 10:05:53 [INFO]   ml_training_ratio = 0.8
+2026-09-16 10:05:53 [INFO] This process is memory intensive, it may take a while to finish. Please be patient and do not close the program.
+
+
+2026-09-16 10:05:53 [INFO] -------------------------------start step 1 out 2-----------------------------
+2026-09-16 10:05:53 [INFO] starting to dump genotyping project!
+2026-09-16 10:05:53 [INFO] This is slow, please be patient!
+2026-09-16 10:05:53 [INFO] Starting to dump session for project: genotype
+2026-09-16 10:05:53 [INFO] Session successfully saved to: /home/liup/project/data/smartyper/par/mn/out/project_genotype_session.dill
+2026-09-16 10:05:53 [INFO] finished to dump genotyping project!
+2026-09-16 10:05:53 [INFO] -------------------------------end step 1 out 2-------------------------------
+
+
+2026-09-16 10:05:53 [INFO] -------------------------------start step 2 out 2-----------------------------
+2026-09-16 10:05:53 [INFO] starting to output all files!
+2026-09-16 10:05:53 [INFO] starting to process each sample
+2026-09-16 10:05:53 [INFO] starting to process each sample!
+2026-09-16 10:05:58 [INFO] Finished samples: 2 out of 2
+2026-09-16 10:05:58 [INFO] starting to process all the markers!
+2026-09-16 10:06:02 [INFO] Finished 10 out of 120 markers...
+2026-09-16 10:06:02 [INFO] Finished 20 out of 120 markers...
+2026-09-16 10:06:03 [INFO] Finished 30 out of 120 markers...
+2026-09-16 10:06:04 [INFO] Finished 40 out of 120 markers...
+2026-09-16 10:06:04 [INFO] Finished 50 out of 120 markers...
+2026-09-16 10:06:05 [INFO] Finished 60 out of 120 markers...
+2026-09-16 10:06:05 [INFO] Finished 70 out of 120 markers...
+2026-09-16 10:06:06 [INFO] Finished 80 out of 120 markers...
+2026-09-16 10:06:06 [INFO] Finished 90 out of 120 markers...
+2026-09-16 10:06:07 [INFO] Finished 100 out of 120 markers...
+2026-09-16 10:06:07 [INFO] Finished 110 out of 120 markers...
+2026-09-16 10:06:08 [INFO] Finished 120 out of 120 markers...
+2026-09-16 10:06:09 [INFO] finished to process all the markers
+2026-09-16 10:06:09 [INFO] begin to process all_sample geno table!
+2026-09-16 10:06:09 [INFO] begin to process all_sample geno table!
+2026-09-16 10:06:09 [INFO] finished to output all files!
+2026-09-16 10:06:09 [INFO] -------------------------------end step 2 out 2-------------------------------
+
+
+2026-09-16 10:06:09 [INFO] Genotyping processing completed successfully. Please click 'Microtype →' for microtype analysis or 'Exit' to close the program.
+2026-09-16 10:06:09 [INFO] Total elapsed time: 0m and 15s.
+2026-09-16 10:06:09 [INFO] Run summary - result output run: step elapsed time = 15.85s, total session time so far = 418.18s, total active time so far = 168.63s, peak memory = 1712.89 MB
+2026-09-16 10:06:57 [INFO] reading loci file: /home/liup/project/data/smartyper/par/mn/loci.txt
+2026-09-16 10:06:57 [INFO] total 120 markers read from loci file
+2026-09-16 10:06:57 [INFO] total 120 markers read from loci file
+2026-09-16 10:06:57 [INFO] reading loci file: /home/liup/project/data/smartyper/par/mn/loci.txt
+2026-09-16 10:06:57 [INFO] total 120 markers read from loci file
+2026-09-16 10:06:57 [INFO] total 120 markers read from loci file
+2026-09-16 10:07:02 [INFO] Application session summary: total elapsed time = 471.94s, active (running) time = 168.63s, idle time = 303.30s, peak memory = 1712.89 MB, OS = Ubuntu 24.04.4 LTS (x86_64), CPU = 12th Gen Intel(R) Core(TM) i5-1245U @ 2496.0 MHz, CPU threads = 12, total memory = 31.04 GB, memory speed = unavailable (requires root/dmidecode), memory = unavailable (requires root/dmidecode), memory bandwidth = 1937.8 MB/s (measured), disk free = 878.09 / 1006.85 GB, disk drive = Msft Virtual Disk, disk speed = 964.4 MB/s (measured)
