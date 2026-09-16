@@ -32,6 +32,7 @@ ENV/
 Thumbs.db
 
 # Project specific
+/log/*.log
 seq2type_args.log
 smartyper_log.txt
 test_seq2type_args.py
