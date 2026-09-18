@@ -131,7 +131,7 @@ void run_seqtyper(int argc, char* argv[]){
     cmd.add<double>("smProp1L", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= smProp1L when there is only one true SNP, must be < smProp1H and coupled with smProp1H. default: 0.72", false, 0.72);
     cmd.add<double>("mmProp1H", 0, "allele is considered as homo when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is >= mmProp1H when there are at least two true SNPs, must be > mmProp1L and coupled with mmProp1L. default: 0.80", false, 0.80);
     cmd.add<double>("mmProp1L", 0, "allele is considered as heter when proportion of read1 (top 1) read against sum of top 2 reads (read1 + read2) is <= mmProp1L when there are at least two true SNPs, must be < mmProp1H and coupled with mmProp1H. default: 0.78", false, 0.78);
-    cmd.add<double>("mProp2", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= mProp2. default: 0.70", false, 0.70);
+    cmd.add<double>("mProp2", 0, "allele is considered as heter when proportion of read2 (top 2) read against sum of read2 + read3 is >= mProp2. default: 0.60", false, 0.60);
     //cmd.add<double>("sProp3", 0, "best SNPs proportion based on all amplicons. Allele is reassessed when it is classifed as inconclusive using ProH and ProL and mProp2: 0.8", false, 0.8);
     //cmd.add<double>("minSeqsProSnp", 0, "minimum proportion reads against largest peak for a genotype, default: 0.1 (10%)", false, 0.10);
     cmd.add<int>("minReads4Allele", 0, "minimum reads for filtering an allele, read1 for homo and read2 for heter. default: 20", false, 20);

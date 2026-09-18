@@ -306,7 +306,7 @@ public:
         smProp1L = 0.72;
         mmProp1H = 0.80;
         mmProp1L = 0.78;
-        mProp2 = 0.70;
+        mProp2 = 0.60;
         //sProp3 = 0.0;
         hmPer = 0.0;
         //htJetter = 0.25;

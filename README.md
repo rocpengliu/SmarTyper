@@ -109,7 +109,7 @@ options:
   --smProp1L SMPROP1L   heter threshold when one true SNP, default: 0.72
   --mmProp1H MMPROP1H   homo threshold when >= two true SNPs, default: 0.78
   --mmProp1L MMPROP1L   heter threshold when >= two true SNPs, default: 0.80
-  --mProp2 MPROP2       heter threshold for read2/read3 proportion, default: 0.7
+  --mProp2 MPROP2       heter threshold for read2/read3 proportion, default: 0.6
   --minReads4Allele MINREADS4ALLELE
                         minimum reads for filtering an allele, read1 for homo and read2 for heter, default: 10
   --maxRVs4Align MAXRVS4ALIGN

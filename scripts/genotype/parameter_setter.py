@@ -104,7 +104,7 @@ def create_body(frame):
     row += 1
 
     nano_var = ctk.BooleanVar(value=param.get_nanopore_default())
-    ctk.CTkLabel(left_body, text="Nanopore:", font=bmbfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
+    ctk.CTkLabel(left_body, text="Nanopore reads:", font=bmbfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
     ctk.CTkCheckBox(left_body, text="", variable = nano_var, font =bmfont, text_color="white").grid(row=row, column=1, padx=(15, 15),sticky="w")
     nano_var.trace_add("write", lambda *args: param.set_nanopore_default(nano_var.get()))
     row += 1

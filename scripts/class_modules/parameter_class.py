@@ -29,7 +29,7 @@ class ParameterClass:
         self._smProp1L = 0.72
         self._mmProp1H = 0.80
         self._mmProp1L = 0.78
-        self._mProp2 = 0.70
+        self._mProp2 = 0.60
         #self._sProp3 = 0.80
         #self._minSeqsProSnp = 0.1
         self._maxRVs4Align = 6

@@ -49,7 +49,7 @@ def main():
     parser.add_argument('--smProp1L', type=float, default=0.78, help='heter threshold when one true SNP, default: 0.72')
     parser.add_argument('--mmProp1H', type=float, default=0.83, help='homo threshold when >= two true SNPs, default: 0.78')
     parser.add_argument('--mmProp1L', type=float, default=0.79, help='heter threshold when >= two true SNPs, default: 0.80')
-    parser.add_argument('--mProp2', type=float, default=0.50, help='heter threshold for read2/read3 proportion, default: 0.7')
+    parser.add_argument('--mProp2', type=float, default=0.60, help='heter threshold for read2/read3 proportion, default: 0.60')
     #parser.add_argument('--sProp3', type=float, default=0.8, help='heter threshold for read2/read3 proportion, default: 0.8')
     #parser.add_argument('--minSeqsProSnp', type=float, default=0.10, help='minimum proportion reads against largest peak for SNP genotype, default: 0.1 (10%%)')
     parser.add_argument('--minReads4Allele', type=int, default=10, help='minimum reads for filtering an allele, read1 for homo and read2 for heter, default: 10')
