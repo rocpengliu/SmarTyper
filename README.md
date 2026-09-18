@@ -81,7 +81,7 @@ options:
   --loc LOC             loci file containing loci names, primers, flanking regions, etc.
   --revCom              if your reverse primer sequence in the loc file is not reverse complentary, please specify it
   --minReads4Locus MINREADS4LOCUS
-                        minimum number of reads for a locus, default: 30
+                        minimum number of reads for a locus, default: 20
   --maxMismatchesPSeq MAXMISMATCHESPSEQ
                         maximum mismatches for primer sequences 4, default: 4
   --noPlot              If specified, do not plot

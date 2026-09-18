@@ -23,7 +23,7 @@ class ParameterClass:
         self._outputmicrotypeproject = "project_microtype_session.dill"
         
         self._maxMismatchesPSeq = 4
-        self._minReads4Locus = 30
+        self._minReads4Locus = 20
         self._minReads4Allele = 10
         self._smProp1H = 0.80
         self._smProp1L = 0.72

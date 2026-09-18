@@ -104,7 +104,7 @@ void run_seqtyper(int argc, char* argv[]){
 
     cmd.add<string>("loc", 0, "loci file containing loci names, 5'primer sequence, reverse complement of 3'primer sequence, 5'flank region, 3'flank region, repeat unit and reference microsatellite repeat array, separated by '\t", false, "");
     cmd.add("revCom", 0, "if your reverse primer sequence in the loc file is not reverse complentary, please specify it");
-    cmd.add<int>("minReads4Locus", 0, "minimum number of reads for a locus, default: 30", false, 30);
+    cmd.add<int>("minReads4Locus", 0, "minimum number of reads for a locus, default: 30", false, 20);
     cmd.add<int>("maxMismatchesPSeq", 0, "maximum mismatches for primer sequences 4", false, 4);
     cmd.add("noPlot", 0, "If specified, do not plot");
     

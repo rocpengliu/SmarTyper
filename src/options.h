@@ -301,7 +301,7 @@ public:
     LocSnpOptions(){
         maxMismatchesPSeq = 4;
         maxScorePrimer = -1;
-        minReads4Locus = 30;
+        minReads4Locus = 20;
         smProp1H = 0.80;
         smProp1L = 0.72;
         mmProp1H = 0.80;

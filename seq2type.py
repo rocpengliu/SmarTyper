@@ -21,7 +21,7 @@ def main():
     # Loci file
     parser.add_argument('--loc', type=str, default='', help='loci file containing loci names, primers, flanking regions, etc.')
     parser.add_argument('--revCom', action='store_true', help='if your reverse primer sequence in the loc file is not reverse complentary, please specify it')
-    parser.add_argument('--minReads4Locus', type=int, default=30, help='minimum number of reads for a locus, default: 30')
+    parser.add_argument('--minReads4Locus', type=int, default=30, help='minimum number of reads for a locus, default: 20')
     parser.add_argument('--maxMismatchesPSeq', type=int, default=4, help='maximum mismatches for primer sequences 4, default: 4')
     parser.add_argument('--noPlot', action='store_true', help='If specified, do not plot')
     
