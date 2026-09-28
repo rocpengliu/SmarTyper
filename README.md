@@ -2,7 +2,7 @@
 
 ## Description
 
-**SmarTyper** is a novel, smart, comprehensive and interfaced-based platform for microtype (microhaplotype & micropeptype) genotyping from targeted sequencing data.
+**SmarTyper** is a novel, smart, comprehensive and interface-based platform for microtype (microhaplotype & micropeptype) genotyping from targeted amplicon sequencing data.
 
 ## Key features of SmarTyper
 
@@ -10,13 +10,13 @@
 
 * **Smart**: supports smart genotyping powered by AI.
 
-* **Interactive**: supports both automated and manual genotyping with interactive plotting.
+* **Interactive**: supports both automated and manual genotyping with interactive visualization.
 
 * **Ultra-fast**: about 5 seconds per sample using a single thread.
 
 * **All-in-one**: SmarTyper takes raw targeted sequencing reads as input and outputs genotype tables.
 
-* **Reads-to-report files**: generates genotype tables, figures for report.
+* **Reads-to-report files**: generates genotype tables, figures.
 
 ## Getting started
 ### Step 1. Pre-installations
