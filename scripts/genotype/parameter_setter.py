@@ -1,3 +1,5 @@
+from curses.panel import top_panel
+
 from ..utils.common import *
 from ..utils.colors import COLORS
 import customtkinter as ctk
@@ -51,12 +53,13 @@ def create_body(frame):
     body_frame.grid(row=1, column=0, columnspan=4, sticky="nsew")
     
      # Configure body_frame columns and rows
-    body_frame.grid_columnconfigure(0, weight=1)  # Left panel (2 columns wide)
-    body_frame.grid_columnconfigure(1, weight=1)  # Left panel (2 columns wide)
-    body_frame.grid_columnconfigure(2, weight=1)  # Middle panel (1 column wide)
-    body_frame.grid_columnconfigure(3, weight=1)  # Middle panel (1 column wide)
-    body_frame.grid_columnconfigure(4, weight=4)  # Right panel (2 columns wide)
-    body_frame.grid_columnconfigure(5, weight=4)  # Right panel (2 columns wide)
+    body_frame.grid_columnconfigure(0, weight=0)  # Left panel (2 columns wide)
+    body_frame.grid_columnconfigure(1, weight=0)  # Left panel (2 columns wide)
+    body_frame.grid_columnconfigure(2, weight=0)  # Middle panel (1 column wide)
+    body_frame.grid_columnconfigure(3, weight=0)  # Middle panel (1 column wide)
+    body_frame.grid_columnconfigure(4, weight=0)  # Right panel (2 columns wide)
+    body_frame.grid_columnconfigure(5, weight=0)  # Right panel (2 columns wide)
+    body_frame.grid_columnconfigure(6, weight=1)  # Spacer column absorbs leftover width
     
     body_frame.grid_rowconfigure('all', weight=1)
     
@@ -86,7 +89,13 @@ def create_body(frame):
     row = 0
     ctk.CTkLabel(left_body, text="General options:", font=bfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
     row += 1
-    create_label_entry(body_frame, left_body, row, 0, "Num. thread:", str(param.get_thread()), "thread", param)
+    nano_var = tk.StringVar(value= ("Nanopore" if param.get_nanopore_default() else "Illumina"))
+    ctk.CTkLabel(left_body, text="Sequence platform:", font=bmbfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
+    nano_radio_frame = ctk.CTkFrame(left_body, fg_color="transparent")
+    nano_radio_frame.grid(row=row, column=1, pady=(1,1), padx=(15,5), sticky="w")
+    ctk.CTkRadioButton(nano_radio_frame, text="Illumina", font=bmfont, value="Illumina", variable=nano_var, width=0).pack(side=tk.LEFT)
+    ctk.CTkRadioButton(nano_radio_frame, text="Nanopore", font=bmfont, value="Nanopore", variable=nano_var, width=0).pack(side=tk.LEFT, padx=(10, 0))
+    nano_var.trace_add("write", lambda *args: param.set_nanopore_default(True if nano_var.get() == "Nanopore" else False))
     row += 1
     create_label_entry(body_frame, left_body, row, 0, "Min. read length:", str(param.get_length_required()), "length_required", param)
     row += 1
@@ -94,7 +103,7 @@ def create_body(frame):
     row += 1
     create_label_entry(body_frame, left_body, row, 0, "Primer mismatches:", str(param.get_maxMismatchesPSeq()), "maxMismatchesPSeq", param)
     row += 1
-    create_label_entry(body_frame, left_body, row, 0, "Min. reads 4 locus:", str(param.get_minReads4Locus()), "minReads4Locus", param)
+    create_label_entry(body_frame, left_body, row, 0, "Min. reads for locus:", str(param.get_minReads4Locus()), "minReads4Locus", param)
     row += 1
     
     fig_var = ctk.BooleanVar(value=param.is_pro_figure())
@@ -103,10 +112,7 @@ def create_body(frame):
     fig_var.trace_add("write", lambda *args: param.set_pro_figure(fig_var.get()))
     row += 1
 
-    nano_var = ctk.BooleanVar(value=param.get_nanopore_default())
-    ctk.CTkLabel(left_body, text="Nanopore reads:", font=bmbfont, text_color="white").grid(row=row, column=0, padx=body_frame.padx, pady=body_frame.pady, sticky="e")
-    ctk.CTkCheckBox(left_body, text="", variable = nano_var, font =bmfont, text_color="white").grid(row=row, column=1, padx=(15, 15),sticky="w")
-    nano_var.trace_add("write", lambda *args: param.set_nanopore_default(nano_var.get()))
+    create_label_entry(body_frame, left_body, row, 0, "Num. thread:", str(param.get_thread()), "thread", param)
     row += 1
 
     row = 0
