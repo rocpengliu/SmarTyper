@@ -71,7 +71,7 @@ def create_home(parent, app):
 
     header_label2 = ctk.CTkLabel(
         header_frame,
-        text="-- A smart, reference-free & unified platform for microhaplotype and micropeptype genotyping, visualization from amplicon sequence data",
+        text="-- A smart, genome reference-free & unified platform for microhaplotype and micropeptype genotyping, visualization from amplicon sequence data",
         font=subtitle_font,
         fg_color="transparent",
         text_color=COLORS['text_secondary'],
