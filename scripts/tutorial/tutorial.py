@@ -2,7 +2,7 @@ import customtkinter as ctk
 import tkinter as tk
 from scripts.utils.colors import COLORS
 from scripts.utils.common import module_font
-import fitz
+import pymupdf
 from PIL import Image, ImageTk
 
 import os
@@ -34,7 +34,7 @@ def create_tutorial_module(parent):
         canvas = tk.Canvas(container, bg="white", highlightthickness=0)
         canvas.grid(row=0, column=0, sticky="nsew")
 
-        doc = fitz.open(pdf_path)
+        doc = pymupdf.open(pdf_path)
         pdf_pages = []
         for page_num in range(len(doc)):
             pdf_page = doc.load_page(page_num)

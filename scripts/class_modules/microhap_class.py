@@ -4,7 +4,7 @@ from ..utils import modern_messagebox
 from ..utils.common import micro_microhap_df_columns, micro_microhap_df_empty_row, micro_amplicon_df_columns, micro_amplicon_df_empty_row, ml_mh_df_columns
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-from ..utils.utils_common import print_time, thread_lock
+from ..utils.utils_common import print_time, thread_lock, matplotlib_lock
 from ..utils.utils_alignment import do_pairwise_alignment
 from ..utils.utils_func import produce_reads_dis_fig, generate_page, init_sam_mar_ml, init_sam_microhaps, init_sam_amplicons, init_assigned_reads
 from concurrent.futures import ThreadPoolExecutor,ProcessPoolExecutor, as_completed
@@ -479,6 +479,8 @@ class MicroHapClass:
         print_time(f"starting to produce sample read distribution fig")
         output_queue.put(f'starting to produce sample read distribution fig!\n')
         data_dict=self.get_assigned_sam_reads_dict()
+        if not data_dict:
+            raise ValueError("No assigned sample reads are available to plot. Load genotyping results first.")
         sorted_data={k:v for k,v in sorted(data_dict.items(),
                                            key=lambda item:item[1],
                                            reverse=True)}
@@ -493,26 +495,18 @@ class MicroHapClass:
         else:
             num_pages=int(num_pages)+1
         
-        # Generate pages in parallel and collect results
-        page_figures = {}
-        with ProcessPoolExecutor(max_workers=n_threads) as executor:
-            futures = {executor.submit(
-                generate_page, i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page
-                ): i for i in range(num_pages)}
-            for future in as_completed(futures):
-                try:
-                    page_num, fig = future.result()
-                    if fig is not None:
-                        page_figures[page_num] = fig
-                except Exception as exc:
-                    print(f"Error generating page {futures[future]}: {exc}")
-        
-        # Save pages in correct order to PDF
-        with PdfPages(pdf_file) as pdf:
+        # Matplotlib figures cannot reliably be pickled across Python versions.
+        with matplotlib_lock, PdfPages(pdf_file) as pdf:
             for i in range(num_pages):
-                if i in page_figures:
-                    pdf.savefig(page_figures[i])
-                    plt.close(page_figures[i])
+                _, fig = generate_page(
+                    i, num_pages, sorted_data, bars_per_page, bars_per_subplot, num_subplots_per_page
+                )
+                if fig is None:
+                    raise RuntimeError(f"Unable to generate reads distribution page {i + 1}.")
+                try:
+                    pdf.savefig(fig)
+                finally:
+                    plt.close(fig)
         
         print_time(f"finish to produce sample read distribution fig")
         output_queue.put(f'finished to produce sample read distribution fig!\n')

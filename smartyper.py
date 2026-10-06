@@ -30,12 +30,17 @@ from scripts.workflow.workflow import create_wkfl_module
 from scripts.tutorial.tutorial import create_tutorial_module
 from scripts.utils.colors import COLORS
 from scripts.utils.app_logger import log_app_start
+from scripts.utils.window_layout import get_bottom_margin, get_interface_scale
 from PIL import Image, ImageTk, ImageOps, ImageEnhance
 from scripts.class_modules.class_modules import GenotypeClass
 ctk.set_appearance_mode("dark")
 
 class SmarTyperApp(ctk.CTk):
     def __init__(self):
+        self.bottom_margin = get_bottom_margin()
+        ctk.set_widget_scaling(1.0)
+        self._interface_scale = 1.0
+        self._layout_update_id = None
         super().__init__()
         self.withdraw()  # Hide window during setup
         self.title("SmarTyper - Smart genotyper")
@@ -54,6 +59,11 @@ class SmarTyperApp(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=0)  # Left panel should not expand
         self.grid_columnconfigure(1, weight=1)  # Right panel should expand
+        self.bottom_spacer = tk.Frame(
+            self, height=max(1, self.bottom_margin),
+            bg=COLORS['background'], borderwidth=0, highlightthickness=0
+        )
+        self._bottom_margin_visible = False
         
         # Modern sidebar with gradient-like appearance
         self.left_panel = ctk.CTkFrame(self, width=220, corner_radius=0, fg_color=COLORS['sidebar'])
@@ -125,6 +135,7 @@ class SmarTyperApp(ctk.CTk):
         self.buttons = {}
         self.button_colors = {}  # Store original colors for each button
         self.children_button_refs = {}  # Store child button references
+        self.children_button_grid_options = {}
         self.create_tabs()
         
         # Create pages but don't display them yet
@@ -148,7 +159,7 @@ class SmarTyperApp(ctk.CTk):
         }
         # Ensure all pages are hidden initially
         for page in self.pages.values():
-            page.grid_remove()
+            page.grid_forget()
         
         # Create and show home page last
         self.pages["home"] = create_home(self.right_panel, self)
@@ -156,11 +167,58 @@ class SmarTyperApp(ctk.CTk):
         self.button_clicked("home")
         # Now show the right panel after home is ready
         self.right_panel.grid(row=0, column=1, sticky="nsew")
+        self.update_idletasks()
+        self._design_width = self.left_panel.winfo_reqwidth() + self.pages["home"].winfo_reqwidth() + 2
+        self._design_height = max(self.left_panel.winfo_reqheight(), self.pages["home"].winfo_reqheight())
         self.deiconify()  # Show window only after everything is ready
+        self.bind("<Configure>", self._schedule_layout_update, add="+")
+        self.after_idle(self._update_window_layout)
+
+    def _schedule_layout_update(self, event):
+        if event.widget is not self:
+            return
+        if self._layout_update_id is not None:
+            self.after_cancel(self._layout_update_id)
+        self._layout_update_id = self.after(120, self._update_window_layout)
+
+    def _update_window_layout(self):
+        self._layout_update_id = None
+        self._update_bottom_margin()
+        available_height = self.winfo_height() - (
+            self.bottom_margin if self._bottom_margin_visible else 0
+        )
+        scale = get_interface_scale(
+            max(1, self.winfo_width()), max(1, available_height),
+            self._design_width, self._design_height
+        )
+        if abs(scale - self._interface_scale) < 0.005:
+            return
+        self._interface_scale = scale
+        ctk.set_widget_scaling(scale)
+        self.left_panel.grid_rowconfigure(0, minsize=round(200 * scale))
+
+    def _update_bottom_margin(self, event=None):
+        if event is not None and event.widget is not self:
+            return
+        if platform.system() == "Windows":
+            maximized = self.state() == "zoomed"
+        elif platform.system() == "Linux":
+            maximized = bool(self.attributes("-zoomed"))
+        else:
+            maximized = False
+        visible = self.bottom_margin > 0 and maximized
+        if visible == self._bottom_margin_visible:
+            return
+        self._bottom_margin_visible = visible
+        # WSLg can maximize behind the Windows taskbar instead of respecting its work area.
+        if visible:
+            self.bottom_spacer.grid(row=1, column=0, columnspan=2, sticky="ew")
+        else:
+            self.bottom_spacer.grid_remove()
 
     def setup_window(self):
-        screen_width=self.winfo_screenwidth()*0.4
-        screen_height=self.winfo_screenheight()*0.6
+        screen_width = round(self.winfo_screenwidth() * 0.8)
+        screen_height = round(self.winfo_screenheight() * 0.6)
         self.geometry(f"{screen_width}x{screen_height}")
         # Maximize window on launch
         try:
@@ -252,8 +310,11 @@ class SmarTyperApp(ctk.CTk):
                         fg_color="transparent", hover_color=COLORS['card'],
                         border_width=0, anchor="w", text_color=button_color,
                         command=lambda c=child_name.lower(): self.show_page(c))
-                    child_button.grid(row=row_index, column=0, pady=4, padx=child_button_padding, sticky="ew")
-                    child_button.grid_remove()  # Hide all child buttons initially
+                    # Keep layout outside CTk so scaling cannot restore folded buttons.
+                    self.children_button_grid_options[child_button] = {
+                        "row": row_index, "column": 0, "pady": 4,
+                        "padx": child_button_padding, "sticky": "ew"
+                    }
                     self.buttons[unique_id] = child_button
                     self.button_colors[unique_id] = button_color  # Store the color
                     button_refs.append(child_button)
@@ -293,7 +354,7 @@ class SmarTyperApp(ctk.CTk):
         if all:
             for menu in self.children_button_refs:
                 for button in self.children_button_refs[menu]:
-                    button.grid_remove()
+                    button.grid_forget()
             self.menu_expanded = {key: False for key in self.menu_expanded}
         else:
             expanded = self.menu_expanded.get(menu_name, False)
@@ -301,13 +362,13 @@ class SmarTyperApp(ctk.CTk):
                 if menu == menu_name:
                     for button in self.children_button_refs[menu]:
                         if expanded:
-                            button.grid_remove()
+                            button.grid_forget()
                         else:
-                            button.grid()
+                            button.grid(**self.children_button_grid_options[button])
                     self.menu_expanded[menu_name] = not expanded
                 else:
                     for button in self.children_button_refs[menu]:
-                        button.grid_remove()
+                        button.grid_forget()
                     self.menu_expanded[menu] = False
 
     def show_page(self, page_name):

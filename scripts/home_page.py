@@ -5,28 +5,28 @@ from .utils.smartyper_logo import SmarTyperLogo
 
 def create_home(parent, app):
     # Modern fonts
-    page = ctk.CTkFrame(parent, fg_color=COLORS['background'])
+    page = ctk.CTkFrame(parent, width=0, height=0, fg_color=COLORS['background'])
     page.grid_columnconfigure(0, weight=1)
-    page.grid_rowconfigure(0, weight=3)  # Header row will expand more
-    page.grid_rowconfigure(1, weight=1)  # Content row will expand less (shorter)
-    page.grid_rowconfigure(2, weight=1)  # Footer row
+    page.grid_rowconfigure(0, weight=0)
+    page.grid_rowconfigure(1, weight=1)
+    page.grid_rowconfigure(2, weight=0)
 
     # Modern Header Frame with gradient-like effect (AI style)
 
-    header_frame = ctk.CTkFrame(page, fg_color="transparent")
+    header_frame = ctk.CTkFrame(page, width=0, height=0, fg_color="transparent")
     header_frame.grid(row=0, column=0, sticky="nsew", pady=(20, 0))
     header_frame.grid_columnconfigure(0, weight=1)
     header_frame.grid_rowconfigure(0, weight=1)
     header_frame.grid_rowconfigure(1, weight=0)
 
     # Composite label for colored S and T in SmarTyper
-    header_label_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+    header_label_frame = ctk.CTkFrame(header_frame, width=0, height=0, fg_color="transparent")
     header_label_frame.grid(row=0, column=0, pady=(18, 10), sticky="nsew")
     header_label_frame.grid_columnconfigure(0, weight=1)
     header_label_frame.grid_columnconfigure(1, weight=0)
     header_label_frame.grid_columnconfigure(2, weight=1)
     # Use an internal frame to center the label group in column 1
-    label_inner = ctk.CTkFrame(header_label_frame, fg_color="transparent")
+    label_inner = ctk.CTkFrame(header_label_frame, width=0, height=0, fg_color="transparent")
     label_inner.grid(row=0, column=1)
     welcome_label = ctk.CTkLabel(
         label_inner,
@@ -81,7 +81,7 @@ def create_home(parent, app):
 
     # Main panel for the four cards
     grid_padx = 40
-    main_panel = ctk.CTkFrame(page, fg_color="transparent")
+    main_panel = ctk.CTkFrame(page, width=0, height=0, fg_color="transparent")
     main_panel.grid(row=1, column=0, sticky="nsew", padx=grid_padx, pady=(0, 5))
     for i in range(2):
         main_panel.grid_columnconfigure(i, weight=1, uniform="card")
@@ -94,11 +94,11 @@ def create_home(parent, app):
     ]
     def create_modern_card(parent, card_data, app):
         # Card with border color matching its main color
-        card = ctk.CTkFrame(parent, fg_color=COLORS['card'], corner_radius=14, border_width=2, border_color=card_data["color"])
+        card = ctk.CTkFrame(parent, width=0, height=0, fg_color=COLORS['card'], corner_radius=14, border_width=2, border_color=card_data["color"])
         card.grid_rowconfigure(0, weight=1)
         card.grid_columnconfigure(0, weight=1)
         # Card content
-        content_area = ctk.CTkFrame(card, fg_color="transparent")
+        content_area = ctk.CTkFrame(card, width=0, height=0, fg_color="transparent")
         content_area.pack(fill="both", expand=True, padx=25, pady=(20, 10))
         title = ctk.CTkLabel(content_area, text=card_data["title"], font=card_title_font, text_color=card_data["color"])
         title.pack(pady=(10, 8), fill="x")
@@ -131,7 +131,7 @@ def create_home(parent, app):
         card_frame.grid(row=card["row"], column=card["col"], padx=15, pady=15, sticky="nsew")
 
     # Two horizontal panels for contact and citation, aligned side by side
-    lower_panel = ctk.CTkFrame(page, fg_color="transparent", corner_radius=12)
+    lower_panel = ctk.CTkFrame(page, width=0, height=0, fg_color="transparent", corner_radius=12)
     lower_panel.grid(row=2, column=0, sticky="ew", padx=40, pady=(2, 15))
     lower_panel.grid_columnconfigure(0, weight=1)
     lower_panel.grid_columnconfigure(1, weight=1)
@@ -143,7 +143,7 @@ def create_home(parent, app):
     citation_text = "Citation: Liu, P. et al. SmarTyper: a reference-free and unified platform for microhaplotype and micropeptype genotyping. (2026)."
     github_text = "Github: https://github.com/rocpengliu/SmarTyper"
 
-    contact_panel = ctk.CTkFrame(lower_panel, fg_color="transparent")
+    contact_panel = ctk.CTkFrame(lower_panel, width=0, height=0, fg_color="transparent")
     contact_panel.grid(row=0, column=0, sticky="ne", padx=(0, 10))
     contact_panel.grid_columnconfigure(0, weight=1)
 
@@ -181,7 +181,7 @@ def create_home(parent, app):
         justify="right"
     ).grid(row=2, column=0, sticky="e", pady=0)
 
-    citation_panel = ctk.CTkFrame(lower_panel, fg_color="transparent")
+    citation_panel = ctk.CTkFrame(lower_panel, width=0, height=0, fg_color="transparent")
     citation_panel.grid(row=0, column=1, sticky="nw", padx=(10, 0))
     citation_panel.grid_columnconfigure(0, weight=1)
 
@@ -210,4 +210,3 @@ def create_home(parent, app):
     github_label.grid(row=1, column=0, sticky="w", pady=0)
 
     return page
-

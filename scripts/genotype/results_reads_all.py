@@ -1,8 +1,10 @@
 import customtkinter as ctk
 import tkinter as tk
 import os
+from queue import Queue
 from ..utils.utils_func import load_pdf
 from ..utils.mouse import _on_mousewheel
+from ..utils.modern_messagebox import showerror
 
 def update_all_reads_qual_distri(parent,show_panel,type):
     print(f"starting to update_all_reads_qual_distri")
@@ -48,8 +50,18 @@ def load_pdf_from_here(genoclass,canvas,fig_type):
     elif fig_type=="distri":
         suffix="All_sample_read_distribution.pdf"
     else:
+        showerror(canvas.master, "Invalid Figure", f"Unknown all-sample figure type: {fig_type}")
         return
     pdf_file_path=os.path.join(genoclass.get_parameter().get_outputdir(),suffix)
-    if not os.path.exists(pdf_file_path):
+    if fig_type == "distri" and not os.path.isfile(pdf_file_path):
+        try:
+            genoclass.get_microhap().pro_all_sample_read_distri_fig_pdf(
+                genoclass.get_parameter().get_outputdir(), Queue()
+            )
+        except (OSError, ValueError, RuntimeError) as exc:
+            showerror(canvas.master, "Distribution Figure", f"Unable to generate reads distribution:\n{exc}")
+            return
+    if not os.path.isfile(pdf_file_path):
+        showerror(canvas.master, "Missing Figure", f"The all-sample figure was not found:\n{pdf_file_path}")
         return
     load_pdf(pdf_file_path,canvas)

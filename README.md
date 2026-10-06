@@ -26,11 +26,9 @@ We have tested SmarTyper on Windows Subsystem for Linux 2 (WSL2) and on Linux sy
 #### Install system dependencies:
 ```bash
 sudo apt update
-sudo apt install python3-full python3-tk python3-pip mafft
-python3 -m pip install --upgrade pip
-python3 -m pip install --break-system-packages setuptools Cython customtkinter biopython pillow numpy pandas matplotlib dill logomaker seaborn joblib scikit-learn pymupdf psutil
+sudo apt install python3-full python3-tk python3-venv python3-dev build-essential zlib1g-dev fontconfig fonts-dejavu-core mafft
 ```
-Note: `--break-system-packages` may be required on newer Ubuntu releases when installing into the system Python environment.
+Use a project virtual environment rather than installing packages into system Python.
 
 ### Step 2. Clone and set up SmarTyper
 
@@ -39,23 +37,44 @@ git clone https://github.com/rocpengliu/SmarTyper.git
 cd SmarTyper
 ```
 
+Create the environment with Ubuntu's system Python explicitly. This avoids accidentally
+using a Conda Python whose Tk build may not support scalable fonts.
+
+```bash
+/usr/bin/python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install setuptools Cython customtkinter biopython pillow numpy pandas matplotlib dill logomaker seaborn joblib scikit-learn pymupdf psutil
+```
+
 ### Step 3. Compile the C++ extension
 
 ```bash
-python3 setup.py clean --all && python3 setup.py build_ext --inplace
+python setup.py build_ext --inplace --force
 ```
+
+Build with the same environment used to launch the application. `--force` also
+rebuilds objects left by a different Python installation.
 
 ### Step 4. Launch SmarTyper
 
 ```bash
+source .venv/bin/activate
 python3 smartyper.py
 ```
 
+The left-side submenus start folded. Clicking a module opens its submenu;
+resizing the window preserves the current folded or expanded state.
 
-### Step 6. Process your data
+### Step 5. Process your data
 
 Please try the example data in folder example_data and follow the tutorial.
 
+In Results, the all-sample reads **distribution** button displays
+`All_sample_read_distribution.pdf` from the output directory. If the PDF is
+missing, it is generated from the loaded sample read counts when clicked.
+Missing read data or PDF generation errors are shown in a dialog rather than
+leaving the figure panel blank.
 
 ## Use Seq2Type engine as a standalone software tool for automated genotyping (not recommended).
 

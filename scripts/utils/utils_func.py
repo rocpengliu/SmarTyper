@@ -7,7 +7,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 import os, sys
 import threading
 import pandas as pd
-import fitz  # PyMuPDF
+import pymupdf
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
@@ -33,7 +33,7 @@ def _concat_non_empty_frames(frame_dict):
 
 def load_pdf(file_path, canvas):
     try:
-        doc = fitz.open(file_path)
+        doc = pymupdf.open(file_path)
         y_offset = 0  # Initial y-offset for stacking images vertically
         canvas.image_refs = []  # Store references to avoid garbage collection
         for page_num in range(len(doc)):
