@@ -414,7 +414,7 @@ string HtmlReporterAll::getPercents(long numerator, long denominator) {
 
 void HtmlReporterAll::printHeader(ofstream& ofs){
     ofs << "<html><head><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />";
-    ofs << "<title>Seq2Sat report at " + getCurrentSystemTime() + " </title>";
+    ofs << "<title>Seq2Type report at " + getCurrentSystemTime() + " </title>";
     printJS(ofs);
     printCSS(ofs);
     ofs << "</head>";

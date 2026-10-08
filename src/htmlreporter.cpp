@@ -689,7 +689,7 @@ void HtmlReporter::report(std::vector<std::map<std::string, std::vector<std::pai
 
     printHeader(ofs);
 
-    ofs << "<h1 style='text-align:left;'><a href='https://github.com/seq2sat' target='_blank' style='color:#009900;text-decoration:none;'>Seq2Sat Report</a </h1>" << std::endl;
+    ofs << "<h1 style='text-align:left;'><a href='https://github.com/seq2sat' target='_blank' style='color:#009900;text-decoration:none;'>Seq2Type Report</a </h1>" << std::endl;
     ofs << "<div style='font-size:12px;font-weight:normal;text-align:left;color:#666666;padding:5px;'>" << "Sample: " << basename(mOptions->prefix) << "</div>" << std::endl;
 
     if (!mOptions->mSex.sexMarker.empty()) {
@@ -1426,7 +1426,7 @@ std::string HtmlReporter::highligher(LocSnp2 & locSnp, bool ref, std::string ref
 
 void HtmlReporter::printHeader(ofstream& ofs) {
     ofs << "<html><head><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\" />";
-    ofs << "<title>Seq2Sat report at " + getCurrentSystemTime() + " </title>";
+    ofs << "<title>Seq2Type report at " + getCurrentSystemTime() + " </title>";
     printJS(ofs);
     printCSS(ofs);
     ofs << "</head>";

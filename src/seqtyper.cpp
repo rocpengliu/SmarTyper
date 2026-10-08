@@ -81,7 +81,7 @@ const char* get_captured_cout(){
 void run_seqtyper(int argc, char* argv[]){
     // display version info if no argument is given
     if(argc == 1) {
-        std::cout << "Seq2Sat: an ultra-fast and comprehensive genetic variation identification tool for raw sequencing data." << endl << "version " << SEQ2TYPER_VER << std::endl;
+        std::cout << "Seq2Type: an ultra-fast and comprehensive genetic variation identification tool for raw sequencing data." << endl << "version " << SEQ2TYPER_VER << std::endl;
     }
     if (argc == 2 && strcmp(argv[1], "test")==0){
         UnitTest tester;
@@ -153,9 +153,9 @@ void run_seqtyper(int argc, char* argv[]){
     //cmd.add("dont_merge_overlapped_PE", 0, "don't merge the overlapped PE reads; this is off by default");
     
     // reporting
-    cmd.add<string>("json", 'j', "the json format report file name", false, "seq2sat.json");
-    cmd.add<string>("html", 'h', "the html format report file name", false, "seq2sat.html");
-    cmd.add<string>("report_title", 'R', "should be quoted with \' or \", default is \"seq2sat report\"", false, "seq2sat report");
+    cmd.add<string>("json", 'j', "the json format report file name", false, "seq2type.json");
+    cmd.add<string>("html", 'h', "the html format report file name", false, "seq2type.html");
+    cmd.add<string>("report_title", 'R', "should be quoted with \' or \", default is \"seq2type report\"", false, "seq2type report");
 
     // threading
     cmd.add<int>("thread", 'w', "worker thread number, default is 4", false, 4);
@@ -238,7 +238,7 @@ void run_seqtyper(int argc, char* argv[]){
     cmd.add<string>("umi_loc", 0, "specify the location of UMI, can be (index1/index2/read1/read2/per_index/per_read, default is none", false, "");
     cmd.add<int>("umi_len", 0, "if the UMI is in read1/read2, its length should be provided", false, 0);
     cmd.add<string>("umi_prefix", 0, "if specified, an underline will be used to connect prefix and UMI (i.e. prefix=UMI, UMI=AATTCG, final=UMI_AATTCG). No prefix by default", false, "");
-    cmd.add<int>("umi_skip", 0, "if the UMI is in read1/read2, seq2sat can skip several bases following UMI, default is 0", false, 0);
+    cmd.add<int>("umi_skip", 0, "if the UMI is in read1/read2, Seq2Type can skip several bases following UMI, default is 0", false, 0);
 
     cmd.parse_check(argc, argv);
 

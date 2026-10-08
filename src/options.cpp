@@ -13,7 +13,7 @@ Options::Options(){
     out2 = "";
     outFR = false;
     outFRFile = "";
-    reportTitle = "seq2sat report";
+    reportTitle = "Seq2Type report";
     thread = 1;
     compression = 2;
     phred64 = false;
@@ -180,7 +180,7 @@ bool Options::validate() {
     if(thread < 1) {
         thread = 1;
     } else if(thread > 16) {
-        std::cout << "WARNING: seq2sat uses up to 16 threads although you specified " << thread << std::endl;
+        std::cout << "WARNING: Seq2Type uses up to 16 threads although you specified " << thread << std::endl;
         thread = 16;
     }
 
